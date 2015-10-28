@@ -35,14 +35,22 @@ namespace iolib
     template <class Range> using reference_type = typename Range::reference;
 
     // range concepts
-    template <class Range> constexpr auto is_single_pass_range =
-        ::std::is_base_of<single_pass_range_tag, range_category<Range>>::value;
-    template <class Range> constexpr auto is_multi_pass_range =
-        ::std::is_base_of<multi_pass_range_tag, range_category<Range>>::value;
-    template <class Range> constexpr auto is_bidirectional_range =
-        ::std::is_base_of<bidirectional_range_tag, range_category<Range>>::value;
-    template <class Range> constexpr auto is_random_access_range =
-        ::std::is_base_of<random_access_range_tag, range_category<Range>>::value;
+    template <class Range> struct is_single_pass_range
+    {
+        static constexpr auto value = ::std::is_base_of<single_pass_range_tag, range_category<Range>>::value;
+    };
+    template <class Range> struct is_multi_pass_range
+    {
+        static constexpr auto value = ::std::is_base_of<multi_pass_range_tag, range_category<Range>>::value;
+    };
+    template <class Range> struct is_bidirectional_range
+    {
+        static constexpr auto value = ::std::is_base_of<bidirectional_range_tag, range_category<Range>>::value;
+    };
+    template <class Range> struct is_random_access_range
+    {
+        static constexpr auto value = ::std::is_base_of<random_access_range_tag, range_category<Range>>::value;
+    };
 
     // basic range
     template <class Category, class T, class Position, class Distance, class Pointer, class Reference>
@@ -57,19 +65,19 @@ namespace iolib
     };
 
     // range utilities
-    template <class Range, REQUIRES(is_single_pass_range<Range>)>
+    template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
     auto next_pos(const Range& range, position_type<Range> pos)
     {
         return range.advance_pos(pos);
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>)>
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
     auto prev_pos(const Range& range, position_type<Range> pos)
     {
         return range.advance_pos(pos, -1);
     }
 
-    template <class Range, REQUIRES(is_single_pass_range<Range>)>
+    template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
     auto set_range(Range range, const position_type<Range>& first, const position_type<Range>& last) noexcept
     {
         range.begin(first);
@@ -77,7 +85,7 @@ namespace iolib
         return range;
     }
 
-    template <class Range, REQUIRES(is_single_pass_range<Range>)>
+    template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
     Range& drop_first(Range& range, ::std::make_unsigned_t<difference_type<Range>> n = 1)
     {
         auto pos = range.begin_pos();
@@ -86,7 +94,7 @@ namespace iolib
         return range;
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>)>
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
     Range& drop_last(Range& range, ::std::make_unsigned_t<difference_type<Range>> n = 1)
     {
         auto pos = range.end_pos();
