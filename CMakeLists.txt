@@ -8,6 +8,7 @@ project(iolib)
         "include/iolib/algorithm.h"
         "include/iolib/array_view.h"
         "include/iolib/concept.h"
+        "include/iolib/generator.h"
         "include/iolib/optional.h"
         "include/iolib/range.h"
         "include/iolib/stream.h"
