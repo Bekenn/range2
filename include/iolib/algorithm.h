@@ -10,6 +10,7 @@
 #define IOLIB_ALGORITHM_INCLUDED
 #pragma once
 
+#include "generator.h"
 #include "range.h"
 
 #include <functional>
@@ -179,11 +180,11 @@ namespace iolib
         return search(range1, range2, ::std::equal_to<>());
     }
 
-    template <class Range1, class Size, class T,
-        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(::std::is_integral<Size>::value)>
-    auto search_n(const Range1, Size count, const T& value)
+    template <class Range, class Size, class T,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(::std::is_integral<Size>::value)>
+    auto search_n(const Range& range, Size count, const T& value)
     {
-        // need generator ranges
+        return search(range, generator_range(indexed_generator([&value](Size n) -> decltype(auto) { return value; }), 0, count));
     }
 }
 

@@ -10,7 +10,8 @@
 #define IOLIB_STREAM_INCLUDED
 #pragma once
 
-#include <iolib/range.h>
+#include "iterator.h"
+#include "range.h"
 
 #include <algorithm>
 #include <iterator>
@@ -198,12 +199,6 @@ namespace iolib
         using typename ::std::iterator<::std::input_iterator_tag, const POD>::reference;
         using typename ::std::iterator<::std::input_iterator_tag, const POD>::iterator_category;
 
-        struct value_proxy
-        {
-            value_type value;
-            reference operator * () { return value; }
-        };
-
     public:
         input_stream_iterator() : stream(nullptr) { }
         explicit input_stream_iterator(input_stream& stream) : stream(&stream) { ++*this; }
@@ -212,7 +207,7 @@ namespace iolib
         reference operator * () const { return value; }
         pointer operator -> () const { return &value; }
         input_stream_iterator& operator ++ () { if (stream->read(&value, 1) == 0) stream = nullptr; return *this; }
-        value_proxy operator ++ (int) { value_proxy proxy = { value }; ++*this; return proxy; }
+        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(::std::move(value)); ++*this; return proxy; }
 
         friend bool operator == (const input_stream_iterator& a, const input_stream_iterator& b) noexcept
         {
