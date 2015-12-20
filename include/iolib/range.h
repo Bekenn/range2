@@ -176,6 +176,30 @@ namespace iolib
 
     namespace detail
     {
+        template <class Range> class single_pass_range_iterator;
+        template <class Range> class multi_pass_range_iterator;
+        template <class Range> class bidirectional_range_iterator;
+        template <class Range> class random_access_range_iterator;
+
+        template <class RangeCategory> struct range_iterator_category_map;
+        template <> struct range_iterator_category_map<single_pass_range_tag> { using type = ::std::input_iterator_tag; };
+        template <> struct range_iterator_category_map<multi_pass_range_tag> { using type = ::std::forward_iterator_tag; };
+        template <> struct range_iterator_category_map<bidirectional_range_tag> { using type = ::std::bidirectional_iterator_tag; };
+        template <> struct range_iterator_category_map<random_access_range_tag> { using type = ::std::random_access_iterator_tag; };
+        template <class RangeCategory> using range_iterator_category_map_t = typename range_iterator_category_map<RangeCategory>::type;
+    }
+
+    template <class Range> using range_iterator =
+        ::std::conditional_t<is_random_access_range<Range>::value, detail::random_access_range_iterator<Range>,
+            ::std::conditional_t<is_bidirectional_range<Range>::value, detail::bidirectional_range_iterator<Range>,
+                ::std::conditional_t<is_multi_pass_range<Range>::value, detail::multi_pass_range_iterator<Range>,
+                    ::std::enable_if_t<is_single_pass_range<Range>::value, detail::single_pass_range_iterator<Range>>
+                >
+            >
+        >;
+
+    namespace detail
+    {
         template <class Generator, class TerminationPredicate> class single_pass_generator_range;
         template <class Generator, class TerminationPredicate> class multi_pass_generator_range;
         template <class Generator, class TerminationPredicate> class bidirectional_generator_range;
@@ -378,6 +402,187 @@ namespace iolib
                 if (n >= size())
                     throw ::std::out_of_range("element index out of range");
                 return this->begin()[n];
+            }
+        };
+
+        // Range iterators
+        template <class Range>
+        class single_pass_range_iterator
+        {
+        public:
+            using iterator_category = detail::range_iterator_category_map<range_category<Range>>;
+            using value_type = value_type<Range, is_range>;
+            using difference_type = difference_type<Range, is_range>;
+            using pointer = pointer_type<Range, is_range>;
+            using reference = reference_type<Range, is_range>;
+            using position = position_type<Range, is_range>;
+            using range = Range;
+
+        public:
+            single_pass_range_iterator() : r(nullptr), p() { }
+            single_pass_range_iterator(const range& r, const position& pos) noexcept(noexcept(position(pos)))
+                : r(&r), p(pos) { }
+            single_pass_range_iterator(const range& r, position&& pos) noexcept(noexcept(position(::std::move(pos))))
+                : r(&r), p(::std::move(pos)) { }
+
+            friend bool operator == (const single_pass_range_iterator& a, const single_pass_range_iterator& b) noexcept
+            {
+                return (a.r == b.r || (a.r != nullptr && b.r != nullptr && *a.r == *b.r))
+                    && a.p == b.p;
+            }
+            friend bool operator != (const single_pass_range_iterator& a, const single_pass_range_iterator& b) noexcept
+            {
+                return !(a == b);
+            }
+
+        public:
+            reference operator * () const { return r->at_pos(p); }
+            pointer operator -> () const { return ::std::addressof(r->at_pos(p)); }
+            single_pass_range_iterator& operator ++ ()
+            {
+                r->advance_pos(p);
+                return *this;
+            }
+            iterator_proxy<single_pass_range_iterator> operator ++ (int)
+            {
+                iterator_proxy<single_pass_range_iterator> result(r->at_pos(p));
+                ++*this;
+                return result;
+            }
+
+            const range& base_range() const noexcept { return *r; }
+            const position& base_position() const noexcept { return p; }
+
+            void swap(single_pass_range_iterator& other)
+                noexcept(noexcept(swap(p, other.p)))
+            {
+                swap(r, other.r);
+                swap(p, other.p);
+            }
+
+            friend void swap(single_pass_range_iterator& a, single_pass_range_iterator& b)
+                noexcept(noexcept(a.swap(b)))
+            {
+                a.swap(b);
+            }
+
+        private:
+            friend class multi_pass_range_iterator<Range>;
+            friend class bidirectional_range_iterator<Range>;
+            friend class random_access_range_iterator<Range>;
+
+            const range* r;
+            position p;
+        };
+
+        template <class Range>
+        class multi_pass_range_iterator : public single_pass_range_iterator<Range>
+        {
+        public:
+            using single_pass_range_iterator<Range>::single_pass_range_iterator;
+
+        public:
+            using single_pass_range_iterator<Range>::operator ++;
+            multi_pass_range_iterator operator ++ (int)
+            {
+                multi_pass_range_iterator tmp = *this;
+                ++*this;
+                return tmp;
+            }
+        };
+
+        template <class Range>
+        class bidirectional_range_iterator : public multi_pass_range_iterator<Range>
+        {
+        public:
+            using multi_pass_range_iterator<Range>::multi_pass_range_iterator;
+
+        public:
+            bidirectional_range_iterator& operator -- ()
+            {
+                this->r->advance_pos(this->p, -1);
+                return *this;
+            }
+            bidirectional_range_iterator operator -- (int)
+            {
+                bidirectional_range_iterator tmp = *this;
+                --*this;
+                return tmp;
+            }
+        };
+
+        template <class Range>
+        class random_access_range_iterator : public bidirectional_range_iterator<Range>
+        {
+        public:
+            using typename bidirectional_range_iterator<Range>::difference_type;
+            using typename bidirectional_range_iterator<Range>::reference;
+            using typename bidirectional_range_iterator<Range>::position;
+
+        public:
+            using bidirectional_range_iterator<Range>::bidirectional_range_iterator;
+
+            friend bool operator <  (const random_access_range_iterator& a, const random_access_range_iterator& b) noexcept
+            {
+                if (a.r == nullptr)
+                    return b.r != nullptr;
+                if (b.r == nullptr)
+                    return false;
+
+                assert(*a.r == *b.r);
+                return a.r->distance(a.p, b.p) < 0;
+            }
+            friend bool operator >  (const random_access_range_iterator& a, const random_access_range_iterator& b) noexcept
+            {
+                return b < a;
+            }
+            friend bool operator <= (const random_access_range_iterator& a, const random_access_range_iterator& b) noexcept
+            {
+                return !(b < a);
+            }
+            friend bool operator >= (const random_access_range_iterator& a, const random_access_range_iterator& b) noexcept
+            {
+                return !(a < b);
+            }
+
+        public:
+            random_access_range_iterator& operator += (difference_type n)
+            {
+                this->r->advance_pos(this->p, n);
+                return *this;
+            }
+            random_access_range_iterator& operator -= (difference_type n)
+            {
+                this->r->advance_pos(this->p, -n);
+                return *this;
+            }
+
+            reference operator [] (difference_type n) const
+            {
+                position pos = this->p;
+                this->r->advance_pos(pos, n);
+                return this->r->at_pos(pos);
+            }
+
+            friend random_access_range_iterator operator + (random_access_range_iterator it, difference_type n)
+            {
+                return it += n;
+            }
+            friend random_access_range_iterator operator + (difference_type n, random_access_range_iterator it)
+            {
+                return it += n;
+            }
+            friend random_access_range_iterator operator - (random_access_range_iterator it, difference_type n)
+            {
+                return it -= n;
+            }
+            friend difference_type operator - (const random_access_range_iterator& a, const random_access_range_iterator& b)
+            {
+                if (a.r == nullptr && b.r == nullptr)
+                    return 0;
+
+                assert(*a.r == *b.r);
+                return a.r->distance(a.p, b.p);
             }
         };
 

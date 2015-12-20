@@ -5,6 +5,8 @@
 #include "concept.h"
 #include "iterator.h"
 
+#include <cassert>
+
 
 namespace iolib
 {
@@ -82,15 +84,34 @@ namespace iolib
     }
 
     template <class Iterator> using iterator_generator =
-        ::std::conditional_t<::std::is_base_of<::std::random_access_iterator_tag, typename ::std::iterator_traits<Iterator>::iterator_category>::value,
-            detail::random_access_iterator_generator<Iterator>,
-            ::std::conditional_t<::std::is_base_of<::std::bidirectional_iterator_tag, typename ::std::iterator_traits<Iterator>::iterator_category>::value,
-                detail::bidirectional_iterator_generator<Iterator>,
-                ::std::conditional_t<::std::is_base_of<::std::forward_iterator_tag, typename ::std::iterator_traits<Iterator>::iterator_category>::value,
-                    detail::forward_iterator_generator<Iterator>,
-                    ::std::enable_if_t<::std::is_base_of<::std::input_iterator_tag, typename ::std::iterator_traits<Iterator>::iterator_category>::value,
-                        detail::input_iterator_generator<Iterator>
-                    >
+        ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::random_access_iterator_generator<Iterator>,
+            ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::bidirectional_iterator_generator<Iterator>,
+                ::std::conditional_t<is_forward_iterator<Iterator>::value, detail::forward_iterator_generator<Iterator>,
+                    ::std::enable_if_t<is_input_iterator<Iterator>::value, detail::input_iterator_generator<Iterator>>
+                >
+            >
+        >;
+
+    namespace detail
+    {
+        template <class GeneratorCategory> struct generator_iterator_category_map;
+        template <> struct generator_iterator_category_map<single_pass_generator_tag> { using type = ::std::input_iterator_tag; };
+        template <> struct generator_iterator_category_map<multi_pass_generator_tag> { using type = ::std::forward_iterator_tag; };
+        template <> struct generator_iterator_category_map<bidirectional_generator_tag> { using type = ::std::bidirectional_iterator_tag; };
+        template <> struct generator_iterator_category_map<random_access_generator_tag> { using type = ::std::random_access_iterator_tag; };
+        template <class GeneratorCategory> using generator_iterator_category_map_t = typename generator_iterator_category_map<GeneratorCategory>::type;
+
+        template <class Generator> class single_pass_generator_iterator;
+        template <class Generator> class multi_pass_generator_iterator;
+        template <class Generator> class bidirectional_generator_iterator;
+        template <class Generator> class random_access_generator_iterator;
+    }
+
+    template <class Generator> using generator_iterator =
+        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::random_access_generator_iterator<Generator>,
+            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::bidirectional_generator_iterator<Generator>,
+                ::std::conditional_t<is_multi_pass_generator<Generator>::value, detail::multi_pass_generator_iterator<Generator>,
+                    ::std::enable_if_t<is_single_pass_generator<Generator>::value, detail::single_pass_generator_iterator<Generator>>
                 >
             >
         >;
@@ -140,6 +161,7 @@ namespace iolib
 
     namespace detail
     {
+        // iterator generators
         template <class Iterator>
         class input_iterator_generator
         {
@@ -205,6 +227,172 @@ namespace iolib
         {
         public:
             using bidirectional_iterator_generator<Iterator>::bidirectional_iterator_generator;
+        };
+
+        // generator iterators
+        template <class Generator>
+        class single_pass_generator_iterator
+        {
+        public:
+            using iterator_category = detail::generator_iterator_category_map_t<generator_category<Generator>>;
+            using value_type = value_type<Generator, is_generator>;
+            using difference_type = difference_type<Generator, is_generator>;
+            using pointer = pointer_type<Generator, is_generator>;
+            using reference = reference_type<Generator, is_generator>;
+            using position = position_type<Generator, is_generator>;
+            using generator = Generator;
+
+        public:
+            single_pass_generator_iterator() noexcept : gen(nullptr), pos() { }
+            single_pass_generator_iterator(const generator& gen, const position& pos)
+                : gen(&gen), pos(pos) { }
+            single_pass_generator_iterator(const generator& gen, position&& pos)
+                : gen(&gen), pos(::std::move(pos)) { }
+
+            friend bool operator == (const single_pass_generator_iterator& a, const single_pass_generator_iterator& b) noexcept
+            {
+                return (a.gen == b.gen || (a.gen != nullptr && b.gen != nullptr && *a.gen == *b.gen))
+                    && a.pos == b.pos;
+            }
+            friend bool operator != (const single_pass_generator_iterator& a, const single_pass_generator_iterator& b) noexcept
+            {
+                return !(a == b);
+            }
+
+        public:
+            reference operator * () const { return gen->at_pos(pos); }
+            pointer operator -> () const { return ::std::addressof(gen->at_pos(pos)); }
+            single_pass_generator_iterator& operator ++ ()
+                noexcept(noexcept(gen->advance_pos(pos)))
+            {
+                gen->advance_pos(pos);
+                return *this;
+            }
+            iterator_proxy<single_pass_generator_iterator> operator ++ (int)
+            {
+                iterator_proxy<single_pass_generator_iterator> proxy(gen->at_pos(pos));
+                ++*this;
+                return proxy;
+            }
+
+            const generator& base_generator() const noexcept { return *gen; }
+            const position& base_position() const noexcept { return pos; }
+
+        private:
+            friend class multi_pass_generator_iterator<Generator>;
+            friend class bidirectional_generator_iterator<Generator>;
+            friend class random_access_generator_iterator<Generator>;
+
+            const generator* gen;
+            position pos;
+        };
+
+        template <class Generator>
+        class multi_pass_generator_iterator : public single_pass_generator_iterator<Generator>
+        {
+        public:
+            using single_pass_generator_iterator<Generator>::single_pass_generator_iterator;
+
+        public:
+            using single_pass_generator_iterator<Generator>::operator ++;
+            multi_pass_generator_iterator operator ++ (int)
+            {
+                multi_pass_generator_iterator tmp = *this;
+                ++*this;
+                return tmp;
+            }
+        };
+
+        template <class Generator>
+        class bidirectional_generator_iterator : public multi_pass_generator_iterator<Generator>
+        {
+        public:
+            using multi_pass_generator_iterator<Generator>::multi_pass_generator_iterator;
+
+        public:
+            bidirectional_generator_iterator& operator -- ()
+            {
+                this->gen->advance_pos(this->pos, -1);
+                return *this
+            }
+            bidirectional_generator_iterator operator -- (int)
+            {
+                bidirectional_generator_iterator tmp = *this;
+                --*this;
+                return tmp;
+            }
+        };
+
+        template <class Generator>
+        class random_access_generator_iterator : public bidirectional_generator_iterator<Generator>
+        {
+        public:
+            using typename bidirectional_generator_iterator<Generator>::difference_type;
+            using typename bidirectional_generator_iterator<Generator>::reference;
+            using typename bidirectional_generator_iterator<Generator>::position;
+
+        public:
+            using bidirectional_generator_iterator<Generator>::bidirectional_generator_iterator;
+
+            friend bool operator <  (const random_access_generator_iterator& a, const random_access_generator_iterator& b) noexcept
+            {
+                if (a.gen == nullptr)
+                    return b.gen != nullptr;
+                if (b.gen == nullptr)
+                    return false;
+
+                assert(*a.gen == *b.gen)
+                return a.gen->distance(a.pos, b.pos) < 0;
+            }
+            friend bool operator >  (const random_access_generator_iterator& a, const random_access_generator_iterator& b) noexcept
+            {
+                return b < a;
+            }
+            friend bool operator <= (const random_access_generator_iterator& a, const random_access_generator_iterator& b) noexcept
+            {
+                return !(b < a);
+            }
+            friend bool operator >= (const random_access_generator_iterator& a, const random_access_generator_iterator& b) noexcept
+            {
+                return !(a < b);
+            }
+
+        public:
+            random_access_generator_iterator& operator += (difference_type n)
+            {
+                this->gen->advance_pos(this->pos, n);
+                return *this;
+            }
+            random_access_generator_iterator& operator -= (difference_type n)
+            {
+                this->gen->advance_pos(this->pos, -n);
+                return *this;
+            }
+
+            reference operator [] (difference_type n) const
+            {
+                position p = this->pos;
+                this->gen->advance_pos(p, n);
+                return this->gen->at_pos(p);
+            }
+
+            friend random_access_generator_iterator operator + (random_access_generator_iterator it, difference_type n)
+            {
+                return it += n;
+            }
+            friend random_access_generator_iterator operator + (difference_type n, random_access_generator_iterator it)
+            {
+                return it += n;
+            }
+            friend random_access_generator_iterator operator - (random_access_generator_iterator it, difference_type n)
+            {
+                return it -= n;
+            }
+            friend difference_type operator - (const random_access_generator_iterator& a, const random_access_generator_iterator& b) noexcept
+            {
+                assert(a.base_generator() == b.base_generator());
+                return a.base_generator().distance(a.base_position(), b.base_position());
+            }
         };
     }
 }
