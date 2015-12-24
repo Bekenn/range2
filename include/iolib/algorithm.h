@@ -10,7 +10,6 @@
 #define IOLIB_ALGORITHM_INCLUDED
 #pragma once
 
-#include "generator.h"
 #include "range.h"
 
 #include <functional>
@@ -23,7 +22,7 @@ namespace iolib
     auto for_each(const Range& range, Function&& f)
     {
         auto pos = range.begin_pos();
-        for (auto last = range.end_pos(); pos != last; range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
             f(range.at_pos(pos));
         return pos;
     }
@@ -33,7 +32,7 @@ namespace iolib
     auto find_if(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
-        for (auto last = range.end_pos(); pos != last; range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
         {
             if (pred(range.at_pos(pos)))
                 break;
@@ -47,7 +46,7 @@ namespace iolib
     auto find_if_not(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
-        for (auto last = range.end_pos(); pos != last; range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
         {
             if (!pred(range.at_pos(pos)))
                 break;
@@ -89,7 +88,7 @@ namespace iolib
     auto find_first_of(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = range1.begin_pos();
-        for (auto last = range1.end_pos(); pos != last; range1.advance_pos(pos))
+        for (; !range1.is_end_pos(pos); range1.advance_pos(pos))
         {
             if (any_of(range2, [&value = range1.at_pos(pos), &pred](const auto& x) { return pred(value, x); }))
                 break;
@@ -109,18 +108,17 @@ namespace iolib
     auto adjacent_find(const Range& range, BinaryPredicate&& pred)
     {
         auto even = range.begin_pos();
-        auto last = range.end_pos();
-        if (even == last)
+        if (range.is_end_pos(even))
             return even;
 
         position_type<Range> odd;
         while (true)
         {
-            if ((odd = next_pos(range, even)) == last)
+            if (range.is_end_pos(odd = next_pos(range, even)))
                 return odd;
             if (pred(range.at_pos(even), range.at_pos(odd)))
                 return even;
-            if ((even = next_pos(range, odd)) == last)
+            if (range.is_end_pos(even = next_pos(range, odd)))
                 return even;
             if (pred(range.at_pos(odd), range.at_pos(even)))
                 return odd;
@@ -134,14 +132,36 @@ namespace iolib
         return adjacent_find(range, ::std::equal_to<>());
     }
 
+    template <class Range, class Predicate,
+        REQUIRES(is_single_pass_range<Range>::value)>
+    difference_type<Range, is_range> count_if(const Range& range, Predicate&& pred)
+    {
+        difference_type<Range, is_range> n = 0;
+        for_each(range, [&](auto& v)
+        {
+            if (pred(v))
+                ++n;
+        });
+        return n;
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_single_pass_range<Range>::value)>
+    difference_type<Range, is_range> count(const Range& range, const T& value)
+    {
+        return count_if(range, [&](const auto& v)
+        {
+            return v == value;
+        });
+    }
+
     template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
     auto mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = ::std::make_pair(range1.begin_pos(), range2.begin_pos());
-        for (auto last = ::std::make_pair(range1.end_pos(), range2.end_pos());
-             pos.first != last.first && pos.second != last.second;
-             void(range1.advance_pos(pos.first)), range2.advance_pos(pos.second))
+        for (; !range1.is_end_pos(pos.first) && !range2.is_end_pos(pos.second);
+             range1.advance_pos(pos.first), range2.advance_pos(pos.second))
         {
             if (!pred(range1.at_pos(pos.first), range2.at_pos(pos.second)))
                 break;
@@ -158,19 +178,33 @@ namespace iolib
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
+        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
+    bool equal(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
+    {
+        auto pos = mismatch(range1, range2, ::std::forward<BinaryPredicate>(pred));
+        return range1.is_end_pos(pos.first) && range2.is_end_pos(pos.second);
+    }
+
+    template <class Range1, class Range2,
+        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
+    bool equal(const Range1& range1, const Range2& range2)
+    {
+        return equal(range1, range2, ::std::equal_to<>())
+    }
+
+    template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     auto search(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
-        auto last1 = range1.end_pos();
-        auto last2 = range2.end_pos();
         auto range = range1;
-        for (auto pos = mismatch(range, range2, pred); pos.first != last1; drop_first(range))
+        auto pos = mismatch(range, range2, pred);
+        for (!range1.is_end_pos(pos.first); drop_first(range))
         {
             if (pos.second == last2)
                 return range.begin_pos();
         }
 
-        return last1;
+        return pos.first;
     }
 
     template <class Range1, class Range2,
@@ -180,11 +214,18 @@ namespace iolib
         return search(range1, range2, ::std::equal_to<>());
     }
 
-    template <class Range, class Size, class T,
+    template <class Range, class Size, class T, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(::std::is_integral<Size>::value)>
-    auto search_n(const Range& range, Size count, const T& value)
+    auto search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
     {
-        return search(range, generator_range(indexed_generator([&value](Size n) -> decltype(auto) { return value; }), 0, count));
+        auto const_gen = make_constant_generator(value);
+        auto const_rng = make_counted_range(const_gen, count);
+        auto pos = mismatch(range, const_rng, pred);
+        for (; !range.is_end_pos(pos.first); drop_first(range), pos = mismatch(range, const_rng, pred))
+        {
+            if (const_rng.is_end_pos(pos.second))
+                return pos.first;
+        }
     }
 }
 

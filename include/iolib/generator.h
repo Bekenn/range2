@@ -33,8 +33,6 @@ namespace iolib
         template <class Generator>
         struct difference_type_of<Generator, is_generator> { using type = typename Generator::difference_type; };
         template <class Generator>
-        struct pointer_type_of<Generator, is_generator> { using type = typename Generator::pointer; };
-        template <class Generator>
         struct reference_type_of<Generator, is_generator> { using type = typename Generator::reference; };
     }
 
@@ -54,18 +52,6 @@ namespace iolib
     template <class Generator> struct is_random_access_generator
     {
         static constexpr auto value = ::std::is_base_of<random_access_generator_tag, generator_category<Generator>>::value;
-    };
-
-    // basic generator
-    template <class Category, class T, class Position, class Distance = ::std::ptrdiff_t, class Pointer = T*, class Reference = T&>
-    struct generator
-    {
-        using generator_category = Category;
-        using value_type = T;
-        using position = Position;
-        using difference_type = Distance;
-        using pointer = Pointer;
-        using reference = Reference;
     };
 
     namespace detail
@@ -92,6 +78,12 @@ namespace iolib
             >
         >;
 
+    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    auto make_generator(Iterator&& it)
+    {
+        return iterator_generator<::std::decay_t<Iterator>>(::std::forward<Iterator>(it));
+    }
+
     namespace detail
     {
         template <class GeneratorCategory> struct generator_iterator_category_map;
@@ -116,6 +108,17 @@ namespace iolib
             >
         >;
 
+    template <class Generator, REQUIRES(is_generator<Generator>::value)>
+    auto make_iterator(const Generator& gen, const position_type<Generator, is_generator>& pos)
+    {
+        return generator_iterator<Generator>(gen, pos);
+    }
+    template <class Generator, REQUIRES(is_generator<Generator>::value)>
+    auto make_iterator(const Generator& gen, position_type<Generator, is_generator>&& pos)
+    {
+        return generator_iterator<Generator>(gen, ::std::move(pos));
+    }
+
     template <class T>
     class constant_generator
     {
@@ -123,7 +126,6 @@ namespace iolib
         using generator_category = random_access_generator_tag;
         using value_type = T;
         using difference_type = ::std::ptrdiff_t;
-        using pointer = const T*;
         using reference = const T&;
 
         struct position
@@ -159,6 +161,12 @@ namespace iolib
         value_type v;
     };
 
+    template <class T>
+    auto make_constant_generator(T&& v)
+    {
+        return constant_generator<::std::decay_t<T>>(::std::forward<T>(v));
+    }
+
     namespace detail
     {
         // iterator generators
@@ -170,13 +178,13 @@ namespace iolib
             using value_type = typename ::std::iterator_traits<Iterator>::value_type;
             using position = Iterator;
             using difference_type = typename ::std::iterator_traits<Iterator>::difference_type;
-            using pointer = typename ::std::iterator_traits<Iterator>::pointer;
             using reference = typename ::std::iterator_traits<Iterator>::reference;
             using iterator = Iterator;
 
         public:
             input_iterator_generator() noexcept : i(nullptr) { }
-            explicit input_iterator_generator(iterator i) noexcept : i(i) { }
+            explicit input_iterator_generator(const iterator& i) noexcept : i(i) { }
+            explicit input_iterator_generator(iterator&& i) noexcept : i(::std::move(i)) { }
 
             friend bool operator == (const input_iterator_generator& a, const input_iterator_generator& b) noexcept
             {
@@ -237,7 +245,7 @@ namespace iolib
             using iterator_category = detail::generator_iterator_category_map_t<generator_category<Generator>>;
             using value_type = value_type<Generator, is_generator>;
             using difference_type = difference_type<Generator, is_generator>;
-            using pointer = pointer_type<Generator, is_generator>;
+            using pointer = value_type*;
             using reference = reference_type<Generator, is_generator>;
             using position = position_type<Generator, is_generator>;
             using generator = Generator;
