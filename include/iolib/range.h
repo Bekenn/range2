@@ -296,6 +296,17 @@ namespace iolib
             >
         >;
 
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto make_range(const Range& range, const position_type<Range, is_range>& p1, const position_type<Range, is_range>& p2)
+    {
+        return delimited_range<Range>(range, p1, p2);
+    }
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto make_range(const Range& range, position_type<Range, is_range>&& p1, position_type<Range, is_range>&& p2)
+    {
+        return delimited_range<Range>(range, ::std::move(p1), ::std::move(p2));
+    }
+
     namespace detail
     {
         template <class Range> class counted_single_pass_range;
