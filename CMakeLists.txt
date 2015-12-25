@@ -10,10 +10,12 @@ project(iolib)
         "include/iolib/concept.h"
         "include/iolib/generator.h"
         "include/iolib/iterator.h"
+		"include/iolib/meta.h"
         "include/iolib/optional.h"
         "include/iolib/range.h"
         "include/iolib/stream.h"
         "include/iolib/string_view.h"
+		"include/iolib/tuple.h"
         "include/iolib/utility.h")
     include_directories("include")
     add_library(iolib ${IOLIB_SRC} ${IOLIB_INC})

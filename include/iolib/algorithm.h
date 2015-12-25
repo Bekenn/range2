@@ -11,25 +11,36 @@
 #pragma once
 
 #include "range.h"
+#include "tuple.h"
 
 #include <functional>
 
 
 namespace iolib
 {
-    template <class Range, class Function,
-        REQUIRES(is_single_pass_range<Range>::value)>
-    auto for_each(const Range& range, Function&& f)
+    bool multi_and()
     {
-        auto pos = range.begin_pos();
-        for (; !range.is_end_pos(pos); range.advance_pos(pos))
-            f(range.at_pos(pos));
-        return pos;
+        return true;
+    }
+    template <class Bool, class... Bools>
+    bool multi_and(Bool v, Bools... vs)
+    {
+        return v && multi_and(vs...);
+    }
+
+    bool multi_or()
+    {
+        return false;
+    }
+    template <class Bool, class... Bools>
+    bool multi_or(Bool v, Bools... vs)
+    {
+        return v || multi_or(vs...);
     }
 
     template <class Range, class Predicate,
         REQUIRES(is_single_pass_range<Range>::value)>
-    auto find_if(const Range& range, Predicate&& pred)
+    position_type<Range, is_range> find_if(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
         for (; !range.is_end_pos(pos); range.advance_pos(pos))
@@ -43,7 +54,7 @@ namespace iolib
 
     template <class Range, class Predicate,
         REQUIRES(is_single_pass_range<Range>::value)>
-    auto find_if_not(const Range& range, Predicate&& pred)
+    position_type<Range, is_range> find_if_not(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
         for (; !range.is_end_pos(pos); range.advance_pos(pos))
@@ -57,35 +68,35 @@ namespace iolib
 
     template <class Range, class T,
         REQUIRES(is_single_pass_range<Range>::value)>
-    auto find(const Range& range, const T& value)
+    position_type<Range, is_range> find(const Range& range, const T& value)
     {
         return find_if(range, [&value](const auto& x) { return x == value; });
     }
 
     template <class Range, class Predicate,
         REQUIRES(is_single_pass_range<Range>::value)>
-    auto all_of(const Range& range, Predicate&& pred)
+    bool all_of(const Range& range, Predicate&& pred)
     {
         return find_if_not(range, pred) == range.end_pos();
     }
 
     template <class Range, class Predicate,
         REQUIRES(is_single_pass_range<Range>::value)>
-    auto none_of(const Range& range, Predicate&& pred)
+    bool none_of(const Range& range, Predicate&& pred)
     {
         return find_if(range, pred) == range.end_pos();
     }
 
     template <class Range, class Predicate,
         REQUIRES(is_single_pass_range<Range>::value)>
-    auto any_of(const Range& range, Predicate&& pred)
+    bool any_of(const Range& range, Predicate&& pred)
     {
         return !none_of(range, pred);
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
-    auto find_first_of(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
+    position_type<Range1, is_range> find_first_of(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = range1.begin_pos();
         for (; !range1.is_end_pos(pos); range1.advance_pos(pos))
@@ -98,14 +109,14 @@ namespace iolib
 
     template <class Range1, class Range2,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
-    auto find_first_of(const Range1& range1, const Range2& range2)
+    position_type<Range1, is_range> find_first_of(const Range1& range1, const Range2& range2)
     {
         return find_first_of(range1, range2, ::std::equal_to<>());
     }
 
     template <class Range, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range>::value)>
-    auto adjacent_find(const Range& range, BinaryPredicate&& pred)
+    position_type<Range, is_range> adjacent_find(const Range& range, BinaryPredicate&& pred)
     {
         auto even = range.begin_pos();
         if (range.is_end_pos(even))
@@ -127,16 +138,45 @@ namespace iolib
 
     template <class Range,
         REQUIRES(is_multi_pass_range<Range>::value)>
-    auto adjacent_find(const Range& range)
+    position_type<Range, is_range> adjacent_find(const Range& range)
     {
         return adjacent_find(range, ::std::equal_to<>());
     }
 
+    template <class Function, class... Args>
+    void for_each_argument(Function&& func, Args&&... args)
+    {
+        func(::std::forward<Args>(args))...;
+    }
+
+    namespace detail
+    {
+        template <class... Ranges, ::std::size_t... indices>
+        ::std::tuple<::std::tuple<const Ranges&, position_type<Ranges, is_range>&>...>
+            make_range_pos_pairs(::std::tuple<const Ranges&>... ranges, ::std::tuple<position_type<Range, is_range>...>& positions, type_list<constant<::std::size_t, indices>...>)
+        {
+            return ::make_tuple(::std::make_tuple(::std::ref(::std::get<indices>(ranges)), ::std::ref(::std::get<indices>(positions)))...);
+        }
+    }
+    template <class Function, class... Ranges,
+        REQUIRES(is_single_pass_range<Ranges>::value)...>
+    ::std::tuple<position_type<Ranges, is_range>...> for_each(Function&& f, const Ranges&... ranges)
+    {
+        ::std::tuple<position_type<Ranges, is_range>...> positions(::std::move(ranges.begin_pos()...);
+        auto args = detail::make_range_pos_pairs(
+        apply([&](auto&... rp)
+        {
+            for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))); for_each_argument([](auto& rp) { ::std::get<0>(rp).advance_pos(::std::get<1>(rp)); }, rp...))
+                for_each_argument([&](const auto& rp) { f(::std::get<0>(rp).at_pos(::std::get<1>(rp))); });
+        }, args);
+        return positions;
+    }
+
     template <class Range, class Predicate,
         REQUIRES(is_single_pass_range<Range>::value)>
-    difference_type<Range, is_range> count_if(const Range& range, Predicate&& pred)
+    size_type<Range, is_range> count_if(const Range& range, Predicate&& pred)
     {
-        difference_type<Range, is_range> n = 0;
+        size_type<Range, is_range> n = 0;
         for_each(range, [&](auto& v)
         {
             if (pred(v))
@@ -147,7 +187,7 @@ namespace iolib
 
     template <class Range, class T,
         REQUIRES(is_single_pass_range<Range>::value)>
-    difference_type<Range, is_range> count(const Range& range, const T& value)
+    size_type<Range, is_range> count(const Range& range, const T& value)
     {
         return count_if(range, [&](const auto& v)
         {
@@ -157,7 +197,7 @@ namespace iolib
 
     template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
-    auto mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = ::std::make_pair(range1.begin_pos(), range2.begin_pos());
         for (; !range1.is_end_pos(pos.first) && !range2.is_end_pos(pos.second);
@@ -172,7 +212,7 @@ namespace iolib
 
     template <class Range1, class Range2,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
-    auto mismatch(const Range1& range1, const Range2& range2)
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> mismatch(const Range1& range1, const Range2& range2)
     {
         return mismatch(range1, range2, ::std::equal_to<>());
     }
@@ -251,7 +291,7 @@ namespace iolib
 
     template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
-    auto search(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
+    position_type<Range1, is_range> search(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto range = range1;
         auto pos = mismatch(range, range2, pred);
@@ -266,14 +306,14 @@ namespace iolib
 
     template <class Range1, class Range2,
         REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
-    auto search(const Range1& range1, const Range2& range2)
+    position_type<Range1, is_range> search(const Range1& range1, const Range2& range2)
     {
         return search(range1, range2, ::std::equal_to<>());
     }
 
     template <class Range, class Size, class T, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(::std::is_integral<Size>::value)>
-    auto search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
+    position_type<Range1, is_range> search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
     {
         auto const_gen = make_constant_generator(value);
         auto const_rng = make_counted_range(const_gen, count);
@@ -288,6 +328,17 @@ namespace iolib
 
             drop_first(subrange);
         }
+    }
+
+    template <class Range, class Function>
+    position_type<Range, is_range> generate(const Range& range, Function&& func)
+    {
+        return for_each(range, [&](auto& value) { value = func(); });
+    }
+
+    template <class Range1, class Range2>
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> copy(const Range1& range1, const Range2& range2)
+    {
     }
 }
 
