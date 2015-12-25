@@ -192,6 +192,63 @@ namespace iolib
         return equal(range1, range2, ::std::equal_to<>())
     }
 
+    namespace detail
+    {
+        template <class Range1, class Range2, class BinaryPredicate>
+        bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, ::std::false_type counted)
+        {
+            auto pos = mismatch(range1, range2, pred);
+            if (range1.is_end_pos(pos.first))
+                return range2.is_end_pos(pos.second);
+            if (range2.is_end_pos(pos.second))
+                return false;
+
+            auto size1 = size_after(range1, pos.first);
+            auto size2 = size_after(range2, pos.second);
+            if (size1 != size2)
+                return false;
+
+            for (auto pos1 = pos.first; !range1.is_end_pos(pos1); range1.advance_pos(pos1))
+            {
+                if (any_of(make_range(range1, pos.first, pos1), [&](const auto& value) { return pred(value, range1.at_pos(pos1)); }))
+                    continue;
+
+                auto count1 = count_if(make_range(range1, next_pos(range1, pos1), [&](const auto& r, const auto& p) { return range1.is_end_pos(p); }),
+                    [&](const auto& value) { return pred(value, range1.at_pos(pos1)); });
+                auto count2 = count_if(range2, [&](const auto& value) { return pred(value, range1.at_pos(pos1)); });
+                if (count1 != count2)
+                    return false;
+            }
+
+            return true;
+        }
+
+        template <class Range1, class Range2, class BinaryPredicate>
+        bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, ::std::true_type counted)
+        {
+            if (range1.size() != range2.size())
+                return false;
+            return is_permutation(range1, range2, ::std::forward<BinaryPredicate>(pred), ::std::false_type());
+        }
+    }
+
+    template <class Range1, class Range2, class BinaryPredicate,
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
+    bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
+    {
+        return detail::is_permutation(range1, range2, ::std::forward<BinaryPredicate>(pred),
+            ::std::conditional_t<is_counted_range<Range1>::value && is_counted_range<Range2>::value,
+                ::std::true_type,
+                ::std::false_type>());
+    }
+
+    template <class Range1, class Range2,
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
+    bool is_permutation(const Range1& range1, const Range2& range2)
+    {
+        return is_permutation(range1, range2, ::std::equal_to<>());
+    }
+
     template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     auto search(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
@@ -220,11 +277,16 @@ namespace iolib
     {
         auto const_gen = make_constant_generator(value);
         auto const_rng = make_counted_range(const_gen, count);
-        auto pos = mismatch(range, const_rng, pred);
-        for (; !range.is_end_pos(pos.first); drop_first(range), pos = mismatch(range, const_rng, pred))
+        auto subrange = make_range(range, range.begin_pos(), [&](const auto& r, const auto& p) { return range.is_end_pos(p); });
+        while (true)
         {
-            if (const_rng.is_end_pos(pos.second))
-                return pos.first;
+            auto pos = mismatch(subrange, const_rng, pred);
+            if (range.is_end_pos(pos.first()))
+                return pos.first();
+            if (const_rng.is_end_pos(pos.second()))
+                return subrange.begin_pos();
+
+            drop_first(subrange);
         }
     }
 }

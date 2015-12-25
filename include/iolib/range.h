@@ -52,15 +52,34 @@ namespace iolib
             static ::std::false_type test(...);
             static constexpr bool value = decltype(test(nullptr))::value;
         };
-        template <class T>
-        struct check_end_pos
-        {
-            static constexpr bool value = check_end_pos_getter<T>::value
-                && check_end_pos_setter<T>::value;
-        };
     }
     template <class T> struct is_delimited_range
-        : ::std::conditional_t<is_range<T>::value && detail::check_end_pos<T>::value,
+        : ::std::conditional_t<is_range<T>::value && detail::check_end_pos_getter<T>::value && detail::check_end_pos_setter<T>::value,
+            ::std::true_type,
+            ::std::false_type>
+    { };
+
+    namespace detail
+    {
+        DECLARE_HAS_METHOD(size);
+        template <class T>
+        struct check_has_size
+        {
+            static HAS_METHOD_T(T, size) test(void*);
+            static ::std::false_type test(...);
+            static constexpr bool value = decltype(test(nullptr))::value;
+        };
+        DECLARE_HAS_METHOD(resize);
+        template <class T>
+        struct check_has_resize
+        {
+            static HAS_METHOD_T(T, resize, size_type<T, is_range>) test(void*);
+            static ::std::false_type test(...);
+            static constexpr bool value = decltype(test(nullptr))::value;
+        };
+    }
+    template <class T> struct is_counted_range
+        : ::std::conditional_t<is_range<T>::value && detail::check_has_size<T>::value && detail::check_has_resize<T>::value,
             ::std::true_type,
             ::std::false_type>
     { };
@@ -77,6 +96,21 @@ namespace iolib
         struct difference_type_of<Range, is_range> { using type = typename Range::difference_type; };
         template <class Range>
         struct reference_type_of<Range, is_range> { using type = typename Range::reference; };
+
+        DECLARE_HAS_INNER_TYPE(size_type);
+        template <class T, bool has_inner_size_type>
+        struct check_range_inner_size_type
+        {
+            using type = ::std::make_unsigned_t<difference_type<T, is_range>>;
+        };
+        template <class T>
+        struct check_range_inner_size_type<T, true>
+        {
+            using type = typename T::size_type;
+        };
+
+        template <class Range>
+        struct size_type_of<Range, is_range> { using type = typename check_range_inner_size_type<Range, HAS_INNER_TYPE(Range, size_type)>::type; };
     }
 
     // range concepts
@@ -110,16 +144,59 @@ namespace iolib
         return range.advance_pos(pos, -1);
     }
 
-    template <class Range, REQUIRES(is_delimited_range<Range>::value)>
-    auto set_range(Range range, const position_type<Range, is_range>& first, const position_type<Range, is_range>& last) noexcept
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    bool is_empty(const Range& range) noexcept
     {
-        range.begin_pos(first);
-        range.end_pos(last);
-        return range;
+        return range.is_end_pos(range.begin_pos());
+    }
+
+    namespace detail
+    {
+        template <class Range>
+        size_type<Range, is_range> size_before(const Range& range, const position_type<Range, is_range>& pos, multi_pass_range_tag)
+        {
+            size_type<Range, is_range> size = 0;
+            for (auto p = range.begin_pos(); p != pos; range.advance_pos(p))
+                ++size;
+            return size;
+        }
+
+        template <class Range>
+        size_type<Range, is_range> size_before(const Range& range, const position_type<Range, is_range>& pos, random_access_range_tag)
+        {
+            return size_type<Range, is_range>(range.distance(range.begin_pos(), pos));
+        }
+
+        template <class Range>
+        size_type<Range, is_range> size_after(const Range& range, const position_type<Range, is_range>& pos, multi_pass_range_tag)
+        {
+            size_type<Range, is_range> size = 0;
+            for (auto p = pos; !range.is_end_pos(p); range.advance_pos(p))
+                ++size;
+            return size;
+        }
+
+        template <class Range, REQUIRES(is_delimited_range<Range>::value)>
+        size_type<Range, is_range> size_after(const Range& range, const position_type<Range, is_range>& pos, random_access_range_tag)
+        {
+            return size_type<Range, is_range>(range.distance(pos, range.end_pos()));
+        }
+    }
+
+    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    auto size_before(const Range& range, const position_type<Range, is_range>& pos)
+    {
+        return detail::size_before(range, pos, range_category<Range>());
+    }
+
+    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    auto size_after(const Range& range, const position_type<Range, is_range>& pos)
+    {
+        return detail::size_after(range, pos, range_category<Range>());
     }
 
     template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
-    Range& drop_first(Range& range, ::std::make_unsigned_t<difference_type<Range, is_range>> n = 1)
+    Range& drop_first(Range& range, size_type<Range, is_range> n = 1)
     {
         auto pos = range.begin_pos();
         range.advance_pos(pos, n);
@@ -127,13 +204,41 @@ namespace iolib
         return range;
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
-    Range& drop_last(Range& range, ::std::make_unsigned_t<difference_type<Range, is_range>> n = 1)
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
+    Range& drop_last(Range& range, size_type<Range, is_range> n = 1)
     {
         auto pos = range.end_pos();
         range.advance_pos(pos, -difference_type<Range, is_range>(n));
         range.end_pos(::std::move(pos));
         return range;
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    decltype(auto) head(const Range& range)
+    {
+        return range.at_pos(range.begin_pos());
+    }
+
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
+    decltype(auto) last(const Range& range)
+    {
+        auto pos = range.end_pos();
+        range.advance_pos(pos, -1);
+        return range.at_pos(pos);
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    Range tail(const Range& range)
+    {
+        Range result = range;
+        return drop_first(result);
+    }
+
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
+    Range init(const Range& range)
+    {
+        Range result = range;
+        return drop_last(result);
     }
 
     namespace detail

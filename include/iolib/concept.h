@@ -42,6 +42,7 @@ namespace iolib
         template <class T, template <class> class IsT> struct value_type_of;
         template <class T, template <class> class IsT> struct position_type_of;
         template <class T, template <class> class IsT> struct difference_type_of;
+        template <class T, template <class> class IsT> struct size_type_of;
         template <class T, template <class> class IsT> struct pointer_type_of;
         template <class T, template <class> class IsT> struct reference_type_of;
     }
@@ -49,6 +50,7 @@ namespace iolib
     template <class T, template <class> class IsT> using value_type = typename detail::value_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using position_type = typename detail::position_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using difference_type = typename detail::difference_type_of<T, IsT>::type;
+    template <class T, template <class> class IsT> using size_type = typename detail::size_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using pointer_type = typename detail::pointer_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using reference_type = typename detail::reference_type_of<T, IsT>::type;
 }
