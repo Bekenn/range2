@@ -18,22 +18,22 @@
 
 namespace iolib
 {
-    bool multi_and()
+    constexpr bool multi_and() noexcept
     {
         return true;
     }
     template <class Bool, class... Bools>
-    bool multi_and(Bool v, Bools... vs)
+    constexpr bool multi_and(Bool v, Bools... vs) noexcept
     {
         return v && multi_and(vs...);
     }
 
-    bool multi_or()
+    constexpr bool multi_or() noexcept
     {
         return false;
     }
     template <class Bool, class... Bools>
-    bool multi_or(Bool v, Bools... vs)
+    constexpr bool multi_or(Bool v, Bools... vs) noexcept
     {
         return v || multi_or(vs...);
     }
@@ -153,17 +153,17 @@ namespace iolib
     {
         template <class... Ranges, ::std::size_t... indices>
         ::std::tuple<::std::tuple<const Ranges&, position_type<Ranges, is_range>&>...>
-            make_range_pos_pairs(::std::tuple<const Ranges&>... ranges, ::std::tuple<position_type<Range, is_range>...>& positions, type_list<constant<::std::size_t, indices>...>)
+            make_range_pos_pairs(::std::tuple<const Ranges&...> ranges, ::std::tuple<position_type<Ranges, is_range>...>& positions, type_list<constant<::std::size_t, indices>...>)
         {
-            return ::make_tuple(::std::make_tuple(::std::ref(::std::get<indices>(ranges)), ::std::ref(::std::get<indices>(positions)))...);
+            return ::std::make_tuple(::std::make_tuple(::std::ref(::std::get<indices>(ranges)), ::std::ref(::std::get<indices>(positions)))...);
         }
     }
     template <class Function, class... Ranges,
-        REQUIRES(is_single_pass_range<Ranges>::value)...>
+        REQUIRES(const_and<is_single_pass_range<Ranges>::value...>::value)>
     ::std::tuple<position_type<Ranges, is_range>...> for_each(Function&& f, const Ranges&... ranges)
     {
-        ::std::tuple<position_type<Ranges, is_range>...> positions(::std::move(ranges.begin_pos()...);
-        auto args = detail::make_range_pos_pairs(
+        ::std::tuple<position_type<Ranges, is_range>...> positions(ranges.begin_pos()...);
+        auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list<sizeof...(Ranges), ::std::size_t>());
         apply([&](auto&... rp)
         {
             for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))); for_each_argument([](auto& rp) { ::std::get<0>(rp).advance_pos(::std::get<1>(rp)); }, rp...))
@@ -313,7 +313,7 @@ namespace iolib
 
     template <class Range, class Size, class T, class BinaryPredicate,
         REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(::std::is_integral<Size>::value)>
-    position_type<Range1, is_range> search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
+    position_type<Range, is_range> search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
     {
         auto const_gen = make_constant_generator(value);
         auto const_rng = make_counted_range(const_gen, count);

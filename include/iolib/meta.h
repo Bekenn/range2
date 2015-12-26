@@ -14,6 +14,31 @@
 
 namespace iolib
 {
+    // Compile-time variadic boolean comparisons.
+    template <bool... vs> struct const_and;
+    template <>
+    struct const_and<>
+    {
+        static constexpr bool value = true;
+    };
+    template <bool v, bool... vs>
+    struct const_and<v, vs...>
+    {
+        static constexpr bool value = v && const_and<vs...>::value;
+    };
+
+    template <bool... vs> struct const_or;
+    template <>
+    struct const_or<>
+    {
+        static constexpr bool value = false;
+    };
+    template <bool v, bool... vs>
+    struct const_or<v, vs...>
+    {
+        static constexpr bool value = v || const_or<vs...>::value;
+    };
+
     // A constant value.
     template <class T, T v>
     struct constant
@@ -41,6 +66,20 @@ namespace iolib
     struct list_tail<type_list<T, Ts...>>
     {
         using type = type_list<Ts...>;
+    };
+
+    // Retrieve the nth element from a list.
+    template <class List, ::std::size_t n> struct list_element;
+    template <class List, ::std::size_t n> using list_element_t = typename list_element<List, n>::type;
+    template <class T, class... Ts>
+    struct list_element<type_list<T, Ts...>, 0>
+    {
+        using type = T;
+    };
+    template <class T, class... Ts, ::std::size_t n>
+    struct list_element<type_list<T, Ts...>, n>
+    {
+        using type = list_element_t<type_list<Ts...>, n - 1>;
     };
 
     // Add a new element to the front of a list.
@@ -95,7 +134,7 @@ namespace iolib
 
     // Given several lists of lists, construct a list of lists, each constructed by concatenating corresponding lists.
     template <class... Listss> struct list_concat_lists;
-    template <class... Listss> using list_concat_lists_t = typename list_concat_lists::type;
+    template <class... Listss> using list_concat_lists_t = typename list_concat_lists<Listss...>::type;
     template <class... Lists>
     struct list_concat_lists<type_list<Lists...>>
     {
@@ -116,9 +155,27 @@ namespace iolib
         using type = type_list<>;
     };
     template <class... Ts, class... Lists>
-    struct list_transpose<type_list<type_list<Ts...>, Lists...>
+    struct list_transpose<type_list<type_list<Ts...>, Lists...>>
     {
         using type = list_concat_lists_t<type_list<type_list<Ts>...>, list_transpose_t<type_list<Lists...>>>;
+    };
+
+    // Given several lists, construct a list of lists, each constructed with corresponding elements from all lists.
+    template <class... Lists> struct list_zip;
+    template <class... Lists> using list_zip_t = typename list_zip<Lists...>::type;
+    template <class... Lists>
+    struct list_zip
+    {
+        using type = list_transpose_t<type_list<Lists...>>;
+    };
+
+    // Given a template taking variadic type arguments, instantiate that template with types from a list.
+    template <template <class...> class Templ, class List> struct list_apply;
+    template <template <class...> class Templ, class List> using list_apply_t = typename list_apply<Templ, List>::type;
+    template <template <class...> class Templ, class... Ts>
+    struct list_apply<Templ, type_list<Ts...>>
+    {
+        using type = Templ<Ts...>;
     };
 
     // Construct a list of monotonically increasing constants with a given length and starting value.
