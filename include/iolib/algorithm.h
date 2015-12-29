@@ -66,6 +66,19 @@ namespace iolib
         return pos;
     }
 
+    template <class Range, class Predicate>
+    position_type<Range, is_range> find_pos(const Range& range, Predicate&& pred)
+    {
+        auto pos = range.begin_pos();
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        {
+            if (pred(range, pos))
+                break;
+        }
+
+        return pos;
+    }
+
     template <class Range, class T,
         REQUIRES(is_single_pass_range<Range>::value)>
     position_type<Range, is_range> find(const Range& range, const T& value)
@@ -177,11 +190,11 @@ namespace iolib
     size_type<Range, is_range> count_if(const Range& range, Predicate&& pred)
     {
         size_type<Range, is_range> n = 0;
-        for_each(range, [&](auto& v)
+        for_each([&](auto& v)
         {
             if (pred(v))
                 ++n;
-        });
+        }, range);
         return n;
     }
 
@@ -330,15 +343,274 @@ namespace iolib
         }
     }
 
-    template <class Range, class Function>
-    position_type<Range, is_range> generate(const Range& range, Function&& func)
+    template <class Range, class OutputRange>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy(const Range& range, const OutputRange& result)
     {
-        return for_each(range, [&](auto& value) { value = func(); });
+        return for_each([](const auto& from, auto& to) { to = from; }, range, result);
+    }
+
+    template <class Range, class Size, class OutputRange>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy_n(const Range& range, Size n, const OutputRange& result)
+    {
+        auto counted = make_counted_range(range, n);
+        auto pos = copy(counted, result);
+        return { counted.base_position(pos.first), pos.second };
+    }
+
+    template <class Range, class OutputRange, class Predicate>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
+    {
+        auto pos = ::std::make_pair(range.begin_pos(), result.begin_pos());
+        for (; !range.is_end_pos(pos.first) && !result.is_end_pos(pos.second); range.advance_pos(pos.first), result.advance_pos(pos.second))
+        {
+            if (pred(range.at_pos(pos.first)))
+                result.at_pos(pos.second) = range.at_pos(pos.first);
+        }
+        return pos;
+    }
+
+    template <class Range, class OutputRange,
+        REQUIRES(is_bidirectional_range<OutputRange>::value), REQUIRES(is_delimited_range<OutputRange>::value)>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy_backward(const Range& range, const OutputRange& result)
+    {
+        auto rev = make_reverse_range(result);
+        auto pos = copy(range, rev);
+        return { pos.first, rev.base_position(pos.second) };
+    }
+
+    template <class Range, class OutputRange>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> move(const Range& range, const OutputRange& result)
+    {
+        return for_each([](auto& from, auto& to) { to = ::std::move(from); }, range, result);
+    }
+
+    template <class Range, class OutputRange,
+        REQUIRES(is_bidirectional_range<OutputRange>::value), REQUIRES(is_delimited_range<OutputRange>::value)>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> move_backward(const Range& range, const OutputRange& result)
+    {
+        auto rev = make_reverse_range(result);
+        auto pos = move(range, rev);
+        return { pos.first, rev.base_position(pos.second) };
     }
 
     template <class Range1, class Range2>
-    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> copy(const Range1& range1, const Range2& range2)
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> swap_ranges(const Range1& range1, const Range2& range2)
     {
+        return for_each([](auto& from, auto& to) { swap(from, to); }, range1, range2);
+    }
+
+    template <class Range, class OutputRange, class UnaryOperation>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> transform(const Range& range, const OutputRange& result, UnaryOperation&& op)
+    {
+        return for_each([&](const auto& from, auto& to) { to = op(from); }, range, result);
+    }
+
+    template <class Range1, class Range2, class OutputRange, class BinaryOperation>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>> transform(const Range1& range1, const Range2& range2, const OutputRange& result, BinaryOperation&& op)
+    {
+        return for_each([&](const auto& from1, const auto& from2, auto& to) { to = op(from1, from2); }, range1, range2, result);
+    }
+
+    template <class Range, class Predicate, class T,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> replace_if(const Range& range, Predicate&& pred, const T& new_value)
+    {
+        return ::std::get<0>(for_each([&](auto& value) { if (pred(value)) value = new_value; }));
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> replace(const Range& range, const T& old_value, const T& new_value)
+    {
+        return replace_if(range, [&](const auto& value) { return value == old_value; }, new_value);
+    }
+
+    template <class Range, class OutputRange, class Predicate, class T>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> replace_copy_if(const Range& range, const OutputRange& result, Predicate&& pred, const T& new_value)
+    {
+        return for_each([&](const auto& from, auto& to) { to = pred(from) ? new_value : from; }, range, result);
+    }
+
+    template <class Range, class OutputRange, class T>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> replace_copy(const Range& range, const OutputRange& result, const T& old_value, const T& new_value)
+    {
+        return replace_copy_if(range, result, [&](const auto& value) { return value == old_value; }, new_value);
+    }
+
+    template <class Range, class T>
+    position_type<Range, is_range> fill(const Range& range, const T& value)
+    {
+        return ::std::get<0>(for_each([&](auto& v) { v = value; }));
+    }
+
+    template <class Range, class Size, class T>
+    position_type<Range, is_range> fill_n(const Range& range, Size n, const T& value)
+    {
+        auto counted = make_counted_range(range, n);
+        auto pos = fill(counted, value);
+        return counted.base_position(pos);
+    }
+
+    template <class Range, class Function>
+    position_type<Range, is_range> generate(const Range& range, Function&& func)
+    {
+        return ::std::get<0>(for_each([&](auto& value) { value = func(); }, range));
+    }
+
+    template <class Range, class Size, class Function>
+    position_type<Range, is_range> generate_n(const Range& range, Size n, Function&& func)
+    {
+        auto counted = make_counted_range(range, n);
+        auto pos = generate(counted, ::std::forward<Function>(func));
+        return counted.base_position(pos);
+    }
+
+    template <class Range, class Predicate,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> remove_if(const Range& range, Predicate&& pred)
+    {
+        auto pos = find_if(range, pred);
+        auto rng = make_range(range, pos, [&](const auto& pos) { return range.is_end_pos(pos); });
+        for_each([&](auto& value)
+        {
+            if (!pred(value))
+            {
+                rng.at_pos(pos) = ::std::move(value);
+                rng.advance_pos(pos);
+            }
+        }, rng);
+
+        return pos;
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> remove(const Range& range, const T& value)
+    {
+        return remove_if(range, [&](const auto& v) { return v == value; });
+    }
+
+    template <class Range, class OutputRange, class Predicate>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> remove_copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
+    {
+        return copy_if(range, result, [&](const auto& v) { return !pred(v); });
+    }
+
+    template <class Range, class OutputRange, class T>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> remove_copy(const Range& range, const OutputRange& result, const T& value)
+    {
+        return remove_copy_if(range, result, [&](const auto& v) { return v == value; });
+    }
+
+    template <class Range, class BinaryPredicate,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> unique(const Range& range, BinaryPredicate&& pred)
+    {
+        auto read_pos = range.begin_pos();
+        if (range.is_end_pos(read_pos))
+            return read_pos;
+
+        range.advance_pos(read_pos);
+        auto write_pos = find_if(range, [&](const auto& value)
+        {
+            if (range.is_end_pos(read_pos) || pred(value, range.at_pos(read_pos)))
+                return true;
+            advance_pos(read_pos);
+            return false;
+        });
+
+        advance_pos(write_pos);
+        if (range.is_end_pos(read_pos))
+            return write_pos;
+
+        advance_pos(read_pos);
+        while (!range.is_end_pos(read_pos))
+        {
+            range.at_pos(write_pos) = ::std::move(range.at_pos(read_pos));
+            range.advance_pos(read_pos);
+            range.advance_pos(write_pos);
+            read_pos = find_if(subrange_from(read_pos), [&](const auto& value) { return !pred(value, range.at_pos(write_pos)); });
+        }
+
+        return write_pos;
+    }
+
+    template <class Range,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> unique(const Range& range)
+    {
+        return unique(range, ::std::equal_to<>());
+    }
+
+    template <class Range, class OutputRange, class BinaryPredicate>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> unique_copy(const Range& range, const OutputRange& result, BinaryPredicate&& pred)
+    {
+        auto from = range.begin_pos();
+        if (range.is_end_pos(from))
+            return ::std::make_pair(from, result.begin_pos());
+
+        auto to = for_each([&](auto& out)
+        {
+            out = range.at_pos(from);
+            from = find_if(next_pos(range, from), [&](const auto& value) { return !pred(value, range.at_pos(from)); });
+        }, result);
+        return ::std::make_pair(from, to);
+    }
+
+    template <class Range, class OutputRange>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> unique_copy(const Range& range, const OutputRange& result)
+    {
+        return unique_copy(range, result, ::std::equal_to<>());
+    }
+
+    template <class Range,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    void reverse(Range range)
+    {
+        auto l = range.begin_pos();
+        if (range.is_end_pos(l))
+            return;
+
+        for (auto r = range.end_pos(); range.advance_pos(r, -1) != l; )
+        {
+            swap(range.at_pos(l), range.at_pos(r));
+            if (range.advance_pos(l) == r)
+                return;
+        }
+    }
+
+    template <class Range, class OutputRange,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> reverse_copy(const Range& range, const OutputRange& result)
+    {
+        auto rng = make_reverse_range(range);
+        auto pos = copy(rng, result);
+        return ::std::make_pair(rng.base_position(pos.first), pos.second);
+    }
+
+    template <class Range,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> rotate(const Range& range, position_type<Range, is_range> middle)
+    {
+        if (middle == range.begin_pos() || range.is_end_pos(middle))
+            return range.begin_pos();
+
+        auto ranges = split_range(range, middle);
+        auto pos = for_each([](auto& a, auto& b) { swap(a, b); }, ranges.first, ranges.second);
+
+        if (ranges.first.is_end_pos(::std::get<0>(pos)))
+            return rotate(ranges.second, ::std::get<1>(pos));
+
+        rotate(subrange_from(range, ::std::get<0>(pos)), middle);
+        return ::std::get<0>(pos);
+    }
+
+    template <class Range, class OutputRange,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> rotate_copy(const Range& range, position_type<Range, is_range> middle, const OutputRange& result)
+    {
+        auto pos = for_each([](const auto& from, auto& to) { to = from; }, subrange_from(range, middle), result);
+        return for_each([](const auto& from, auto& to) { to = from; }, subrange_to(range, middle), subrange_from(result, pos.second));
     }
 }
 

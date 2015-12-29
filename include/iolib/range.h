@@ -386,6 +386,16 @@ namespace iolib
     {
         return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, ::std::move(pos), ::std::forward<TerminationPredicate>(pred));
     }
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto subrange_from(const Range& range, const position_type<Range, is_range>& first)
+    {
+        return make_range(range, first, [&](const auto& pos) { return range.is_end_pos(pos); });
+    }
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto subrange_from(const Range& range, position_type<Range, is_range>&& first)
+    {
+        return make_range(range, ::std::move(first), [&](const auto& pos) { return range.is_end_pos(pos); });
+    }
 
     namespace detail
     {
@@ -410,6 +420,22 @@ namespace iolib
     auto make_range(const Range& range, position_type<Range, is_range>&& p1, position_type<Range, is_range>&& p2)
     {
         return delimited_range<Range>(range, ::std::move(p1), ::std::move(p2));
+    }
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto subrange_to(const Range& range, const position_type<Range, is_range>& last)
+    {
+        return make_range(range, range.begin_pos(), last);
+    }
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto subrange_to(const Range& range, position_type<Range, is_range>&& last)
+    {
+        return make_range(range, range.begin_pos(), ::std::move(last));
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto split_range(const Range& range, position_type<Range, is_range> pos)
+    {
+        return ::std::make_pair(subrange_to(range, pos), subrange_from(range, pos));
     }
 
     namespace detail
@@ -483,6 +509,25 @@ namespace iolib
     auto make_counted_range(const Generator& gen, position_type<Generator, is_generator>&& pos, typename counted_generator_range<Generator>::size_type count)
     {
         return counted_generator_range<Generator>(gen, ::std::move(pos), count);
+    }
+
+    namespace detail
+    {
+        template <class Range> class reverse_bidirectional_range;
+        template <class Range> class reverse_random_access_range;
+    }
+
+    template <class Range> using reverse_range =
+        ::std::enable_if_t<is_delimited_range<Range>::value,
+            ::std::conditional_t<is_random_access_range<Range>::value, detail::reverse_random_access_range<Range>,
+                ::std::enable_if_t<is_bidirectional_range<Range>::value, detail::reverse_bidirectional_range<Range>>
+            >
+        >;
+
+    template <class Range, REQUIRES(is_delimited_range<Range>::value), REQUIRES(is_bidirectional_range<Range>::value)>
+    auto make_reverse_range(const Range& range)
+    {
+        return reverse_range<Range>(range);
     }
 
     namespace detail
@@ -1155,6 +1200,8 @@ namespace iolib
             position& advance_pos(position& pos) const { return r->advance_pos(pos); }
             reference at_pos(const position& pos) const { return r->at_pos(pos); }
 
+            const range& base() const noexcept { return *r; }
+
         private:
             friend class delimited_bidirectional_range<Range>;
             friend class delimited_random_access_range<Range>;
@@ -1262,6 +1309,8 @@ namespace iolib
             }
 
             const range& base() const noexcept { return underlying; }
+            const position_type<range, is_range>& base_position(const position& pos) { return pos.first(); }
+            position_type<range, is_range> base_position(position&& pos) { return pos.first(); }
 
             size_type size() const noexcept { return count - first.second(); }
             void resize(size_type n) noexcept { count = first.second() + n; }
@@ -1585,6 +1634,96 @@ namespace iolib
                 return this->base().at_pos(pos);
             }
             reference at(size_type n) const
+            {
+                if (n >= size())
+                    throw ::std::out_of_range("element index out of range");
+                return (*this)[n];
+            }
+        };
+
+        // reverse ranges
+        template <class Range>
+        class reverse_bidirectional_range
+        {
+        public:
+            using range_category = range_category<Range>;
+            using value_type = value_type<Range, is_range>;
+            using position = position_type<Range, is_range>;
+            using difference_type = difference_type<Range, is_range>;
+            using reference = reference_type<Range, is_range>;
+            using range = Range;
+
+        public:
+            reverse_bidirectional_range() : r(nullptr), first(), last() { }
+            explicit reverse_bidirectional_range(const Range& range)
+                : r(&range), first(range.end_pos()), last(range.begin_pos()) { }
+
+            friend bool operator == (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
+            {
+                return (a.r == b.r || (a.r != nullptr && b.r != nullptr && *a.r == *b.r))
+                    && a.first == b.first
+                    && a.last == b.last;
+            }
+            friend bool operator != (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
+            {
+                return !(a == b);
+            }
+
+        public:
+            const position& begin_pos() const noexcept { return first; }
+            void begin_pos(const position& pos) { first = pos; }
+            void begin_pos(position&& pos) { first = ::std::move(pos); }
+
+            const position& end_pos() const noexcept { return last; }
+            void end_pos(const position& pos) { last = pos; }
+            void end_pos(position&& pos) { last = ::std::move(pos); }
+
+            bool is_end_pos(const position& pos) const noexcept { return pos == last; }
+
+            position& advance_pos(position& pos, difference_type n = 1) const { return r->advance_pos(pos, -n); }
+            reference at_pos(const position& pos) const { return r->at_pos(prev_pos(*r, pos)); }
+
+            const range& base() { return *r; }
+            const position& base_position(const position& pos) { return pos; }
+            position base_position(position&& pos) { return pos; }
+
+        private:
+            friend class reverse_random_access_range<Range>;
+
+            const range* r;
+            position first, last;
+        };
+
+        template <class Range>
+        class reverse_random_access_range : public reverse_bidirectional_range<Range>
+        {
+        public:
+            using position = typename reverse_bidirectional_range<Range>::position;
+            using difference_type = typename reverse_bidirectional_range<Range>::difference_type;
+            using reference = typename reverse_bidirectional_range<Range>::reference;
+            using size_type = ::std::make_unsigned_t<difference_type>;
+
+        public:
+            using reverse_bidirectional_range<Range>::reverse_bidirectional_range;
+
+        public:
+            difference_type distance(const position& p1, const position& p2) const noexcept
+            {
+                return this->r->distance(p2, p1);
+            }
+
+            size_type size() const noexcept
+            {
+                return size_type(distance(this->first, this->last));
+            }
+
+            reference operator [] (size_type n)
+            {
+                auto pos = this->begin_pos();
+                this->advance_pos(pos, n);
+                return this->at_pos(pos);
+            }
+            reference at(size_type n)
             {
                 if (n >= size())
                     throw ::std::out_of_range("element index out of range");
