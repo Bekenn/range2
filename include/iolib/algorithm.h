@@ -14,6 +14,8 @@
 #include "tuple.h"
 
 #include <functional>
+#include <random>
+#include <vector>
 
 
 namespace iolib
@@ -210,7 +212,8 @@ namespace iolib
 
     template <class Range1, class Range2, class BinaryPredicate,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
-    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>>
+        mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = ::std::make_pair(range1.begin_pos(), range2.begin_pos());
         for (; !range1.is_end_pos(pos.first) && !range2.is_end_pos(pos.second);
@@ -225,7 +228,8 @@ namespace iolib
 
     template <class Range1, class Range2,
         REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
-    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> mismatch(const Range1& range1, const Range2& range2)
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>>
+        mismatch(const Range1& range1, const Range2& range2)
     {
         return mismatch(range1, range2, ::std::equal_to<>());
     }
@@ -344,13 +348,15 @@ namespace iolib
     }
 
     template <class Range, class OutputRange>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy(const Range& range, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        copy(const Range& range, const OutputRange& result)
     {
         return for_each([](const auto& from, auto& to) { to = from; }, range, result);
     }
 
     template <class Range, class Size, class OutputRange>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy_n(const Range& range, Size n, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        copy_n(const Range& range, Size n, const OutputRange& result)
     {
         auto counted = make_counted_range(range, n);
         auto pos = copy(counted, result);
@@ -358,7 +364,8 @@ namespace iolib
     }
 
     template <class Range, class OutputRange, class Predicate>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
         auto pos = ::std::make_pair(range.begin_pos(), result.begin_pos());
         for (; !range.is_end_pos(pos.first) && !result.is_end_pos(pos.second); range.advance_pos(pos.first), result.advance_pos(pos.second))
@@ -371,7 +378,8 @@ namespace iolib
 
     template <class Range, class OutputRange,
         REQUIRES(is_bidirectional_range<OutputRange>::value), REQUIRES(is_delimited_range<OutputRange>::value)>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> copy_backward(const Range& range, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        copy_backward(const Range& range, const OutputRange& result)
     {
         auto rev = make_reverse_range(result);
         auto pos = copy(range, rev);
@@ -379,14 +387,16 @@ namespace iolib
     }
 
     template <class Range, class OutputRange>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> move(const Range& range, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        move(const Range& range, const OutputRange& result)
     {
         return for_each([](auto& from, auto& to) { to = ::std::move(from); }, range, result);
     }
 
     template <class Range, class OutputRange,
         REQUIRES(is_bidirectional_range<OutputRange>::value), REQUIRES(is_delimited_range<OutputRange>::value)>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> move_backward(const Range& range, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        move_backward(const Range& range, const OutputRange& result)
     {
         auto rev = make_reverse_range(result);
         auto pos = move(range, rev);
@@ -394,19 +404,22 @@ namespace iolib
     }
 
     template <class Range1, class Range2>
-    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>> swap_ranges(const Range1& range1, const Range2& range2)
+    ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>>
+        swap_ranges(const Range1& range1, const Range2& range2)
     {
         return for_each([](auto& from, auto& to) { swap(from, to); }, range1, range2);
     }
 
     template <class Range, class OutputRange, class UnaryOperation>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> transform(const Range& range, const OutputRange& result, UnaryOperation&& op)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        transform(const Range& range, const OutputRange& result, UnaryOperation&& op)
     {
         return for_each([&](const auto& from, auto& to) { to = op(from); }, range, result);
     }
 
     template <class Range1, class Range2, class OutputRange, class BinaryOperation>
-    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>> transform(const Range1& range1, const Range2& range2, const OutputRange& result, BinaryOperation&& op)
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        transform(const Range1& range1, const Range2& range2, const OutputRange& result, BinaryOperation&& op)
     {
         return for_each([&](const auto& from1, const auto& from2, auto& to) { to = op(from1, from2); }, range1, range2, result);
     }
@@ -426,13 +439,15 @@ namespace iolib
     }
 
     template <class Range, class OutputRange, class Predicate, class T>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> replace_copy_if(const Range& range, const OutputRange& result, Predicate&& pred, const T& new_value)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        replace_copy_if(const Range& range, const OutputRange& result, Predicate&& pred, const T& new_value)
     {
         return for_each([&](const auto& from, auto& to) { to = pred(from) ? new_value : from; }, range, result);
     }
 
     template <class Range, class OutputRange, class T>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> replace_copy(const Range& range, const OutputRange& result, const T& old_value, const T& new_value)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        replace_copy(const Range& range, const OutputRange& result, const T& old_value, const T& new_value)
     {
         return replace_copy_if(range, result, [&](const auto& value) { return value == old_value; }, new_value);
     }
@@ -491,13 +506,15 @@ namespace iolib
     }
 
     template <class Range, class OutputRange, class Predicate>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> remove_copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        remove_copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
         return copy_if(range, result, [&](const auto& v) { return !pred(v); });
     }
 
     template <class Range, class OutputRange, class T>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> remove_copy(const Range& range, const OutputRange& result, const T& value)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        remove_copy(const Range& range, const OutputRange& result, const T& value)
     {
         return remove_copy_if(range, result, [&](const auto& v) { return v == value; });
     }
@@ -543,7 +560,8 @@ namespace iolib
     }
 
     template <class Range, class OutputRange, class BinaryPredicate>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> unique_copy(const Range& range, const OutputRange& result, BinaryPredicate&& pred)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        unique_copy(const Range& range, const OutputRange& result, BinaryPredicate&& pred)
     {
         auto from = range.begin_pos();
         if (range.is_end_pos(from))
@@ -558,7 +576,8 @@ namespace iolib
     }
 
     template <class Range, class OutputRange>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> unique_copy(const Range& range, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        unique_copy(const Range& range, const OutputRange& result)
     {
         return unique_copy(range, result, ::std::equal_to<>());
     }
@@ -581,7 +600,8 @@ namespace iolib
 
     template <class Range, class OutputRange,
         REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> reverse_copy(const Range& range, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        reverse_copy(const Range& range, const OutputRange& result)
     {
         auto rng = make_reverse_range(range);
         auto pos = copy(rng, result);
@@ -607,10 +627,221 @@ namespace iolib
 
     template <class Range, class OutputRange,
         REQUIRES(is_multi_pass_range<Range>::value)>
-    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>> rotate_copy(const Range& range, position_type<Range, is_range> middle, const OutputRange& result)
+    ::std::pair<position_type<Range, is_range>, position_type<OutputRange, is_range>>
+        rotate_copy(const Range& range, position_type<Range, is_range> middle, const OutputRange& result)
     {
         auto pos = for_each([](const auto& from, auto& to) { to = from; }, subrange_from(range, middle), result);
         return for_each([](const auto& from, auto& to) { to = from; }, subrange_to(range, middle), subrange_from(result, pos.second));
+    }
+
+    template <class Range, class UniformRandomNumberGenerator,
+        REQUIRES(is_random_access_range<Range>::value), REQUIRES(is_counted_range<Range>::value)>
+    void shuffle(const Range& range, UniformRandomNumberGenerator&& g)
+    {
+        if (is_empty(range))
+            return;
+
+        ::std::uniform_int_distribution<size_type<Range, is_range>> dist;
+
+        auto size = range.size();
+        for (size_type<Range, is_range> n = 0; n < size - 1; ++n)
+        {
+            dist.param({ n, size - 1 });
+            auto index = dist(g);
+            if (index != n)
+                swap(range[n], range[index]);
+        }
+    }
+
+    template <class Range, class Predicate>
+    bool is_partitioned(const Range& range, Predicate&& pred)
+    {
+        auto pos = range.begin_pos();
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        {
+            if (!pred(range.at_pos(pos)))
+                break;
+        }
+
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        {
+            if (pred(range.at_pos(pos)))
+                return false;
+        }
+
+        return true;
+    }
+
+    namespace detail
+    {
+        template <class Range, class Predicate>
+        position_type<Range, is_range> partition(const Range& range, Predicate&& pred, multi_pass_range_tag)
+        {
+            auto p1 = find_if_not(range, pred);
+            if (range.is_end_pos(p1))
+                return p1;
+
+            while (true)
+            {
+                auto p2 = find_if(subrange_from(range, next_pos(range, p1)), pred);
+                if (range.is_end_pos(p2))
+                    return p1;
+                swap(range.at_pos(p1), range.at_pos(p2));
+                p1 = p2;
+            }
+        }
+
+        template <class Range, class Predicate,
+            REQUIRES(is_delimited_range<Range>::value)>
+        position_type<Range, is_range> partition(const Range& range, Predicate&& pred, bidirectional_range_tag)
+        {
+            auto p1 = find_if_not(range, pred);
+            if (range.is_end_pos(p1))
+                return p1;
+
+            auto rev = make_reverse_range(range);
+            auto p2 = find_if(rev, pred);
+            if (rev.is_end_pos(p2))
+                return p1;
+
+            while (p1 != rev.base_position(p2))
+            {
+                swap(range.at_pos(p1), rev.at_pos(p2));
+                p1 = find_if_not(subrange_from(range, next_pos(range, p1)), pred);
+                p2 = find_if(subrange_from(rev, next_pos(rev, p2)), pred);
+            }
+
+            return p1;
+        }
+    }
+
+    template <class Range, class Predicate,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> partition(const Range& range, Predicate&& pred)
+    {
+        return detail::partition(range, pred, range_category<Range>());
+    }
+
+    namespace detail
+    {
+        template <class Range, class Predicate>
+        position_type<Range, is_range> fast_stable_partition(const Range& range, Predicate&& pred, ::std::vector<value_type<Range, is_range>>& buf)
+        {
+            auto p1 = find_if_not(range, pred);
+            if (range.is_end_pos(p1))
+                return p1;
+
+            while (true)
+            {
+                auto p2 = find_if(subrange_from(range, next_pos(range, p1)), pred);
+                if (range.is_end_pos(p2))
+                    return p1;
+
+                auto p3 = find_if_not(subrange_from(range, next_pos(range, p2)), pred);
+
+                for (auto pos = p1; pos != p2; range.advance_pos(pos))
+                    buf.emplace_back(::std::move(range.at_pos(pos)));
+
+                p2 = move(make_range(range, p2, p3), make_range(range, p1, p2)).second;
+                move(make_range(buf.begin(), buf.end()), make_range(range, p2, p3));
+                p1 = p3;
+            }
+        }
+
+        template <class Range, class Predicate>
+        position_type<Range, is_range> fast_stable_partition(const Range& range, Predicate&& pred, ::std::false_type /* is_counted */)
+        {
+            ::std::vector<value_type<Range, is_range>> buf;
+            return fast_stable_partition(range, pred, buf);
+        }
+
+        template <class Range, class Predicate>
+        position_type<Range, is_range> fast_stable_partition(const Range& range, Predicate&& pred, ::std::true_type /* is_counted */)
+        {
+            ::std::vector<value_type<Range, is_range>> buf;
+            buf.reserve(range.size() / 2);
+            return fast_stable_partition(range, pred, buf);
+        }
+
+        template <class Range, class Predicate>
+        position_type<Range, is_range> slow_stable_partition(const Range& range, Predicate&& pred)
+        {
+            auto p1 = find_if_not(range, pred);
+            if (range.is_end_pos(p1))
+                return p1;
+
+            while (true)
+            {
+                auto p2 = find_if(subrange_from(range, next_pos(range, p1)), pred);
+                if (range.is_end_pos(p2))
+                    return p1;
+
+                auto p3 = find_if_not(subrange_from(range, next_pos(range, p2)), pred);
+                rotate(make_range(range, p1, p3), p2);
+                p1 = p3;
+            }
+        }
+    }
+
+    template <class Range, class Predicate,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    position_type<Range, is_range> stable_partition(const Range& range, Predicate&& pred)
+    {
+        try
+        {
+            return detail::fast_stable_partition(range, pred, is_counted_range<Range>());
+        }
+        catch (const ::std::bad_alloc&)
+        {
+            return detail::slow_stable_partition(range, pred);
+        }
+    }
+
+    template <class Range, class OutputRange1, class OutputRange2, class Predicate>
+    ::std::tuple<position_type<Range, is_range>, position_type<OutputRange1, is_range>, position_type<OutputRange2, is_range>>
+        partition_copy(const Range& range, const OutputRange1& out_true, const OutputRange2& out_false, Predicate&& pred)
+    {
+        auto pos = range.begin_pos();
+        auto out1 = out_true.begin_pos();
+        auto out2 = out_false.begin_pos();
+        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        {
+            if (pred(range.at_pos(pos)))
+            {
+                if (out_true.is_end_pos(out1))
+                    return make_tuple(pos, out1, out2);
+                out_true.at_pos(out1) = range.at_pos(pos);
+                out_true.advance_pos(out1);
+            }
+            else
+            {
+                if (out_false.is_end_pos(out2))
+                    return make_tuple(pos, out1, out2);
+                out_false.at_pos(out2) = range.at_pos(pos);
+                out_false.advance_pos(out2);
+            }
+        }
+
+        return make_tuple(pos, out1, out2);
+    }
+
+    template <class Range, class Predicate,
+        REQUIRES(is_random_access_range<Range>::value), REQUIRES(is_counted_range<Range>::value)>
+    position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred)
+    {
+        auto l = size_type<Range, is_range>(0);
+        auto r = range.size();
+        while (l != r)
+        {
+            auto n = l + (r - l) / 2;
+            if (pred(range[n]))
+                l = n + 1;
+            else
+                r = n;
+        }
+
+        auto pos = range.begin_pos();
+        return range.advance_pos(pos, r);
     }
 }
 

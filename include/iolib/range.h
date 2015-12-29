@@ -152,6 +152,30 @@ namespace iolib
 
     namespace detail
     {
+        template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+        difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2, multi_pass_range_tag)
+        {
+            difference_type<Range, is_range> d = 0;
+            for (; p1 != p2; range.advance_pos(p1))
+                ++d;
+            return d;
+        }
+
+        template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+        difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2, random_access_range_tag)
+        {
+            return range.distance(p1, p2);
+        }
+    }
+
+    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return detail::distance(range, p1, p2, range_category<Range>());
+    }
+
+    namespace detail
+    {
         template <class Range>
         size_type<Range, is_range> size_before(const Range& range, position_type<Range, is_range> pos, multi_pass_range_tag)
         {
