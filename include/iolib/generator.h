@@ -109,14 +109,9 @@ namespace iolib
         >;
 
     template <class Generator, REQUIRES(is_generator<Generator>::value)>
-    auto make_iterator(const Generator& gen, const position_type<Generator, is_generator>& pos)
+    auto make_iterator(const Generator& gen, position_type<Generator, is_generator> pos)
     {
         return generator_iterator<Generator>(gen, pos);
-    }
-    template <class Generator, REQUIRES(is_generator<Generator>::value)>
-    auto make_iterator(const Generator& gen, position_type<Generator, is_generator>&& pos)
-    {
-        return generator_iterator<Generator>(gen, ::std::move(pos));
     }
 
     template <class T>
@@ -155,7 +150,7 @@ namespace iolib
     public:
         constexpr position origin_pos() const noexcept { return { }; }
         constexpr position& advance_pos(position& pos, difference_type n = 1) const noexcept { return pos; }
-        constexpr reference at_pos(const position& pos) const noexcept { return v; }
+        constexpr reference at_pos(position pos) const noexcept { return v; }
 
     private:
         value_type v;
@@ -196,9 +191,9 @@ namespace iolib
             }
 
         public:
-            const position& origin_pos() const noexcept { return i; }
+            position origin_pos() const noexcept { return i; }
             position& advance_pos(position& pos) const { return ++pos; }
-            reference at_pos(const position& pos) const { return *pos; }
+            reference at_pos(position pos) const { return *pos; }
 
         private:
             iterator i;
@@ -252,10 +247,8 @@ namespace iolib
 
         public:
             single_pass_generator_iterator() noexcept : gen(nullptr), pos() { }
-            single_pass_generator_iterator(const generator& gen, const position& pos)
+            single_pass_generator_iterator(const generator& gen, position pos)
                 : gen(&gen), pos(pos) { }
-            single_pass_generator_iterator(const generator& gen, position&& pos)
-                : gen(&gen), pos(::std::move(pos)) { }
 
             friend bool operator == (const single_pass_generator_iterator& a, const single_pass_generator_iterator& b) noexcept
             {
@@ -284,7 +277,7 @@ namespace iolib
             }
 
             const generator& base_generator() const noexcept { return *gen; }
-            const position& base_position() const noexcept { return pos; }
+            position base_position() const noexcept { return pos; }
 
         private:
             friend class multi_pass_generator_iterator<Generator>;

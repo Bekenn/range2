@@ -135,7 +135,7 @@ namespace iolib
         if (range.is_end_pos(even))
             return even;
 
-        position_type<Range> odd;
+        position_type<Range, is_range> odd;
         while (true)
         {
             if (range.is_end_pos(odd = next_pos(range, even)))
