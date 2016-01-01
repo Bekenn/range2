@@ -135,13 +135,48 @@ namespace iolib
     template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
     auto next_pos(const Range& range, position_type<Range, is_range> pos)
     {
-        return range.advance_pos(pos);
+        return range.inc_pos(pos);
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
     auto prev_pos(const Range& range, position_type<Range, is_range> pos)
     {
-        return range.advance_pos(pos, -1);
+        return range.dec_pos(pos);
+    }
+
+    namespace detail
+    {
+        template <class Range>
+        position_type<Range, is_range>& advance_pos(const Range& range, position_type<Range, is_range>& pos, difference_type<Range, is_range> n, single_pass_range_tag)
+        {
+            assert(n >= 0);
+
+            while (n-- != 0)
+                range.inc_pos(pos);
+            return pos;
+        }
+
+        template <class Range>
+        position_type<Range, is_range>& advance_pos(const Range& range, position_type<Range, is_range>& pos, difference_type<Range, is_range> n, bidirectional_range_tag)
+        {
+            for (; n > 0; --n)
+                range.inc_pos(pos);
+            for (; n < 0; ++n)
+                range.dec_pos(pos);
+            return pos;
+        }
+
+        template <class Range>
+        position_type<Range, is_range>& advance_pos(const Range& range, position_type<Range, is_range>& pos, difference_type<Range, is_range> n, random_access_range_tag)
+        {
+            return range.advance_pos(pos, n);
+        }
+    }
+
+    template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
+    position_type<Range, is_range>& advance_pos(const Range& range, position_type<Range, is_range>& pos, difference_type<Range, is_range> n)
+    {
+        return detail::advance_pos(range, pos, n, range_category<Range>());
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
@@ -156,7 +191,7 @@ namespace iolib
         difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2, multi_pass_range_tag)
         {
             difference_type<Range, is_range> d = 0;
-            for (; p1 != p2; range.advance_pos(p1))
+            for (; p1 != p2; range.inc_pos(p1))
                 ++d;
             return d;
         }
@@ -180,7 +215,7 @@ namespace iolib
         size_type<Range, is_range> size_before(const Range& range, position_type<Range, is_range> pos, multi_pass_range_tag)
         {
             size_type<Range, is_range> size = 0;
-            for (auto p = range.begin_pos(); p != pos; range.advance_pos(p))
+            for (auto p = range.begin_pos(); p != pos; range.inc_pos(p))
                 ++size;
             return size;
         }
@@ -195,7 +230,7 @@ namespace iolib
         size_type<Range, is_range> size_after(const Range& range, position_type<Range, is_range> pos, multi_pass_range_tag)
         {
             size_type<Range, is_range> size = 0;
-            for (auto p = pos; !range.is_end_pos(p); range.advance_pos(p))
+            for (auto p = pos; !range.is_end_pos(p); range.inc_pos(p))
                 ++size;
             return size;
         }
@@ -223,8 +258,7 @@ namespace iolib
     Range& drop_first(Range& range, size_type<Range, is_range> n = 1)
     {
         auto pos = range.begin_pos();
-        range.advance_pos(pos, n);
-        range.begin_pos(::std::move(pos));
+        range.begin_pos(advance_pos(range, pos, n));
         return range;
     }
 
@@ -232,8 +266,7 @@ namespace iolib
     Range& drop_last(Range& range, size_type<Range, is_range> n = 1)
     {
         auto pos = range.end_pos();
-        range.advance_pos(pos, -difference_type<Range, is_range>(n));
-        range.end_pos(::std::move(pos));
+        range.end_pos(advance_pos(range, pos, -difference_type<Range, is_range>(n)));
         return range;
     }
 
@@ -247,8 +280,7 @@ namespace iolib
     decltype(auto) last(const Range& range)
     {
         auto pos = range.end_pos();
-        range.advance_pos(pos, -1);
-        return range.at_pos(pos);
+        return range.at_pos(range.dec_pos(pos));
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
@@ -553,7 +585,7 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos == last; }
 
-            position& advance_pos(position& pos) const { return ++pos; }
+            position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
 
             bool empty() const noexcept { return first == last; }
@@ -587,12 +619,7 @@ namespace iolib
             using forward_iterator_range<Iterator>::forward_iterator_range;
 
         public:
-            using forward_iterator_range<Iterator>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) const
-            {
-                ::std::advance(pos, n);
-                return pos;
-            }
+            position& dec_pos(position& pos) const { return --pos; }
 
             reverse_iterator rbegin() const noexcept { return reverse_iterator(this->end()); }
             reverse_iterator rend() const noexcept { return reverse_iterator(this->begin()); }
@@ -613,6 +640,12 @@ namespace iolib
             using bidirectional_iterator_range<Iterator>::bidirectional_iterator_range;
 
         public:
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                ::std::advance(pos, n);
+                return pos;
+            }
+
             difference_type distance(position p1, position p2) const noexcept { return ::std::distance(p1, p2); }
             size_type size() const noexcept { return size_type(distance(this->begin(), this->end())); }
             void resize(size_type n) { this->end_pos(this->begin_pos() + n); }
@@ -659,7 +692,7 @@ namespace iolib
             pointer operator -> () const { return ::std::addressof(r->at_pos(p)); }
             single_pass_range_iterator& operator ++ ()
             {
-                r->advance_pos(p);
+                r->inc_pos(p);
                 return *this;
             }
             iterator_proxy<single_pass_range_iterator> operator ++ (int)
@@ -719,7 +752,7 @@ namespace iolib
         public:
             bidirectional_range_iterator& operator -- ()
             {
-                this->r->advance_pos(this->p, -1);
+                this->r->dec_pos(this->p);
                 return *this;
             }
             bidirectional_range_iterator operator -- (int)
@@ -841,9 +874,9 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return gen == nullptr || term(*gen, pos); }
 
-            position& advance_pos(position& pos) const
+            position& inc_pos(position& pos) const
             {
-                return gen->advance_pos(pos);
+                return gen->inc_pos(pos);
             }
 
             reference at_pos(position pos) const
@@ -877,10 +910,9 @@ namespace iolib
             using multi_pass_generator_range<Generator, TerminationPredicate>::multi_pass_generator_range;
 
         public:
-            using multi_pass_generator_range<Generator, TerminationPredicate>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) const
+            position& dec_pos(position& pos, difference_type n) const
             {
-                return this->base().advance_pos(pos, n);
+                return this->base().dec_pos(pos);
             }
         };
 
@@ -897,6 +929,11 @@ namespace iolib
             using bidirectional_generator_range<Generator, TerminationPredicate>::bidirectional_generator_range;
 
         public:
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                return this->base().advance_pos(pos, n);
+            }
+
             difference_type distance(position p1, position p2) const noexcept
             {
                 return this->base().distance(p1, p2);
@@ -947,9 +984,9 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos == last; }
 
-            position& advance_pos(position& pos) const
+            position& inc_pos(position& pos) const
             {
-                return gen->advance_pos(pos);
+                return gen->inc_pos(pos);
             }
 
             reference at_pos(position pos) const
@@ -975,8 +1012,7 @@ namespace iolib
             using delimited_multi_pass_generator_range<Generator>::delimited_multi_pass_generator_range;
 
         public:
-            using delimited_multi_pass_generator_range<Generator>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) { return this->base().advance_pos(pos, n); }
+            position& dec_pos(position& pos) const { return this->base().dec_pos(pos); }
         };
 
         template <class Generator>
@@ -992,6 +1028,7 @@ namespace iolib
             using delimited_bidirectional_generator_range<Generator>::delimited_bidirectional_generator_range;
 
         public:
+            position& advance_pos(position& pos, difference_type n) const { return this->base().advance_pos(pos, n); }
             difference_type distance(position p1, position p2) const noexcept { return this->base().distance(p1, p2); }
             size_type size() const noexcept { return size_type(distance(this->begin_pos(), this->end_pos())); }
             void resize(size_type n)
@@ -1050,7 +1087,7 @@ namespace iolib
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) { first = pos; }
             bool is_end_pos(position pos) const noexcept { return term(*r, pos); }
-            position& advance_pos(position& pos) const { return r->advance_pos(pos); }
+            position& inc_pos(position& pos) const { return r->inc_pos(pos); }
             reference at_pos(position pos) const { return r->at_pos(pos); }
             const range& base() const noexcept { return *r; }
 
@@ -1082,8 +1119,7 @@ namespace iolib
             using delegated_multi_pass_range<Range, TerminationPredicate>::delegated_multi_pass_range;
 
         public:
-            using delegated_multi_pass_range<Range, TerminationPredicate>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) { return this->r->advance_pos(pos, n); }
+            position& dec_pos(position& pos) const { return this->r->dec_pos(pos); }
         };
 
         template <class Range, class TerminationPredicate>
@@ -1099,6 +1135,7 @@ namespace iolib
             using delegated_bidirectional_range<Range, TerminationPredicate>::delegated_bidirectional_range;
 
         public:
+            position& advance_pos(position& pos, difference_type n) const { return this->r->advance_pos(pos, n); }
             difference_type distance(position p1, position p2) const noexcept { return this->r->distance(p1, p2); }
 
             reference operator [] (size_type n) const
@@ -1146,7 +1183,7 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos == last; }
 
-            position& advance_pos(position& pos) const { return r->advance_pos(pos); }
+            position& inc_pos(position& pos) const { return r->inc_pos(pos); }
             reference at_pos(position pos) const { return r->at_pos(pos); }
 
             const range& base() const noexcept { return *r; }
@@ -1170,8 +1207,7 @@ namespace iolib
             using delimited_multi_pass_range<Range>::delimited_multi_pass_range;
 
         public:
-            using delimited_multi_pass_range<Range>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) const { return this->r->advance_pos(pos, n); }
+            position& dec_pos(position& pos) const { return this->r->dec_pos(pos); }
         };
 
         template <class Range>
@@ -1187,6 +1223,7 @@ namespace iolib
             using delimited_bidirectional_range<Range>::delimited_bidirectional_range;
 
         public:
+            position& advance_pos(position& pos, difference_type n) const { return this->r->advance_pos(pos, n); }
             difference_type distance(position p1, position p2) const noexcept { return this->r->distance(p1, p2); }
             size_type size() const noexcept { return size_type(this->r->distance(this->first, this->last)); }
             void resize(size_type n)
@@ -1243,9 +1280,9 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
 
-            position& advance_pos(position& pos) const
+            position& inc_pos(position& pos) const
             {
-                underlying->advance_pos(pos.first());
+                underlying->inc_pos(pos.first());
                 ++pos.second();
                 return pos;
             }
@@ -1285,11 +1322,10 @@ namespace iolib
             using counted_multi_pass_range<Range>::counted_multi_pass_range;
 
         public:
-            using counted_multi_pass_range<Range>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) const
+            position& dec_pos(position& pos) const
             {
-                this->base().advance_pos(pos.first(), n);
-                pos.second() += n;
+                this->base().dec_pos(pos.first());
+                --pos.second();
                 return pos;
             }
         };
@@ -1316,6 +1352,13 @@ namespace iolib
             void end_pos(position pos) noexcept
             {
                 this->resize(pos.second() - this->begin_pos().second());
+            }
+
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                this->base().advance_pos(pos.first(), n);
+                pos.second() += n;
+                return pos;
             }
 
             difference_type distance(position p1, position p2) const noexcept
@@ -1372,7 +1415,7 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
 
-            position& advance_pos(position& pos) const
+            position& inc_pos(position& pos) const
             {
                 ++pos.first();
                 ++pos.second();
@@ -1407,11 +1450,10 @@ namespace iolib
             using counted_forward_iterator_range<Iterator>::counted_forward_iterator_range;
 
         public:
-            using counted_forward_iterator_range<Iterator>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) const
+            position& dec_pos(position& pos) const
             {
-                ::std::advance(pos.first(), n);
-                pos.second() += n;
+                --pos.first();
+                --pos.second();
                 return pos;
             }
         };
@@ -1438,6 +1480,13 @@ namespace iolib
             void end_pos(position pos) noexcept
             {
                 this->resize(pos.second() - this->begin_pos().second());
+            }
+
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                ::std::advance(pos.first(), n);
+                pos.second() += n;
+                return pos;
             }
 
             difference_type distance(position p1, position p2) const noexcept
@@ -1490,9 +1539,9 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
 
-            position& advance_pos(position& pos) const
+            position& inc_pos(position& pos) const
             {
-                gen->advance_pos(pos.first());
+                gen->inc_pos(pos.first());
                 ++pos.second();
                 return pos;
             }
@@ -1531,11 +1580,10 @@ namespace iolib
             using counted_multi_pass_generator_range<Generator>::counted_multi_pass_generator_range;
 
         public:
-            using counted_multi_pass_generator_range<Generator>::advance_pos;
-            position& advance_pos(position& pos, difference_type n) const
+            position& dec_pos(position& pos) const
             {
-                this->base().advance_pos(pos.first(), n);
-                pos.second() += n;
+                this->base().dec_pos(pos.first());
+                --pos.second();
                 return pos;
             }
         };
@@ -1562,6 +1610,13 @@ namespace iolib
             void end_pos(position pos) noexcept
             {
                 this->resize(pos.second() - this->begin_pos().second());
+            }
+
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                this->base().advance_pos(pos.first(), n);
+                pos.second() += n;
+                return pos;
             }
 
             difference_type distance(position p1, position p2) const noexcept
@@ -1620,7 +1675,8 @@ namespace iolib
 
             bool is_end_pos(position pos) const noexcept { return pos == last; }
 
-            position& advance_pos(position& pos, difference_type n = 1) const { return r->advance_pos(pos, -n); }
+            position& inc_pos(position& pos) const { return r->dec_pos(pos); }
+            position& dec_pos(position& pos) const { return r->inc_pos(pos); }
             reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, pos)); }
 
             const range& base() { return *r; }
@@ -1646,6 +1702,11 @@ namespace iolib
             using reverse_bidirectional_range<Range>::reverse_bidirectional_range;
 
         public:
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                return r->advance_pos(pos, -n);
+            }
+
             difference_type distance(position p1, position p2) const noexcept
             {
                 return this->r->distance(p2, p1);

@@ -45,7 +45,7 @@ namespace iolib
     position_type<Range, is_range> find_if(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
-        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.inc_pos(pos))
         {
             if (pred(range.at_pos(pos)))
                 break;
@@ -59,7 +59,7 @@ namespace iolib
     position_type<Range, is_range> find_if_not(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
-        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.inc_pos(pos))
         {
             if (!pred(range.at_pos(pos)))
                 break;
@@ -72,7 +72,7 @@ namespace iolib
     position_type<Range, is_range> find_pos(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
-        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.inc_pos(pos))
         {
             if (pred(range, pos))
                 break;
@@ -114,7 +114,7 @@ namespace iolib
     position_type<Range1, is_range> find_first_of(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = range1.begin_pos();
-        for (; !range1.is_end_pos(pos); range1.advance_pos(pos))
+        for (; !range1.is_end_pos(pos); range1.inc_pos(pos))
         {
             if (any_of(range2, [&value = range1.at_pos(pos), &pred](const auto& x) { return pred(value, x); }))
                 break;
@@ -181,7 +181,7 @@ namespace iolib
         auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list<sizeof...(Ranges), ::std::size_t>());
         apply([&](auto&... rp)
         {
-            for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))); for_each_argument([](auto& rp) { ::std::get<0>(rp).advance_pos(::std::get<1>(rp)); }, rp...))
+            for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))); for_each_argument([](auto& rp) { ::std::get<0>(rp).inc_pos(::std::get<1>(rp)); }, rp...))
                 for_each_argument([&](const auto& rp) { f(::std::get<0>(rp).at_pos(::std::get<1>(rp))); });
         }, args);
         return positions;
@@ -217,7 +217,7 @@ namespace iolib
     {
         auto pos = ::std::make_pair(range1.begin_pos(), range2.begin_pos());
         for (; !range1.is_end_pos(pos.first) && !range2.is_end_pos(pos.second);
-             range1.advance_pos(pos.first), range2.advance_pos(pos.second))
+             range1.inc_pos(pos.first), range2.inc_pos(pos.second))
         {
             if (!pred(range1.at_pos(pos.first), range2.at_pos(pos.second)))
                 break;
@@ -265,7 +265,7 @@ namespace iolib
             if (size1 != size2)
                 return false;
 
-            for (auto pos1 = pos.first; !range1.is_end_pos(pos1); range1.advance_pos(pos1))
+            for (auto pos1 = pos.first; !range1.is_end_pos(pos1); range1.inc_pos(pos1))
             {
                 if (any_of(make_range(range1, pos.first, pos1), [&](const auto& value) { return pred(value, range1.at_pos(pos1)); }))
                     continue;
@@ -368,7 +368,7 @@ namespace iolib
         copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
         auto pos = ::std::make_pair(range.begin_pos(), result.begin_pos());
-        for (; !range.is_end_pos(pos.first) && !result.is_end_pos(pos.second); range.advance_pos(pos.first), result.advance_pos(pos.second))
+        for (; !range.is_end_pos(pos.first) && !result.is_end_pos(pos.second); range.inc_pos(pos.first), result.inc_pos(pos.second))
         {
             if (pred(range.at_pos(pos.first)))
                 result.at_pos(pos.second) = range.at_pos(pos.first);
@@ -491,7 +491,7 @@ namespace iolib
             if (!pred(value))
             {
                 rng.at_pos(pos) = ::std::move(value);
-                rng.advance_pos(pos);
+                rng.inc_pos(pos);
             }
         }, rng);
 
@@ -527,25 +527,25 @@ namespace iolib
         if (range.is_end_pos(read_pos))
             return read_pos;
 
-        range.advance_pos(read_pos);
+        range.inc_pos(read_pos);
         auto write_pos = find_if(range, [&](const auto& value)
         {
             if (range.is_end_pos(read_pos) || pred(value, range.at_pos(read_pos)))
                 return true;
-            advance_pos(read_pos);
+            inc_pos(read_pos);
             return false;
         });
 
-        advance_pos(write_pos);
+        range.inc_pos(write_pos);
         if (range.is_end_pos(read_pos))
             return write_pos;
 
-        advance_pos(read_pos);
+        range.inc_pos(read_pos);
         while (!range.is_end_pos(read_pos))
         {
             range.at_pos(write_pos) = ::std::move(range.at_pos(read_pos));
-            range.advance_pos(read_pos);
-            range.advance_pos(write_pos);
+            range.inc_pos(read_pos);
+            range.inc_pos(write_pos);
             read_pos = find_if(subrange_from(read_pos), [&](const auto& value) { return !pred(value, range.at_pos(write_pos)); });
         }
 
@@ -590,10 +590,10 @@ namespace iolib
         if (range.is_end_pos(l))
             return;
 
-        for (auto r = range.end_pos(); range.advance_pos(r, -1) != l; )
+        for (auto r = range.end_pos(); range.dec_pos(r) != l; )
         {
             swap(range.at_pos(l), range.at_pos(r));
-            if (range.advance_pos(l) == r)
+            if (range.inc_pos(l) == r)
                 return;
         }
     }
@@ -677,7 +677,7 @@ namespace iolib
                     return p1;
 
                 swap(range.at_pos(p1), range.at_pos(p2));
-                range.advance_pos(p1);
+                range.inc_pos(p1);
             }
         }
 
@@ -730,7 +730,7 @@ namespace iolib
 
                 r = find_if_not(subrange_from(range, next_pos(range, mid)), pred);
 
-                for (auto pos = l; pos != mid; range.advance_pos(pos))
+                for (auto pos = l; pos != mid; range.inc_pos(pos))
                     buf.emplace_back(::std::move(range.at_pos(pos)));
 
                 l = move(make_range(range, mid, r), make_range(range, l, r)).second;
@@ -795,21 +795,21 @@ namespace iolib
         auto pos = range.begin_pos();
         auto out1 = out_true.begin_pos();
         auto out2 = out_false.begin_pos();
-        for (; !range.is_end_pos(pos); range.advance_pos(pos))
+        for (; !range.is_end_pos(pos); range.inc_pos(pos))
         {
             if (pred(range.at_pos(pos)))
             {
                 if (out_true.is_end_pos(out1))
                     return make_tuple(pos, out1, out2);
                 out_true.at_pos(out1) = range.at_pos(pos);
-                out_true.advance_pos(out1);
+                out_true.inc_pos(out1);
             }
             else
             {
                 if (out_false.is_end_pos(out2))
                     return make_tuple(pos, out1, out2);
                 out_false.at_pos(out2) = range.at_pos(pos);
-                out_false.advance_pos(out2);
+                out_false.inc_pos(out2);
             }
         }
 
@@ -906,7 +906,7 @@ namespace iolib
 
         auto first = range.begin_pos();
         auto last = range.end_pos();
-        range.advance_pos(last, -1);
+        range.dec_pos(last);
 
         swap(range.at_pos(first), range.at_pos(last));
         detail::heap_rebalance_root(subrange_to(range, last), comp);
@@ -1161,7 +1161,7 @@ namespace iolib
                     break;
 
                 r = find_if_not(subrange_from(range, next_pos(range, mid)), pred);
-                for (auto pos = l; pos != mid; range.advance_pos(pos))
+                for (auto pos = l; pos != mid; range.inc_pos(pos))
                     buf.emplace_back(::std::move(range.at_pos(pos)));
                 l = move(make_range(range, mid, r), make_range(range, l, r)).second;
                 move(make_range(buf.begin(), buf.end()), make_range(range, l, r));
@@ -1250,8 +1250,8 @@ namespace iolib
         {
             auto last = heap.end_pos();
             heap.at_pos(last) = range.at_pos(in_pos);
-            range.advance_pos(in_pos);
-            heap.advance_pos(last);
+            range.inc_pos(in_pos);
+            heap.inc_pos(last);
             heap.end_pos(last);
 
             push_heap(heap, comp);
@@ -1261,7 +1261,7 @@ namespace iolib
         {
             if (comp(out[0], range.at_pos(in_pos)))
                 emplace_heap(out, range.at_pos(in_pos), comp);
-            range.advance_pos(in_pos);
+            range.inc_pos(in_pos);
         }
 
         sort_heap(heap, comp);
@@ -1290,7 +1290,7 @@ namespace iolib
                 return next;
 
             current = next;
-            range.advance_pos(next);
+            range.inc_pos(next);
         }
 
         return next;

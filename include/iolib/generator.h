@@ -149,7 +149,10 @@ namespace iolib
 
     public:
         constexpr position origin_pos() const noexcept { return { }; }
-        constexpr position& advance_pos(position& pos, difference_type n = 1) const noexcept { return pos; }
+        constexpr position& inc_pos(position& pos) const noexcept { return pos; }
+        constexpr position& dec_pos(position& pos) const noexcept { return pos; }
+        constexpr position& advance_pos(position& pos, difference_type n) const noexcept { return pos; }
+        constexpr difference_type distance_pos(position p1, position p2) const noexcept { return 0; }
         constexpr reference at_pos(position pos) const noexcept { return v; }
 
     private:
@@ -192,7 +195,7 @@ namespace iolib
 
         public:
             position origin_pos() const noexcept { return i; }
-            position& advance_pos(position& pos) const { return ++pos; }
+            position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
 
         private:
@@ -210,18 +213,16 @@ namespace iolib
         class bidirectional_iterator_generator : public forward_iterator_generator<Iterator>
         {
         public:
-            using position = typename forward_iterator_generator<Iterator>::position;
-            using difference_type = typename forward_iterator_generator<Iterator>::difference_type;
+            using typename forward_iterator_generator<Iterator>::position;
+            using typename forward_iterator_generator<Iterator>::difference_type;
 
         public:
             using forward_iterator_generator<Iterator>::forward_iterator_generator;
 
         public:
-            using forward_iterator_generator<Iterator>::advance_pos;
-            position& advance_pos(position& pos, difference_type n)
+            position& dec_pos(position& pos)
             {
-                ::std::advance(pos, n);
-                return pos;
+                return --pos;
             }
         };
 
@@ -229,7 +230,23 @@ namespace iolib
         class random_access_iterator_generator : public bidirectional_iterator_generator<Iterator>
         {
         public:
+            using typename bidirectional_iterator_generator<Iterator>::position;
+            using typename bidirectional_iterator_generator<Iterator>::difference_type;
+
+        public:
             using bidirectional_iterator_generator<Iterator>::bidirectional_iterator_generator;
+
+        public:
+            position& advance_pos(position& pos, difference_type n)
+            {
+                ::std::advance(pos, n);
+                return pos;
+            }
+
+            difference_type distance(position p1, position p2)
+            {
+                return ::std::distance(p1, p2);
+            }
         };
 
         // generator iterators
@@ -264,9 +281,9 @@ namespace iolib
             reference operator * () const { return gen->at_pos(pos); }
             pointer operator -> () const { return ::std::addressof(gen->at_pos(pos)); }
             single_pass_generator_iterator& operator ++ ()
-                noexcept(noexcept(gen->advance_pos(pos)))
+                noexcept(noexcept(gen->inc_pos(pos)))
             {
-                gen->advance_pos(pos);
+                gen->inc_pos(pos);
                 return *this;
             }
             iterator_proxy<single_pass_generator_iterator> operator ++ (int)
@@ -312,8 +329,9 @@ namespace iolib
 
         public:
             bidirectional_generator_iterator& operator -- ()
+                noexcept(noexcept(this->gen->dec_pos(this->pos)))
             {
-                this->gen->advance_pos(this->pos, -1);
+                this->gen->dec_pos(this->pos);
                 return *this
             }
             bidirectional_generator_iterator operator -- (int)
