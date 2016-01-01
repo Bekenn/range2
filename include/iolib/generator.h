@@ -277,7 +277,7 @@ namespace iolib
             }
 
             const generator& base_generator() const noexcept { return *gen; }
-            position base_position() const noexcept { return pos; }
+            position base_pos() const noexcept { return pos; }
 
         private:
             friend class multi_pass_generator_iterator<Generator>;
@@ -392,7 +392,7 @@ namespace iolib
             friend difference_type operator - (const random_access_generator_iterator& a, const random_access_generator_iterator& b) noexcept
             {
                 assert(a.base_generator() == b.base_generator());
-                return a.base_generator().distance(a.base_position(), b.base_position());
+                return a.base_generator().distance(a.base_pos(), b.base_pos());
             }
         };
     }

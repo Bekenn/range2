@@ -670,7 +670,7 @@ namespace iolib
             }
 
             const range& base_range() const noexcept { return *r; }
-            position base_position() const noexcept { return p; }
+            position base_pos() const noexcept { return p; }
 
             void swap(single_pass_range_iterator& other)
                 noexcept(noexcept(swap(p, other.p)))
@@ -1256,7 +1256,7 @@ namespace iolib
             }
 
             const range& base() const noexcept { return underlying; }
-            position_type<range, is_range> base_position(position pos) { return pos.first(); }
+            position_type<range, is_range> base_pos(position pos) { return pos.first(); }
 
             size_type size() const noexcept { return count - first.second(); }
             void resize(size_type n) noexcept { count = first.second() + n; }
@@ -1624,7 +1624,7 @@ namespace iolib
             reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, pos)); }
 
             const range& base() { return *r; }
-            position base_position(position pos) { return pos; }
+            position base_pos(position pos) { return pos; }
 
         private:
             friend class reverse_random_access_range<Range>;
