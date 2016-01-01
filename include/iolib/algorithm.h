@@ -768,16 +768,17 @@ namespace iolib
         template <class Range, class Predicate>
         position_type<Range, is_range> stable_partition(const Range& range, Predicate&& pred, ::std::true_type /* is_counted */)
         {
+            ::std::vector<value_type<Range, is_range>> buf;
             try
             {
-                ::std::vector<value_type<Range, is_range>> buf;
                 buf.reserve(range.size());
-                return fast_stable_partition(range, pred, buf);
             }
             catch (const ::std::bad_alloc&)
             {
                 return slow_stable_partition(range, pred);
             }
+
+            return fast_stable_partition(range, pred, buf);
         }
     }
 
@@ -816,23 +817,74 @@ namespace iolib
         return make_tuple(pos, out1, out2);
     }
 
-    template <class Range, class Predicate,
-        REQUIRES(is_random_access_range<Range>::value), REQUIRES(is_counted_range<Range>::value)>
-    position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred)
+    namespace detail
     {
-        auto l = size_type<Range, is_range>(0);
-        auto r = range.size();
-        while (l != r)
+        template <class Range, class Predicate>
+        position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred, random_access_range_tag)
         {
-            auto n = l + (r - l) / 2;
-            if (pred(range[n]))
-                l = n + 1;
-            else
-                r = n;
+            auto l = size_type<Range, is_range>(0);
+            auto r = range.size();
+            while (l != r)
+            {
+                auto n = l + (r - l) / 2;
+                if (pred(range[n]))
+                    l = n + 1;
+                else
+                    r = n;
+            }
+
+            auto pos = range.begin_pos();
+            return range.advance_pos(pos, r);
         }
 
-        auto pos = range.begin_pos();
-        return range.advance_pos(pos, r);
+        template <class Range, class Predicate>
+        position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred, ::std::true_type /* is_counted */)
+        {
+            auto size = range.size();
+            auto l = ::std::make_pair(range.begin_pos(), size_type<Range, is_range>(0));
+            auto r = ::std::make_pair(range.begin_pos(), size);
+            advance_pos(range, r.first, size);
+
+            while (l.second != r.second)
+            {
+                auto n = (r.second - l.second) / 2;
+                auto pos = l;
+                advance_pos(range, pos.first, n);
+                pos.second += n;
+                if (pred(range.at_pos(pos.first)))
+                {
+                    l = pos;
+                    range.inc_pos(l.first);
+                    ++l.second;
+                }
+                else
+                    r = pos;
+            }
+
+            return l.first;
+        }
+
+        template <class Range, class Predicate>
+        position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred, ::std::false_type /* is_counted */)
+        {
+            auto size = size_type<Range, is_range>(distance(range, range.begin_pos(), range.end_pos()));
+            auto counted = make_counted_range(range, range.begin_pos(), size);
+            auto pos = partition_point(counted, pred, ::std::true_type());
+            return counted.base_pos(pos);
+        }
+
+        template <class Range, class Predicate>
+        position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred, multi_pass_range_tag)
+        {
+            return partition_point(range, pred, is_counted_range<Range>());
+        }
+    }
+
+    template <class Range, class Predicate,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    position_type<Range, is_range> partition_point(const Range& range, Predicate&& pred)
+    {
+        return detail::partition_point(range, pred, range_category<Range>());
     }
 
     template <class Range, class Compare,
@@ -1203,16 +1255,18 @@ namespace iolib
         REQUIRES(is_random_access_range<Range>::value), REQUIRES(is_counted_range<Range>::value)>
     void stable_sort(const Range& range, Compare&& comp)
     {
+        ::std::vector<value_type<Range, is_range>> buf;
         try
         {
-            ::std::vector<value_type<Range, is_range>> buf;
             buf.reserve(range.size());
-            detail::fast_stable_sort(range, comp, buf);
         }
         catch (const ::std::bad_alloc&)
         {
             detail::slow_stable_sort(range, comp);
+            return;
         }
+
+        detail::fast_stable_sort(range, comp, buf);
     }
 
     template <class Range,
@@ -1315,6 +1369,183 @@ namespace iolib
     bool is_sorted(const Range& range)
     {
         return range.is_end_pos(is_sorted_until(range, ::std::less<>()));
+    }
+
+    template <class Range, class T, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    position_type<Range, is_range> lower_bound(const Range& range, const T& value, Compare&& comp)
+    {
+        return partition_point(range, [&](const auto& v) { return comp(v, value); });
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+        position_type<Range, is_range> lower_bound(const Range& range, const T& value)
+    {
+        return partition_point(range, [&](const auto& v) { return v < value; });
+    }
+
+    template <class Range, class T, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    position_type<Range, is_range> upper_bound(const Range& range, const T& value, Compare&& comp)
+    {
+        return partition_point(range, [&](const auto& v) { return !comp(v, value); });
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    position_type<Range, is_range> upper_bound(const Range& range, const T& value)
+    {
+        return partition_point(range, [&](const auto& v) { return !(v < value); });
+    }
+
+    template <class Range, class T, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    delimited_range<Range> equal_range(const Range& range, const T& value, Compare&& comp)
+    {
+        auto l = lower_bound(range, value, comp);
+        auto remainder = subrange_from(range, l);
+        return make_range(range, l, upper_bound(remainder, value, comp));
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    delimited_range<Range> equal_range(const Range& range, const T& value)
+    {
+        return equal_range(range, value, ::std::less<>());
+    }
+
+    template <class Range, class T, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    bool binary_search(const Range& range, const T& value, Compare&& comp)
+    {
+        auto pos = lower_bound(range, t, comp);
+        if (range.is_end_pos(pos))
+            return false;
+
+        return !comp(value, range.at_pos(pos));
+    }
+
+    template <class Range, class T,
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
+    bool binary_search(const Range& range, const T& value)
+    {
+        return binary_search(range, value, ::std::less<>());
+    }
+
+    template <class Range1, class Range2, class OutputRange, class Compare>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        merge(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
+    {
+        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        {
+            if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
+                write(result, ::std::get<2>(pos), read(range2, ::std::get<1>(pos)));
+            else
+                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+        }
+
+        if (!result.is_end_pos(::std::get<2>(pos)))
+        {
+            if (!range1.is_end_pos(::std::get<0>(pos)))
+            {
+                auto pos2 = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
+                ::std::get<0>(pos) = pos2.first;
+                ::std::get<2>(pos) = pos2.second;
+            }
+            else if (!range2.is_end_pos(::std::get<1>(pos)))
+            {
+                auto pos2 = copy(subrange_from(range2, ::std::get<1>(pos)), subrange_from(result, ::std::get<2>(pos)));
+                ::std::get<1>(pos) = pos2.first;
+                ::std::get<2>(pos) = pos2.second;
+            }
+        }
+
+        return pos;
+    }
+
+    template <class Range1, class Range2, class OutputRange>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        merge(const Range1& range1, const Range2& range2, const OutputRange& result)
+    {
+        return merge(range1, range2, result, ::std::less<>());
+    }
+
+    namespace detail
+    {
+        template <class Range, class Compare>
+        void fast_inplace_merge(const Range& range, position_type<Range, is_range> middle, Compare&& comp, ::std::vector<value_type<Range, is_range>>& buf)
+        {
+            auto l = range.begin_pos();
+            while (!range.is_end_pos(middle))
+            {
+                l = lower_bound(make_range(range, l, middle), [&](const auto& value) { return comp(range.at_pos(middle), value); });
+                if (l == middle)
+                    return;
+
+                auto r = lower_bound(subrange_from(range, middle), [&](const auto& value) { return comp(range.at_pos(l), value); });
+                for_each([&](auto& value) { buf.emplace_back(::std::move(value)); }, make_range(range, l, middle));
+                middle = move(make_range(range, middle, r), make_range(range, l, r)).second;
+                move(make_range(buf.begin(), buf.end()), make_range(range, middle, r));
+                buf.resize(0);
+                l = middle;
+                middle = r;
+            }
+        }
+
+        template <class Range, class Compare>
+        void slow_inplace_merge(const Range& range, position_type<Range, is_range> middle, Compare&& comp)
+        {
+            auto l = range.begin_pos();
+            while (!range.is_end_pos(middle))
+            {
+                l = lower_bound(make_range(range, l, middle), [&](const auto& value) { return comp(range.at_pos(middle), value); });
+                if (l == middle)
+                    return;
+
+                auto r = lower_bound(subrange_from(range, middle), [&](const auto& value) { return comp(range.at_pos(l), value); });
+                l = rotate(make_range(range, l, r), middle);
+                middle = r;
+            }
+        }
+
+        template <class Range, class Compare>
+        void inplace_merge(const Range& range, position_type<Range, is_range> middle, Compare&& comp, ::std::false_type /* is_counted */)
+        {
+            slow_inplace_merge(range, middle, comp);
+        }
+
+        template <class Range, class Compare>
+        void inplace_merge(const Range& range, position_type<Range, is_range> middle, Compare&& comp, ::std::true_type /* is_counted */)
+        {
+            ::std::vector<value_type<Range, is_range>> buf;
+            try
+            {
+                buf.reserve(range.size());
+            }
+            catch (const ::std::bad_alloc&)
+            {
+                slow_inplace_merge(range, middle, comp);
+                return;
+            }
+
+            fast_inplace_merge(range, middle, comp, buf);
+        }
+    }
+
+    template <class Range, class Compare,
+        REQUIRES(is_bidirectional_range<Range>::value)>
+    void inplace_merge(const Range& range, position_type<Range, is_range> middle, Compare&& comp)
+    {
+        detail::inplace_merge(range, middle, comp, is_counted_range<Range>());
+    }
+
+    template <class Range,
+        REQUIRES(is_bidirectional_range<Range>::value)>
+    void inplace_merge(const Range& range, position_type<Range, is_range> middle)
+    {
+        detail::inplace_merge(range, middle, ::std::less<>(), is_counted_range<Range>());
     }
 }
 

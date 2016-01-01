@@ -179,15 +179,9 @@ namespace iolib
         return detail::advance_pos(range, pos, n, range_category<Range>());
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
-    bool is_empty(const Range& range) noexcept
-    {
-        return range.is_end_pos(range.begin_pos());
-    }
-
     namespace detail
     {
-        template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+        template <class Range>
         difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2, multi_pass_range_tag)
         {
             difference_type<Range, is_range> d = 0;
@@ -196,7 +190,7 @@ namespace iolib
             return d;
         }
 
-        template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+        template <class Range>
         difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2, random_access_range_tag)
         {
             return range.distance(p1, p2);
@@ -207,6 +201,42 @@ namespace iolib
     difference_type<Range, is_range> distance(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
     {
         return detail::distance(range, p1, p2, range_category<Range>());
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    bool is_empty(const Range& range) noexcept
+    {
+        return range.is_end_pos(range.begin_pos());
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    value_type<Range, is_range> read(const Range& range, position_type<Range, is_range>& pos)
+    {
+        auto value = range.at_pos(pos);
+        range.inc_pos(pos);
+        return value;
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    value_type<Range, is_range> consume(const Range& range, position_type<Range, is_range>& pos)
+    {
+        auto value = ::std::move(range.at_pos(pos));
+        range.inc_pos(pos);
+        return value;
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    void write(const Range& range, position_type<Range, is_range>& pos, const value_type<Range, is_range>& value)
+    {
+        range.at_pos(pos) = value;
+        range.inc_pos(pos);
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    void write(const Range& range, position_type<Range, is_range>& pos, value_type<Range, is_range>&& value)
+    {
+        range.at_pos(pos) = ::std::move(value);
+        range.inc_pos(pos);
     }
 
     namespace detail
