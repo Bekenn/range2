@@ -1547,6 +1547,142 @@ namespace iolib
     {
         detail::inplace_merge(range, middle, ::std::less<>(), is_counted_range<Range>());
     }
+
+    template <class Range1, class Range2, class Compare>
+    bool includes(const Range1& range1, const Range2& range2, Compare&& comp)
+    {
+        auto pos1 = range1.begin_pos();
+        auto pos2 = find_if(range2, [&](const auto& v2)
+        {
+            pos1 = find_if(subrange_from(range1, pos1), [&](const auto& v1) { return !comp(v1, v2); });
+            return range1.is_end_pos(pos1) || comp(v2, range1.at_pos(pos1));
+        });
+        return !range2.is_end_pos(pos2);
+    }
+
+    template <class Range1, class Range2>
+    bool includes(const Range1& range1, const Range2& range2)
+    {
+        return includes(range1, range2, ::std::less<>());
+    }
+
+    template <class Range1, class Range2, class OutputRange, class Compare>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_union(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
+    {
+        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        {
+            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
+                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
+                write(result, ::std::get<2>(pos), read(range2, ::std::get<1>(pos)));
+            else
+            {
+                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+                range2.inc_pos(::std::get<1>(pos));
+            }
+        }
+
+        ::std::tie(::std::get<0>(pos), ::std::get<2>(pos)) = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        ::std::tie(::std::get<1>(pos), ::std::get<2>(pos)) = copy(subrange_from(range2, ::std::get<1>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        return pos;
+    }
+
+    template <class Range1, class Range2, class OutputRange>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_union(const Range1& range1, const Range2& range2, const OutputRange& result)
+    {
+        return set_union(range1, range2, result, ::std::less<>());
+    }
+
+    template <class Range1, class Range2, class OutputRange, class Compare>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_intersection(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
+    {
+        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        {
+            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
+                range1.inc_pos(::std::get<0>(pos));
+            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
+                range2.inc_pos(::std::get<1>(pos));
+            else
+            {
+                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+                range2.inc_pos(::std::get<1>(pos));
+            }
+        }
+
+        return pos;
+    }
+
+    template <class Range1, class Range2, class OutputRange>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_intersection(const Range1& range1, const Range2& range2, const OutputRange& result)
+    {
+        return set_intersection(range1, range2, result, ::std::less<>());
+    }
+
+    template <class Range1, class Range2, class OutputRange, class Compare>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_difference(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
+    {
+        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        {
+            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
+                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
+                range2.inc_pos(::std::get<1>(pos));
+            else
+            {
+                range1.inc_pos(::std::get<0>(pos));
+                range2.inc_pos(::std::get<1>(pos));
+            }
+        }
+
+        ::std::tie(::std::get<0>(pos), ::std::get<2>(pos)) = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        return pos;
+    }
+
+    template <class Range1, class Range2, class OutputRange>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_difference(const Range1& range1, const Range2& range2, const OutputRange& result)
+    {
+        return set_difference(range1, range2, result, ::std::less<>());
+    }
+
+
+    template <class Range1, class Range2, class OutputRange, class Compare>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_symmetric_difference(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
+    {
+        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        {
+            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
+                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
+                write(result, ::std::get<2>(pos), read(range2, ::std::get<1>(pos)));
+            else
+            {
+                range1.inc_pos(::std::get<0>(pos));
+                range2.inc_pos(::std::get<1>(pos));
+            }
+        }
+
+        ::std::tie(::std::get<0>(pos), ::std::get<2>(pos)) = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        ::std::tie(::std::get<1>(pos), ::std::get<2>(pos)) = copy(subrange_from(range2, ::std::get<1>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        return pos;
+    }
+
+    template <class Range1, class Range2, class OutputRange>
+    ::std::tuple<position_type<Range1, is_range>, position_type<Range2, is_range>, position_type<OutputRange, is_range>>
+        set_symmetric_difference(const Range1& range1, const Range2& range2, const OutputRange& result)
+    {
+        return set_symmetric_difference(range1, range2, result, ::std::less<>());
+    }
 }
 
 #endif
