@@ -1767,6 +1767,68 @@ namespace iolib
     {
         return minmax_element(range, ::std::less<>());
     }
+
+    template <class Range1, class Range2, class Compare>
+    bool lexicographical_compare(const Range1& range1, const Range2& range2, Compare&& comp)
+    {
+        auto pos1 = range1.begin_pos();
+        auto pos2 = range2.begin_pos();
+
+        while (!range1.is_end_pos(pos1) && !range2.is_end_pos(pos2))
+        {
+            if (comp(range1.at_pos(pos1), range2.at_pos(pos2)))
+                return true;
+            if (comp(range2.at_pos(pos2), range1.at_pos(pos1)))
+                return false;
+        }
+
+        return !range2.is_end_pos(pos2);
+    }
+
+    template <class Range1, class Range2>
+    bool lexicographical_compare(const Range1& range1, const Range2& range2)
+    {
+        return lexicographical_compare(range1, range2, ::std::less<>());
+    }
+
+    template <class Range, class Compare,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    bool next_permutation(const Range& range, Compare&& comp)
+    {
+        auto rrange = make_reverse_range(range);
+        auto rpos = adjacent_find(rrange, [&](const auto& v1, const auto& v2) { return comp(v2, v1); });
+        auto pos = rrange.base_pos(rpos);
+        if (pos == range.begin_pos())
+        {
+            sort(range, comp);
+            return false;
+        }
+
+        range.dec_pos(pos);
+        swap(range.at_pos(prev_pos(range, pos)), range.at_pos(pos));
+        reverse(subrange_from(range, pos));
+    }
+
+    template <class Range,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    bool next_permutation(const Range& range)
+    {
+        return next_permutation(range, ::std::less<>());
+    }
+
+    template <class Range, class Compare,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    bool prev_permutation(const Range& range, Compare&& comp)
+    {
+        return next_permutation(range, [&](const auto& v1, const auto& v2) { return comp(v2, v1); });
+    }
+
+    template <class Range,
+        REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    bool prev_permutation(const Range& range)
+    {
+        return next_permutation(range, ::std::greater<>());
+    }
 }
 
 #endif
