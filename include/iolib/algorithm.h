@@ -1683,6 +1683,90 @@ namespace iolib
     {
         return set_symmetric_difference(range1, range2, result, ::std::less<>());
     }
+
+    template <class Range, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> min_element(const Range& range, Compare&& comp)
+    {
+        auto best = range.begin_pos();
+        if (range.is_end_pos(best))
+            return best;
+
+        while (true)
+        {
+            auto pos = find_if(subrange_from(range, next_pos(range, best)),
+                [&](const auto& value)
+            {
+                return comp(value, range.at_pos(best));
+            });
+            if (range.is_end_pos(pos))
+                return best;
+            best = pos;
+        }
+    }
+
+    template <class Range,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> min_element(const Range& range)
+    {
+        return min_element(range, ::std::less<>());
+    }
+
+    template <class Range, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> max_element(const Range& range, Compare&& comp)
+    {
+        auto best = range.begin_pos();
+        if (range.is_end_pos(best))
+            return best;
+
+        while (true)
+        {
+            auto pos = find_if(subrange_from(range, next_pos(range, best)),
+                [&](const auto& value)
+            {
+                return comp(range.at_pos(best), value);
+            });
+            if (range.is_end_pos(pos))
+                return best;
+            best = pos;
+        }
+    }
+
+    template <class Range,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    position_type<Range, is_range> max_element(const Range& range)
+    {
+        return max_element(range, ::std::less<>());
+    }
+
+    template <class Range, class Compare,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    ::std::pair<position_type<Range, is_range>, position_type<Range, is_range>>
+        minmax_element(const Range& range, Compare&& comp)
+    {
+        auto best = ::std::make_pair(range.begin_pos(), range.begin_pos());
+        if (range.is_end_pos(best.first))
+            return best;
+
+        for_each([&](const auto& value)
+        {
+            if (comp(value, range.at_pos(best.first)))
+                best.first = pos;
+            if (comp(range.at_pos(best.second), value))
+                best.second = pos;
+        }, subrange_from(range, next_pos(range, best.first)));
+
+        return best;
+    }
+
+    template <class Range,
+        REQUIRES(is_multi_pass_range<Range>::value)>
+    ::std::pair<position_type<Range, is_range>, position_type<Range, is_range>>
+        minmax_element(const Range& range)
+    {
+        return minmax_element(range, ::std::less<>());
+    }
 }
 
 #endif
