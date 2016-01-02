@@ -131,15 +131,15 @@ namespace iolib
         static constexpr auto value = ::std::is_base_of<random_access_range_tag, range_category<Range>>::value;
     };
 
-    // range utilities
+    // generic range utilities
     template <class Range, REQUIRES(is_single_pass_range<Range>::value)>
-    auto next_pos(const Range& range, position_type<Range, is_range> pos)
+    position_type<Range, is_range> next_pos(const Range& range, position_type<Range, is_range> pos)
     {
         return range.inc_pos(pos);
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
-    auto prev_pos(const Range& range, position_type<Range, is_range> pos)
+    position_type<Range, is_range> prev_pos(const Range& range, position_type<Range, is_range> pos)
     {
         return range.dec_pos(pos);
     }
@@ -273,13 +273,13 @@ namespace iolib
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    auto size_before(const Range& range, position_type<Range, is_range> pos)
+    size_type<Range, is_range> size_before(const Range& range, position_type<Range, is_range> pos)
     {
         return detail::size_before(range, pos, range_category<Range>());
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    auto size_after(const Range& range, position_type<Range, is_range> pos)
+    size_type<Range, is_range> size_after(const Range& range, position_type<Range, is_range> pos)
     {
         return detail::size_after(range, pos, range_category<Range>());
     }
@@ -301,13 +301,13 @@ namespace iolib
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    decltype(auto) head(const Range& range)
+    reference_type<Range, is_range> head(const Range& range)
     {
         return range.at_pos(range.begin_pos());
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
-    decltype(auto) last(const Range& range)
+    reference_type<Range, is_range> last(const Range& range)
     {
         auto pos = range.end_pos();
         return range.at_pos(range.dec_pos(pos));
@@ -327,68 +327,29 @@ namespace iolib
         return drop_last(result);
     }
 
+    // adapter ranges
     namespace detail
     {
-        template <class Iterator> class input_iterator_range;
-        template <class Iterator> class forward_iterator_range;
-        template <class Iterator> class bidirectional_iterator_range;
-        template <class Iterator> class random_access_iterator_range;
+        template <class Range, class TerminationPredicate> class delegated_single_pass_range;
+        template <class Range, class TerminationPredicate> class delegated_multi_pass_range;
+        template <class Range, class TerminationPredicate> class delegated_bidirectional_range;
+        template <class Range, class TerminationPredicate> class delegated_random_access_range;
 
-        template <class IteratorCategory> struct iterator_range_category_map;
-        template <> struct iterator_range_category_map<::std::input_iterator_tag> { using type = single_pass_range_tag; };
-        template <> struct iterator_range_category_map<::std::forward_iterator_tag> { using type = multi_pass_range_tag; };
-        template <> struct iterator_range_category_map<::std::bidirectional_iterator_tag> { using type = bidirectional_range_tag; };
-        template <> struct iterator_range_category_map<::std::random_access_iterator_tag> { using type = random_access_range_tag; };
-        template <class IteratorCategory> using iterator_range_category_map_t = typename iterator_range_category_map<IteratorCategory>::type;
-    }
+        template <class Range> class delimited_multi_pass_range;
+        template <class Range> class delimited_bidirectional_range;
+        template <class Range> class delimited_random_access_range;
 
-    template <class Iterator> using iterator_range =
-        ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::random_access_iterator_range<Iterator>,
-            ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::bidirectional_iterator_range<Iterator>,
-                ::std::conditional_t<is_forward_iterator<Iterator>::value, detail::forward_iterator_range<Iterator>,
-                    ::std::enable_if_t<is_input_iterator<Iterator>::value, detail::input_iterator_range<Iterator>>
-                >
-            >
-        >;
+        template <class Range> class counted_single_pass_range;
+        template <class Range> class counted_multi_pass_range;
+        template <class Range> class counted_bidirectional_range;
+        template <class Range> class counted_random_access_range;
 
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
-    auto make_range(Iterator&& i, Iterator&& j)
-    {
-        return iterator_range<::std::decay_t<Iterator>>(::std::forward<Iterator>(i), ::std::forward<Iterator>(j));
-    }
+        template <class Range, class TerminationPredicate> class reverse_bidirectional_range;
+        template <class Range, class TerminationPredicate> class reverse_random_access_range;
 
-    namespace detail
-    {
-        template <class Range> class single_pass_range_iterator;
-        template <class Range> class multi_pass_range_iterator;
-        template <class Range> class bidirectional_range_iterator;
-        template <class Range> class random_access_range_iterator;
+        template <class Range> class delimited_reverse_bidirectional_range;
+        template <class Range> class delimited_reverse_random_access_range;
 
-        template <class RangeCategory> struct range_iterator_category_map;
-        template <> struct range_iterator_category_map<single_pass_range_tag> { using type = ::std::input_iterator_tag; };
-        template <> struct range_iterator_category_map<multi_pass_range_tag> { using type = ::std::forward_iterator_tag; };
-        template <> struct range_iterator_category_map<bidirectional_range_tag> { using type = ::std::bidirectional_iterator_tag; };
-        template <> struct range_iterator_category_map<random_access_range_tag> { using type = ::std::random_access_iterator_tag; };
-        template <class RangeCategory> using range_iterator_category_map_t = typename range_iterator_category_map<RangeCategory>::type;
-    }
-
-    template <class Range> using range_iterator =
-        ::std::conditional_t<is_random_access_range<Range>::value, detail::random_access_range_iterator<Range>,
-            ::std::conditional_t<is_bidirectional_range<Range>::value, detail::bidirectional_range_iterator<Range>,
-                ::std::conditional_t<is_multi_pass_range<Range>::value, detail::multi_pass_range_iterator<Range>,
-                    ::std::enable_if_t<is_single_pass_range<Range>::value, detail::single_pass_range_iterator<Range>>
-                >
-            >
-        >;
-
-    template <class Range, REQUIRES(is_range<Range>::value)>
-    auto make_iterator(const Range& range, position_type<Range, is_range> pos)
-    {
-        return range_iterator<Range>(pos);
-    }
-
-    namespace detail
-    {
         template <class Generator, class TerminationPredicate> class single_pass_generator_range;
         template <class Generator, class TerminationPredicate> class multi_pass_generator_range;
         template <class Generator, class TerminationPredicate> class bidirectional_generator_range;
@@ -404,43 +365,45 @@ namespace iolib
         template <> struct generator_range_category_map<bidirectional_generator_tag> { using type = bidirectional_range_tag; };
         template <> struct generator_range_category_map<random_access_generator_tag> { using type = random_access_range_tag; };
         template <class GeneratorCategory> using generator_range_category_map_t = typename generator_range_category_map<GeneratorCategory>::type;
-    }
 
-    template <class Generator, class TerminationPredicate> using generator_range =
-        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::random_access_generator_range<Generator, TerminationPredicate>,
-            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::bidirectional_generator_range<Generator, TerminationPredicate>,
-                ::std::conditional_t<is_multi_pass_generator<Generator>::value, detail::multi_pass_generator_range<Generator, TerminationPredicate>,
-                    ::std::enable_if_t<is_single_pass_generator<Generator>::value, detail::single_pass_generator_range<Generator, TerminationPredicate>>
-                >
-            >
-        >;
+        template <class Generator> class counted_single_pass_generator_range;
+        template <class Generator> class counted_multi_pass_generator_range;
+        template <class Generator> class counted_bidirectional_generator_range;
+        template <class Generator> class counted_random_access_generator_range;
 
-    template <class Generator, class TerminationPredicate,
-        REQUIRES(is_generator<Generator>::value)>
-    auto make_range(const Generator& gen, TerminationPredicate&& pred)
-    {
-        return generator_range<Generator, ::std::decay_t<TerminationPredicate>>(gen, ::std::forward<TerminationPredicate>(pred));
-    }
+        template <class Iterator, class TerminationPredicate> class input_iterator_range;
+        template <class Iterator, class TerminationPredicate> class forward_iterator_range;
+        template <class Iterator, class TerminationPredicate> class bidirectional_iterator_range;
+        template <class Iterator, class TerminationPredicate> class random_access_iterator_range;
 
-    template <class Generator> using delimited_generator_range =
-        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::delimited_random_access_generator_range<Generator>,
-            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::delimited_bidirectional_generator_range<Generator>,
-                ::std::enable_if_t<is_multi_pass_generator<Generator>::value, detail::delimited_multi_pass_generator_range<Generator>>
-            >
-        >;
+        template <class Iterator> class delimited_input_iterator_range;
+        template <class Iterator> class delimited_forward_iterator_range;
+        template <class Iterator> class delimited_bidirectional_iterator_range;
+        template <class Iterator> class delimited_random_access_iterator_range;
 
-    template <class Generator, REQUIRES(is_generator<Generator>::value)>
-    auto make_range(const Generator& gen, position_type<Generator, is_generator> p1, position_type<Generator, is_generator> p2)
-    {
-        return delimited_generator_range<Generator>(gen, p1, p2);
-    }
+        template <class Iterator> class counted_input_iterator_range;
+        template <class Iterator> class counted_forward_iterator_range;
+        template <class Iterator> class counted_bidirectional_iterator_range;
+        template <class Iterator> class counted_random_access_iterator_range;
 
-    namespace detail
-    {
-        template <class Range, class TerminationPredicate> class delegated_single_pass_range;
-        template <class Range, class TerminationPredicate> class delegated_multi_pass_range;
-        template <class Range, class TerminationPredicate> class delegated_bidirectional_range;
-        template <class Range, class TerminationPredicate> class delegated_random_access_range;
+        template <class IteratorCategory> struct iterator_range_category_map;
+        template <> struct iterator_range_category_map<::std::input_iterator_tag> { using type = single_pass_range_tag; };
+        template <> struct iterator_range_category_map<::std::forward_iterator_tag> { using type = multi_pass_range_tag; };
+        template <> struct iterator_range_category_map<::std::bidirectional_iterator_tag> { using type = bidirectional_range_tag; };
+        template <> struct iterator_range_category_map<::std::random_access_iterator_tag> { using type = random_access_range_tag; };
+        template <class IteratorCategory> using iterator_range_category_map_t = typename iterator_range_category_map<IteratorCategory>::type;
+
+        template <class Range> class single_pass_range_iterator;
+        template <class Range> class multi_pass_range_iterator;
+        template <class Range> class bidirectional_range_iterator;
+        template <class Range> class random_access_range_iterator;
+
+        template <class RangeCategory> struct range_iterator_category_map;
+        template <> struct range_iterator_category_map<single_pass_range_tag> { using type = ::std::input_iterator_tag; };
+        template <> struct range_iterator_category_map<multi_pass_range_tag> { using type = ::std::forward_iterator_tag; };
+        template <> struct range_iterator_category_map<bidirectional_range_tag> { using type = ::std::bidirectional_iterator_tag; };
+        template <> struct range_iterator_category_map<random_access_range_tag> { using type = ::std::random_access_iterator_tag; };
+        template <class RangeCategory> using range_iterator_category_map_t = typename range_iterator_category_map<RangeCategory>::type;
     }
 
     template <class Range, class TerminationPredicate> using delegated_range =
@@ -452,24 +415,6 @@ namespace iolib
             >
         >;
 
-    template <class Range, class TerminationPredicate, REQUIRES(is_range<Range>::value)>
-    auto make_range(const Range& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
-    {
-        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, ::std::forward<TerminationPredicate>(pred));
-    }
-    template <class Range, REQUIRES(is_range<Range>::value)>
-    auto subrange_from(const Range& range, position_type<Range, is_range> first)
-    {
-        return make_range(range, first, [&](const auto& pos) { return range.is_end_pos(pos); });
-    }
-
-    namespace detail
-    {
-        template <class Range> class delimited_multi_pass_range;
-        template <class Range> class delimited_bidirectional_range;
-        template <class Range> class delimited_random_access_range;
-    }
-
     template <class Range> using delimited_range =
         ::std::conditional_t<is_random_access_range<Range>::value, detail::delimited_random_access_range<Range>,
             ::std::conditional_t<is_bidirectional_range<Range>::value, detail::delimited_bidirectional_range<Range>,
@@ -477,11 +422,442 @@ namespace iolib
             >
         >;
 
+    template <class Range> using counted_range =
+        ::std::conditional_t<is_random_access_range<Range>::value, detail::counted_random_access_range<Range>,
+            ::std::conditional_t<is_bidirectional_range<Range>::value, detail::counted_bidirectional_range<Range>,
+                ::std::conditional_t<is_multi_pass_range<Range>::value, detail::counted_multi_pass_range<Range>,
+                    ::std::enable_if_t<is_single_pass_range<Range>::value, detail::counted_single_pass_range<Range>>
+                >
+            >
+        >;
+
+    template <class Range, class TerminationPredicate> using reverse_range =
+        ::std::conditional_t<is_random_access_range<Range>::value, detail::reverse_random_access_range<Range, TerminationPredicate>,
+            ::std::enable_if_t<is_bidirectional_range<Range>::value, detail::reverse_bidirectional_range<Range, TerminationPredicate>>
+        >;
+
+    template <class Range> using delimited_reverse_range =
+        ::std::conditional_t<is_random_access_range<Range>::value, detail::delimited_reverse_random_access_range<Range>,
+            ::std::enable_if_t<is_bidirectional_range<Range>::value, detail::delimited_reverse_bidirectional_range<Range>>
+        >;
+
+    template <class Generator, class TerminationPredicate> using generator_range =
+        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::random_access_generator_range<Generator, TerminationPredicate>,
+            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::bidirectional_generator_range<Generator, TerminationPredicate>,
+                ::std::conditional_t<is_multi_pass_generator<Generator>::value, detail::multi_pass_generator_range<Generator, TerminationPredicate>,
+                    ::std::enable_if_t<is_single_pass_generator<Generator>::value, detail::single_pass_generator_range<Generator, TerminationPredicate>>
+                >
+            >
+        >;
+
+    template <class Generator> using delimited_generator_range =
+        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::delimited_random_access_generator_range<Generator>,
+            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::delimited_bidirectional_generator_range<Generator>,
+                ::std::enable_if_t<is_multi_pass_generator<Generator>::value, detail::delimited_multi_pass_generator_range<Generator>>
+            >
+        >;
+
+    template <class Generator> using counted_generator_range =
+        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::counted_random_access_generator_range<Generator>,
+            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::counted_bidirectional_generator_range<Generator>,
+                ::std::conditional_t<is_multi_pass_generator<Generator>::value, detail::counted_multi_pass_generator_range<Generator>,
+                    ::std::enable_if_t<is_single_pass_generator<Generator>::value, detail::counted_single_pass_generator_range<Generator>>
+                >
+            >
+        >;
+
+    template <class Iterator, class TerminationPredicate> using iterator_range =
+        ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::random_access_iterator_range<Iterator, TerminationPredicate>,
+            ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::bidirectional_iterator_range<Iterator, TerminationPredicate>,
+                ::std::conditional_t<is_forward_iterator<Iterator>::value, detail::forward_iterator_range<Iterator,TerminationPredicate>,
+                    ::std::enable_if_t<is_input_iterator<Iterator>::value, detail::input_iterator_range<Iterator, TerminationPredicate>>
+                >
+            >
+        >;
+
+    template <class Iterator> using delimited_iterator_range =
+        ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::delimited_random_access_iterator_range<Iterator>,
+            ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::delimited_bidirectional_iterator_range<Iterator>,
+                ::std::conditional_t<is_forward_iterator<Iterator>::value, detail::delimited_forward_iterator_range<Iterator>,
+                    ::std::enable_if_t<is_input_iterator<Iterator>::value, detail::delimited_input_iterator_range<Iterator>>
+                >
+            >
+        >;
+
+    template <class Iterator> using counted_iterator_range =
+        ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::counted_random_access_iterator_range<Iterator>,
+            ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::counted_bidirectional_iterator_range<Iterator>,
+                ::std::conditional_t<is_forward_iterator<Iterator>::value, detail::counted_forward_iterator_range<Iterator>,
+                    ::std::enable_if_t<is_input_iterator<Iterator>::value, detail::counted_input_iterator_range<Iterator>>
+                >
+            >
+        >;
+
+    template <class Range> using range_iterator =
+        ::std::conditional_t<is_random_access_range<Range>::value, detail::random_access_range_iterator<Range>,
+            ::std::conditional_t<is_bidirectional_range<Range>::value, detail::bidirectional_range_iterator<Range>,
+                ::std::conditional_t<is_multi_pass_range<Range>::value, detail::multi_pass_range_iterator<Range>,
+                    ::std::enable_if_t<is_single_pass_range<Range>::value, detail::single_pass_range_iterator<Range>>
+                >
+            >
+        >;
+
+    template <class Range, class TerminationPredicate, REQUIRES(is_range<Range>::value)>
+    auto make_range(const Range& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class DelegatedPredicate, class TerminationPredicate>
+    auto make_range(const delegated_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_range(const delimited_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class DelegatedPredicate, class TerminationPredicate>
+    auto make_range(const reverse_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Generator, class RangePredicate, class TerminationPredicate>
+    auto make_range(const generator_range<Generator, RangePredicate>& range, position_type<Generator, is_generator> pos, TerminationPredicate&& pred)
+    {
+        return generator_range<Generator, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Generator, class TerminationPredicate>
+    auto make_range(const delimited_generator_range<Generator>& range, position_type<Generator, is_generator> pos, TerminationPredicate&& pred)
+    {
+        return generator_range<Generator, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Iterator, class DelegatedPredicate, class TerminationPredicate>
+    auto make_range(const iterator_range<Iterator, DelegatedPredicate>& range, Iterator pos, TerminationPredicate&& pred)
+    {
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Iterator, class TerminationPredicate>
+    auto make_range(const delimited_iterator_range<Iterator>& range, Iterator pos, TerminationPredicate&& pred)
+    {
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
     template <class Range, REQUIRES(is_range<Range>::value)>
     auto make_range(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
     {
         return delimited_range<Range>(range, p1, p2);
     }
+
+    template <class Range, class TerminationPredicate>
+    auto make_range(const delegated_range<Range, TerminationPredicate>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_range<Range>(range.base(), p1, p2);
+    }
+
+    template <class Range>
+    auto make_range(const delimited_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_range<Range>(range.base(), p1, p2);
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_range(const reverse_range<Range, TerminationPredicate>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range, p1, p2);
+    }
+
+    template <class Range>
+    auto make_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range, p1, p2);
+    }
+
+    template <class Generator, class TerminationPredicate>
+    auto make_range(const generator_range<Generator, TerminationPredicate>& range, position_type<Generator, is_generator> p1, position_type<Generator, is_generator> p2)
+    {
+        return delimited_generator_range<Generator>(range.base(), p1, p2);
+    }
+
+    template <class Generator>
+    auto make_range(const delimited_generator_range<Generator>& range, position_type<Generator, is_generator> p1, position_type<Generator, is_generator> p2)
+    {
+        return delimited_generator_range<Generator>(range.base(), p1, p2);
+    }
+
+    template <class Iterator, class TerminationPredicate>
+    auto make_range(const iterator_range<Iterator, TerminationPredicate>& range, Iterator p1, Iterator p2)
+    {
+        return delimited_iterator_range<Iterator>(p1, p2);
+    }
+
+    template <class Iterator>
+    auto make_range(const delimited_iterator_range<Iterator>& range, Iterator p1, Iterator p2)
+    {
+        return delimited_iterator_range<Iterator>(p1, p2);
+    }
+
+    template <class Generator, class TerminationPredicate, REQUIRES(is_generator<Generator>::value)>
+    auto make_range(const Generator& gen, TerminationPredicate&& pred)
+    {
+        return generator_range<Generator, ::std::decay_t<TerminationPredicate>>(gen, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Generator, REQUIRES(is_generator<Generator>::value)>
+    auto make_range(const Generator& gen, position_type<Generator, is_generator> p1, position_type<Generator, is_generator> p2)
+    {
+        return delimited_generator_range<Generator>(gen, p1, p2);
+    }
+
+    template <class Iterator, class TerminationPredicate>
+    auto make_range(const iterator_generator<Iterator>& gen, Iterator pos, TerminationPredicate&& pred)
+    {
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Iterator>
+    auto make_range(const iterator_generator<Iterator>& gen, Iterator p1, Iterator p2)
+    {
+        return delimited_iterator_range<Iterator>(p1, p2);
+    }
+
+    template <class Iterator, class TerminationPredicate, REQUIRES(is_iterator<Iterator>::value)>
+    auto make_range(Iterator i, TerminationPredicate&& pred)
+    {
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(i, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
+    auto make_range(Iterator i, Iterator j)
+    {
+        return delimited_iterator_range<Iterator>(i, j);
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_range(range_iterator<Range> i, TerminationPredicate&& pred)
+    {
+        return make_range(i.base_range(), i.base_pos(), ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range>
+    auto make_range(range_iterator<Range> i, range_iterator<Range> j)
+    {
+        assert(i.base_range() == j.base_range());
+        return make_range(i.base_range(), i.base_pos(), j.base_pos());
+    }
+
+    template <class Generator, class TerminationPredicate>
+    auto make_range(generator_iterator<Generator> i, TerminationPredicate&& pred)
+    {
+        return make_range(i.base_generator(), i.base_pos(), ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Generator>
+    auto make_range(generator_iterator<Generator> i, generator_iterator<Generator> j)
+    {
+        assert(i.base_generator() == j.base_generator());
+        return make_range(i.base_generator(), i.base_pos(), j.base_pos());
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto make_counted_range(const Range& range, position_type<Range, is_range> pos, size_type<Range, is_range> count)
+    {
+        return counted_range<Range>(range, pos, count);
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_counted_range(const delegated_range<Range, TerminationPredicate>& range, position_type<Range, is_range> pos, size_type<Range, is_range> count)
+    {
+        return counted_range<Range>(range.base(), pos, count);
+    }
+
+    template <class Range>
+    auto make_counted_range(const delimited_range<Range>& range, position_type<Range, is_range> pos, size_type<Range, is_range> count)
+    {
+        return counted_range<Range>(range.base(), pos, count);
+    }
+
+    template <class Range>
+    auto make_counted_range(const counted_range<Range>& range, position_type<counted_range<Range>, is_range> pos, size_type<counted_range<Range>, is_range> count)
+    {
+        return counted_range<Range>(range.base(), range.base_pos(pos), count);
+    }
+
+    template <class Generator, class TerminationPredicate>
+    auto make_counted_range(const generator_range<Generator, TerminationPredicate>& range, position_type<Generator, is_generator> pos, size_type<Generator, is_generator> count)
+    {
+        return counted_generator_range<Generator>(range.base(), pos, count);
+    }
+
+    template <class Generator>
+    auto make_counted_range(const delimited_generator_range<Generator>& range, position_type<Generator, is_generator> pos, size_type<Generator, is_generator> count)
+    {
+        return counted_generator_range<Generator>(range.base(), pos, count);
+    }
+
+    template <class Generator>
+    auto make_counted_range(const counted_generator_range<Generator>& range, position_type<counted_generator_range<Generator>, is_range> pos, size_type<counted_generator_range<Generator>, is_range> count)
+    {
+        return counted_generator_range<Generator>(range.base(), range.base_pos(pos), count);
+    }
+
+    template <class Iterator, class TerminationPredicate>
+    auto make_counted_range(const iterator_range<Iterator, TerminationPredicate>& range, Iterator pos, size_type<Iterator, is_iterator> count)
+    {
+        return counted_iterator_range<Iterator>(pos, count);
+    }
+
+    template <class Iterator>
+    auto make_counted_range(const delimited_iterator_range<Iterator>& range, Iterator pos, size_type<Iterator, is_iterator> count)
+    {
+        return counted_iterator_range<Iterator>(pos, count);
+    }
+
+    template <class Iterator>
+    auto make_counted_range(const counted_iterator_range<Iterator>& range, position_type<counted_iterator_range<Iterator>, is_range> pos, size_type<counted_iterator_range<Iterator>, is_range> count)
+    {
+        return counted_iterator_range<Iterator>(range.base_pos(pos), count);
+    }
+
+    template <class Generator, REQUIRES(is_generator<Generator>::value)>
+    auto make_counted_range(const Generator& gen, position_type<Generator, is_generator> pos, size_type<Generator, is_generator> count)
+    {
+        return counted_generator_range<Generator>(gen, pos, count);
+    }
+
+    template <class Iterator>
+    auto make_counted_range(const iterator_generator<Iterator>& gen, Iterator pos, size_type<Iterator, is_iterator> count)
+    {
+        return counted_iterator_range<Iterator>(pos, count);
+    }
+
+    template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
+    auto make_counted_range(Iterator it, size_type<Iterator, is_iterator> count)
+    {
+        return counted_iterator_range<Iterator>(::std::forward(it), count);
+    }
+
+    template <class Range>
+    auto make_counted_range(range_iterator<Range> it, size_type<Range, is_range> count)
+    {
+        return make_counted_range(it.base_range(), it.base_pos(), count);
+    }
+
+    template <class Generator>
+    auto make_counted_range(generator_iterator<Generator> it, size_type<Generator, is_generator> count)
+    {
+        return counted_generator_range<Generator>(it.base_generator(), it.base_pos(), count);
+    }
+
+    template <class Range, class TerminationPredicate, REQUIRES(is_bidirectional_range<Range>::value)>
+    auto make_reverse_range(const Range& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class DelegatedPredicate, class TerminationPredicate>
+    auto make_reverse_range(const delegated_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_reverse_range(const delimited_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class DelegatedPredicate, class TerminationPredicate>
+    auto make_reverse_range(const reverse_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return make_range(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_reverse_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
+    {
+        return make_range(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+    }
+
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
+    auto make_reverse_range(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range, p1, p2);
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_reverse_range(const delegated_range<Range, TerminationPredicate>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range.base(), p1, p2);
+    }
+
+    template <class Range>
+    auto make_reverse_range(const delimited_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range.base(), p1, p2);
+    }
+
+    template <class Range, class TerminationPredicate>
+    auto make_reverse_range(const reverse_range<Range, TerminationPredicate>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range.base(), p1, p2);
+    }
+
+    template <class Range>
+    auto amke_reverse_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    {
+        return delimited_reverse_range<Range>(range.base(), p1, p2);
+    }
+
+    template <class Range, REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    auto make_reverse_range(const Range& range)
+    {
+        return make_reverse_range(range, range.begin_pos(), range.end_pos());
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto make_iterator(const Range& range, position_type<Range, is_range> pos)
+    {
+        return range_iterator<Range>(pos);
+    }
+
+    template <class Iterator, class TerminationPredicate>
+    auto make_iterator(const iterator_range<Iterator, TerminationPredicate>& range, Iterator pos)
+    {
+        return pos;
+    }
+
+    template <class Iterator>
+    auto make_iterator(const delimited_iterator_range<Iterator>& range, Iterator pos)
+    {
+        return pos;
+    }
+
+    template <class Iterator>
+    auto make_iterator(const counted_iterator_range<Iterator>& range, position_type<counted_iterator_range<Iterator>, is_range> pos)
+    {
+        return range.base_pos(pos);
+    }
+
+    template <class Range, REQUIRES(is_range<Range>::value)>
+    auto subrange_from(const Range& range, position_type<Range, is_range> first)
+    {
+        return make_range(range, first, [&](const auto& pos) { return range.is_end_pos(pos); });
+    }
+
     template <class Range, REQUIRES(is_range<Range>::value)>
     auto subrange_to(const Range& range, position_type<Range, is_range> last)
     {
@@ -496,90 +872,8 @@ namespace iolib
 
     namespace detail
     {
-        template <class Range> class counted_single_pass_range;
-        template <class Range> class counted_multi_pass_range;
-        template <class Range> class counted_bidirectional_range;
-        template <class Range> class counted_random_access_range;
-
-        template <class Iterator> class counted_input_iterator_range;
-        template <class Iterator> class counted_forward_iterator_range;
-        template <class Iterator> class counted_bidirectional_iterator_range;
-        template <class Iterator> class counted_random_access_iterator_range;
-
-        template <class Generator> class counted_single_pass_generator_range;
-        template <class Generator> class counted_multi_pass_generator_range;
-        template <class Generator> class counted_bidirectional_generator_range;
-        template <class Generator> class counted_random_access_generator_range;
-    }
-
-    template <class Range> using counted_range =
-        ::std::conditional_t<is_random_access_range<Range>::value, detail::counted_random_access_range<Range>,
-            ::std::conditional_t<is_bidirectional_range<Range>::value, detail::counted_bidirectional_range<Range>,
-                ::std::conditional_t<is_multi_pass_range<Range>::value, detail::counted_multi_pass_range<Range>,
-                    ::std::enable_if_t<is_single_pass_range<Range>::value, detail::counted_single_pass_range<Range>>
-                >
-            >
-        >;
-
-    template <class Range, REQUIRES(is_range<Range>::value)>
-    auto make_counted_range(const Range& range, position_type<Range, is_range> pos, typename counted_range<Range>::size_type count)
-    {
-        return counted_range<Range>(range, pos, count);
-    }
-
-    template <class Iterator> using counted_iterator_range =
-        ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::counted_random_access_iterator_range<Iterator>,
-            ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::counted_bidirectional_iterator_range<Iterator>,
-                ::std::conditional_t<is_forward_iterator<Iterator>::value, detail::counted_forward_iterator_range<Iterator>,
-                    ::std::enable_if_t<is_input_iterator<Iterator>::value, detail::counted_input_iterator_range<Iterator>>
-                >
-            >
-        >;
-
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
-    auto make_counted_range(Iterator&& it, typename counted_iterator_range<Iterator>::size_type count)
-    {
-        return counted_iterator_range<::std::decay_t<Iterator>>(::std::forward(it), count);
-    }
-
-    template <class Generator> using counted_generator_range =
-        ::std::conditional_t<is_random_access_generator<Generator>::value, detail::counted_random_access_generator_range<Generator>,
-            ::std::conditional_t<is_bidirectional_generator<Generator>::value, detail::counted_bidirectional_generator_range<Generator>,
-                ::std::conditional_t<is_multi_pass_generator<Generator>::value, detail::counted_multi_pass_generator_range<Generator>,
-                    ::std::enable_if_t<is_single_pass_generator<Generator>::value, detail::counted_single_pass_generator_range<Generator>>
-                >
-            >
-        >;
-
-    template <class Generator, REQUIRES(is_generator<Generator>::value)>
-    auto make_counted_range(const Generator& gen, position_type<Generator, is_generator> pos, typename counted_generator_range<Generator>::size_type count)
-    {
-        return counted_generator_range<Generator>(gen, pos, count);
-    }
-
-    namespace detail
-    {
-        template <class Range> class reverse_bidirectional_range;
-        template <class Range> class reverse_random_access_range;
-    }
-
-    template <class Range> using reverse_range =
-        ::std::enable_if_t<is_delimited_range<Range>::value,
-            ::std::conditional_t<is_random_access_range<Range>::value, detail::reverse_random_access_range<Range>,
-                ::std::enable_if_t<is_bidirectional_range<Range>::value, detail::reverse_bidirectional_range<Range>>
-            >
-        >;
-
-    template <class Range, REQUIRES(is_delimited_range<Range>::value), REQUIRES(is_bidirectional_range<Range>::value)>
-    auto make_reverse_range(const Range& range)
-    {
-        return reverse_range<Range>(range);
-    }
-
-    namespace detail
-    {
         // Iterator ranges
-        template <class Iterator>
+        template <class Iterator, class TerminationPredicate>
         class input_iterator_range
         {
         public:
@@ -591,18 +885,107 @@ namespace iolib
             using iterator = Iterator;
 
         public:
-            input_iterator_range() noexcept : first(), last() { }
-            input_iterator_range(const iterator& first, const iterator& last) noexcept(noexcept(iterator(first)))
-                : first(first), last(last) { }
-            input_iterator_range(iterator&& first, iterator&& last) noexcept(noexcept(iterator(::std::move(first))))
-                : first(::std::move(first)), last(::std::move(last)) { }
+            input_iterator_range() noexcept : first(), term() { }
+            input_iterator_range(iterator first, const TerminationPredicate& term)
+                : first(first), term(term) { }
+            input_iterator_range(iterator first, TerminationPredicate&& term)
+                : first(first), term(::std::move(term)) { }
 
         public:
             friend bool operator == (const input_iterator_range& a, const input_iterator_range& b) noexcept
             {
-                return a.first == b.first && a.last == b.last;
+                return a.first == b.first && a.term == b.term;
             }
             friend bool operator != (const input_iterator_range& a, const input_iterator_range& b) noexcept
+            {
+                return !(a == b);
+            }
+
+            position begin_pos() const noexcept { return first; }
+            void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
+
+            bool is_end_pos(position pos) const noexcept { return term(pos); }
+
+            position& inc_pos(position& pos) const { return ++pos; }
+            reference at_pos(position pos) const { return *pos; }
+
+        private:
+            position first;
+            TerminationPredicate term;
+        };
+
+        template <class Iterator, class TerminationPredicate>
+        class forward_iterator_range : public input_iterator_range<Iterator, TerminationPredicate>
+        {
+        public:
+            using input_iterator_range<Iterator, TerminationPredicate>::input_iterator_range;
+        };
+
+        template <class Iterator, class TerminationPredicate>
+        class bidirectional_iterator_range : public forward_iterator_range<Iterator, TerminationPredicate>
+        {
+        public:
+            using typename forward_iterator_range<Iterator, TerminationPredicate>::position;
+
+        public:
+            using forward_iterator_range<Iterator, TerminationPredicate>::forward_iterator_range;
+
+        public:
+            position& dec_pos(position& pos) const { return --pos; }
+        };
+
+        template <class Iterator, class TerminationPredicate>
+        class random_access_iterator_range : public bidirectional_iterator_range<Iterator, TerminationPredicate>
+        {
+        public:
+            using typename bidirectional_iterator_range<Iterator, TerminationPredicate>::position;
+            using typename bidirectional_iterator_range<Iterator, TerminationPredicate>::difference_type;
+            using typename bidirectional_iterator_range<Iterator, TerminationPredicate>::reference;
+            using size_type = ::std::make_unsigned_t<difference_type>;
+
+        public:
+            using bidirectional_iterator_range<Iterator, TerminationPredicate>::bidirectional_iterator_range;
+
+        public:
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                ::std::advance(pos, n);
+                return pos;
+            }
+
+            difference_type distance(position p1, position p2) const noexcept { return ::std::distance(p1, p2); }
+
+            reference operator [] (size_type n) const { return this->begin_pos()[n]; }
+            reference at(size_type n) const
+            {
+                if (n >= size())
+                    throw ::std::out_of_range("element index out of range");
+                return this->begin_pos()[n];
+            }
+        };
+
+        template <class Iterator>
+        class delimited_input_iterator_range
+        {
+        public:
+            using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
+            using value_type = value_type<Iterator, is_iterator>;
+            using position = Iterator;
+            using difference_type = difference_type<Iterator, is_iterator>;
+            using reference = reference_type<Iterator, is_iterator>;
+            using iterator = Iterator;
+
+        public:
+            delimited_input_iterator_range() noexcept : first(), last() { }
+            delimited_input_iterator_range(iterator first, iterator last) noexcept(noexcept(iterator(first)))
+                : first(first), last(last) { }
+
+        public:
+            friend bool operator == (const delimited_input_iterator_range& a, const delimited_input_iterator_range& b) noexcept
+            {
+                return a.first == b.first && a.last == b.last;
+            }
+            friend bool operator != (const delimited_input_iterator_range& a, const delimited_input_iterator_range& b) noexcept
             {
                 return !(a == b);
             }
@@ -618,56 +1001,42 @@ namespace iolib
             position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
 
-            bool empty() const noexcept { return first == last; }
-            reference front() const { return *first; }
-
-            iterator begin() const noexcept { return first; }
-            iterator end() const noexcept { return last; }
-
         private:
             position first;
             position last;
         };
 
         template <class Iterator>
-        class forward_iterator_range : public input_iterator_range<Iterator>
+        class delimited_forward_iterator_range : public delimited_input_iterator_range<Iterator>
         {
         public:
-            using input_iterator_range<Iterator>::input_iterator_range;
+            using delimited_input_iterator_range<Iterator>::delimited_input_iterator_range;
         };
 
         template <class Iterator>
-        class bidirectional_iterator_range : public forward_iterator_range<Iterator>
+        class delimited_bidirectional_iterator_range : public delimited_forward_iterator_range<Iterator>
         {
         public:
-            using typename forward_iterator_range<Iterator>::position;
-            using typename forward_iterator_range<Iterator>::difference_type;
-            using typename forward_iterator_range<Iterator>::reference;
-            using reverse_iterator = ::std::reverse_iterator<Iterator>;
+            using typename delimited_forward_iterator_range<Iterator>::position;
 
         public:
-            using forward_iterator_range<Iterator>::forward_iterator_range;
+            using delimited_forward_iterator_range<Iterator>::delimited_forward_iterator_range;
 
         public:
             position& dec_pos(position& pos) const { return --pos; }
-
-            reverse_iterator rbegin() const noexcept { return reverse_iterator(this->end()); }
-            reverse_iterator rend() const noexcept { return reverse_iterator(this->begin()); }
-
-            reference back() const { return *::std::prev(this->end()); }
         };
 
         template <class Iterator>
-        class random_access_iterator_range : public bidirectional_iterator_range<Iterator>
+        class delimited_random_access_iterator_range : public delimited_bidirectional_iterator_range<Iterator>
         {
         public:
-            using typename bidirectional_iterator_range<Iterator>::position;
-            using typename bidirectional_iterator_range<Iterator>::difference_type;
-            using typename bidirectional_iterator_range<Iterator>::reference;
+            using typename delimited_bidirectional_iterator_range<Iterator>::position;
+            using typename delimited_bidirectional_iterator_range<Iterator>::difference_type;
+            using typename delimited_bidirectional_iterator_range<Iterator>::reference;
             using size_type = ::std::make_unsigned_t<difference_type>;
 
         public:
-            using bidirectional_iterator_range<Iterator>::bidirectional_iterator_range;
+            using delimited_bidirectional_iterator_range<Iterator>::delimited_bidirectional_iterator_range;
 
         public:
             position& advance_pos(position& pos, difference_type n) const
@@ -677,15 +1046,138 @@ namespace iolib
             }
 
             difference_type distance(position p1, position p2) const noexcept { return ::std::distance(p1, p2); }
-            size_type size() const noexcept { return size_type(distance(this->begin(), this->end())); }
+            size_type size() const noexcept { return size_type(distance(this->begin_pos(), this->end_pos())); }
             void resize(size_type n) { this->end_pos(this->begin_pos() + n); }
 
-            reference operator [] (size_type n) const { return this->begin()[n]; }
+            reference operator [] (size_type n) const { return this->begin_pos()[n]; }
             reference at(size_type n) const
             {
                 if (n >= size())
                     throw ::std::out_of_range("element index out of range");
-                return this->begin()[n];
+                return this->begin_pos()[n];
+            }
+        };
+
+        template <class Iterator>
+        class counted_input_iterator_range
+        {
+        public:
+            using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
+            using value_type = value_type<Iterator, is_iterator>;
+            using difference_type = difference_type<Iterator, is_iterator>;
+            using reference = reference_type<Iterator, is_iterator>;
+            using iterator = Iterator;
+
+            using size_type = ::std::make_unsigned_t<difference_type>;
+            using position = compressed_pair<iterator, size_type>;
+
+        public:
+            counted_input_iterator_range() : first(), count(0) { }
+            counted_input_iterator_range(iterator i, size_type count) : first(i, 0), count(count) { }
+
+            friend bool operator == (const counted_input_iterator_range& a, const counted_input_iterator_range& b) noexcept
+            {
+                return a.first == b.first
+                    && a.count == b.count;
+            }
+            friend bool operator != (const counted_input_iterator_range& a, const counted_input_iterator_range& b) noexcept
+            {
+                return !(a == b);
+            }
+
+        public:
+            position begin_pos() const noexcept { return first; }
+            void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
+
+            bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
+
+            position& inc_pos(position& pos) const
+            {
+                ++pos.first();
+                ++pos.second();
+                return pos;
+            }
+
+            reference at_pos(position pos) const { return *pos.first(); }
+
+            size_type size() const noexcept { return count - first.second(); }
+            void resize(size_type n) noexcept { count = first.second() + n; }
+
+            iterator base_pos(position pos) const { return pos.first(); }
+
+        private:
+            position first;
+            size_type count;
+        };
+
+        template <class Iterator>
+        class counted_forward_iterator_range : public counted_input_iterator_range<Iterator>
+        {
+        public:
+            using counted_input_iterator_range<Iterator>::counted_input_iterator_range;
+        };
+
+        template <class Iterator>
+        class counted_bidirectional_iterator_range : public counted_forward_iterator_range<Iterator>
+        {
+        public:
+            using typename counted_forward_iterator_range<Iterator>::position;
+            using typename counted_forward_iterator_range<Iterator>::difference_type;
+
+        public:
+            using counted_forward_iterator_range<Iterator>::counted_forward_iterator_range;
+
+        public:
+            position& dec_pos(position& pos) const
+            {
+                --pos.first();
+                --pos.second();
+                return pos;
+            }
+        };
+
+        template <class Iterator>
+        class counted_random_access_iterator_range : public counted_bidirectional_iterator_range<Iterator>
+        {
+        public:
+            using typename counted_bidirectional_iterator_range<Iterator>::position;
+            using typename counted_bidirectional_iterator_range<Iterator>::difference_type;
+            using typename counted_bidirectional_iterator_range<Iterator>::reference;
+            using typename counted_bidirectional_iterator_range<Iterator>::size_type;
+
+        public:
+            using counted_bidirectional_iterator_range<Iterator>::counted_bidirectional_iterator_range;
+
+        public:
+            position end_pos() const
+            {
+                position pos = this->begin_pos();
+                this->advance_pos(pos, this->size());
+                return pos;
+            }
+            void end_pos(position pos) noexcept
+            {
+                this->resize(pos.second() - this->begin_pos().second());
+            }
+
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                ::std::advance(pos.first(), n);
+                pos.second() += n;
+                return pos;
+            }
+
+            difference_type distance(position p1, position p2) const noexcept
+            {
+                return difference_type(p2.second() - p1.second());
+            }
+
+            reference operator [] (size_type n) const { return *(first.first() + n); }
+            reference at(size_type n) const
+            {
+                if (n >= size())
+                    throw ::std::out_of_range("element index out of range");
+                return (*this)[n];
             }
         };
 
@@ -1410,129 +1902,6 @@ namespace iolib
             }
         };
 
-        // counted iterator ranges
-        template <class Iterator>
-        class counted_input_iterator_range
-        {
-        public:
-            using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
-            using value_type = value_type<Iterator, is_iterator>;
-            using difference_type = difference_type<Iterator, is_iterator>;
-            using reference = reference_type<Iterator, is_iterator>;
-            using iterator = Iterator;
-
-            using size_type = ::std::make_unsigned_t<difference_type>;
-            using position = compressed_pair<iterator, size_type>;
-
-        public:
-            counted_input_iterator_range() : first(), count(0) { }
-            counted_input_iterator_range(const iterator& i, size_type count) : first(i, 0), count(count) { }
-            counted_input_iterator_range(iterator&& i, size_type count) : first(::std::move(i), 0), count(count) { }
-
-            friend bool operator == (const counted_input_iterator_range& a, const counted_input_iterator_range& b) noexcept
-            {
-                return a.first == b.first
-                    && a.count == b.count;
-            }
-            friend bool operator != (const counted_input_iterator_range& a, const counted_input_iterator_range& b) noexcept
-            {
-                return !(a == b);
-            }
-
-        public:
-            position begin_pos() const noexcept { return first; }
-            void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
-
-            bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
-
-            position& inc_pos(position& pos) const
-            {
-                ++pos.first();
-                ++pos.second();
-                return pos;
-            }
-
-            reference at_pos(position pos) const { return *pos.first(); }
-
-            size_type size() const noexcept { return count - first.second(); }
-            void resize(size_type n) noexcept { count = first.second() + n; }
-
-        private:
-            position first;
-            size_type count;
-        };
-
-        template <class Iterator>
-        class counted_forward_iterator_range : public counted_input_iterator_range<Iterator>
-        {
-        public:
-            using counted_input_iterator_range<Iterator>::counted_input_iterator_range;
-        };
-
-        template <class Iterator>
-        class counted_bidirectional_iterator_range : public counted_forward_iterator_range<Iterator>
-        {
-        public:
-            using typename counted_forward_iterator_range<Iterator>::position;
-            using typename counted_forward_iterator_range<Iterator>::difference_type;
-
-        public:
-            using counted_forward_iterator_range<Iterator>::counted_forward_iterator_range;
-
-        public:
-            position& dec_pos(position& pos) const
-            {
-                --pos.first();
-                --pos.second();
-                return pos;
-            }
-        };
-
-        template <class Iterator>
-        class counted_random_access_iterator_range : public counted_bidirectional_iterator_range<Iterator>
-        {
-        public:
-            using typename counted_bidirectional_iterator_range<Iterator>::position;
-            using typename counted_bidirectional_iterator_range<Iterator>::difference_type;
-            using typename counted_bidirectional_iterator_range<Iterator>::reference;
-            using typename counted_bidirectional_iterator_range<Iterator>::size_type;
-
-        public:
-            using counted_bidirectional_iterator_range<Iterator>::counted_bidirectional_iterator_range;
-
-        public:
-            position end_pos() const
-            {
-                position pos = this->begin_pos();
-                this->advance_pos(pos, this->size());
-                return pos;
-            }
-            void end_pos(position pos) noexcept
-            {
-                this->resize(pos.second() - this->begin_pos().second());
-            }
-
-            position& advance_pos(position& pos, difference_type n) const
-            {
-                ::std::advance(pos.first(), n);
-                pos.second() += n;
-                return pos;
-            }
-
-            difference_type distance(position p1, position p2) const noexcept
-            {
-                return difference_type(p2.second() - p1.second());
-            }
-
-            reference operator [] (size_type n) const { return *(first.first() + n); }
-            reference at(size_type n) const
-            {
-                if (n >= size())
-                    throw ::std::out_of_range("element index out of range");
-                return (*this)[n];
-            }
-        };
-
         // counted generator ranges
         template <class Generator>
         class counted_single_pass_generator_range
@@ -1669,7 +2038,7 @@ namespace iolib
         };
 
         // reverse ranges
-        template <class Range>
+        template <class Range, class TerminationPredicate>
         class reverse_bidirectional_range
         {
         public:
@@ -1681,17 +2050,103 @@ namespace iolib
             using range = Range;
 
         public:
-            reverse_bidirectional_range() : r(nullptr), first(), last() { }
-            explicit reverse_bidirectional_range(const Range& range)
-                : r(&range), first(range.end_pos()), last(range.begin_pos()) { }
+            reverse_bidirectional_range() : r(nullptr), first(), term() { }
+            reverse_bidirectional_range(const Range& range, position_type<Range, is_range> first, const TerminationPredicate& term)
+                : r(&range), first(last), term(term) { }
+            reverse_bidirectional_range(const Range& range, position_type<Range, is_range> first, TerminationPredicate&& term)
+                : r(&range), first(last), term(::std::move(term)) { }
 
             friend bool operator == (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
             {
                 return (a.r == b.r || (a.r != nullptr && b.r != nullptr && *a.r == *b.r))
                     && a.first == b.first
-                    && a.last == b.last;
+                    && a.term == b.term;
             }
             friend bool operator != (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
+            {
+                return !(a == b);
+            }
+
+        public:
+            position begin_pos() const noexcept { return first; }
+            void begin_pos(position pos) { first = pos; }
+
+            bool is_end_pos(position pos) const noexcept { return term(*r, pos); }
+
+            position& inc_pos(position& pos) const { return r->dec_pos(pos); }
+            position& dec_pos(position& pos) const { return r->inc_pos(pos); }
+            reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, pos)); }
+
+            const range& base() { return *r; }
+
+        private:
+            friend class reverse_random_access_range<Range, TerminationPredicate>;
+
+            const range* r;
+            position first;
+            TerminationPredicate term;
+        };
+
+        template <class Range, class TerminationPredicate>
+        class reverse_random_access_range : public reverse_bidirectional_range<Range, TerminationPredicate>
+        {
+        public:
+            using position = typename reverse_bidirectional_range<Range, TerminationPredicate>::position;
+            using difference_type = typename reverse_bidirectional_range<Range, TerminationPredicate>::difference_type;
+            using reference = typename reverse_bidirectional_range<Range, TerminationPredicate>::reference;
+            using size_type = ::std::make_unsigned_t<difference_type>;
+
+        public:
+            using reverse_bidirectional_range<Range, TerminationPredicate>::reverse_bidirectional_range;
+
+        public:
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                return r->advance_pos(pos, -n);
+            }
+
+            difference_type distance(position p1, position p2) const noexcept
+            {
+                return this->r->distance(p2, p1);
+            }
+
+            reference operator [] (size_type n)
+            {
+                auto pos = this->begin_pos();
+                this->advance_pos(pos, n);
+                return this->at_pos(pos);
+            }
+            reference at(size_type n)
+            {
+                if (n >= size())
+                    throw ::std::out_of_range("element index out of range");
+                return (*this)[n];
+            }
+        };
+
+        template <class Range>
+        class delimited_reverse_bidirectional_range
+        {
+        public:
+            using range_category = range_category<Range>;
+            using value_type = value_type<Range, is_range>;
+            using position = position_type<Range, is_range>;
+            using difference_type = difference_type<Range, is_range>;
+            using reference = reference_type<Range, is_range>;
+            using range = Range;
+
+        public:
+            delimited_reverse_bidirectional_range() : r(nullptr), first(), last() { }
+            delimited_reverse_bidirectional_range(const Range& range, position_type<Range, is_range> first, position_type<Range, is_range> last)
+                : r(&range), first(first), last(last) { }
+
+            friend bool operator == (const delimited_reverse_bidirectional_range& a, const delimited_reverse_bidirectional_range& b) noexcept
+            {
+                return (a.r == b.r || (a.r != nullptr && b.r != nullptr && *a.r == *b.r))
+                    && a.first == b.first
+                    && a.last == b.last;
+            }
+            friend bool operator != (const delimited_reverse_bidirectional_range& a, const delimited_reverse_bidirectional_range& b) noexcept
             {
                 return !(a == b);
             }
@@ -1710,26 +2165,25 @@ namespace iolib
             reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, pos)); }
 
             const range& base() { return *r; }
-            position base_pos(position pos) { return pos; }
 
         private:
-            friend class reverse_random_access_range<Range>;
+            friend class delimited_reverse_random_access_range<Range>;
 
             const range* r;
             position first, last;
         };
 
         template <class Range>
-        class reverse_random_access_range : public reverse_bidirectional_range<Range>
+        class delimited_reverse_random_access_range : public delimited_reverse_bidirectional_range<Range>
         {
         public:
-            using position = typename reverse_bidirectional_range<Range>::position;
-            using difference_type = typename reverse_bidirectional_range<Range>::difference_type;
-            using reference = typename reverse_bidirectional_range<Range>::reference;
+            using position = typename delimited_reverse_bidirectional_range<Range>::position;
+            using difference_type = typename delimited_reverse_bidirectional_range<Range>::difference_type;
+            using reference = typename delimited_reverse_bidirectional_range<Range>::reference;
             using size_type = ::std::make_unsigned_t<difference_type>;
 
         public:
-            using reverse_bidirectional_range<Range>::reverse_bidirectional_range;
+            using delimited_reverse_bidirectional_range<Range>::delimited_reverse_bidirectional_range;
 
         public:
             position& advance_pos(position& pos, difference_type n) const

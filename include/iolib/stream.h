@@ -269,30 +269,30 @@ namespace iolib
 
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
-    class input_stream_range : public iterator_range<input_stream_iterator<POD>>
+    class input_stream_range : public delimited_iterator_range<input_stream_iterator<POD>>
     {
     public:
-        using iterator = typename iterator_range<input_stream_iterator<POD>>::iterator;
+        using iterator = typename delimited_iterator_range<input_stream_iterator<POD>>::iterator;
 
     public:
         input_stream_range() = default;
         input_stream_range(input_stream& stream)
-            : iterator_range<iterator>(iterator(stream), iterator())
+            : delimited_iterator_range<iterator>(iterator(stream), iterator())
         {
         }
     };
 
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
-    class output_stream_range : public iterator_range<output_stream_iterator<POD>>
+    class output_stream_range : public delimited_iterator_range<output_stream_iterator<POD>>
     {
     public:
-        using iterator = typename iterator_range<output_stream_iterator<POD>>::iterator;
+        using iterator = typename delimited_iterator_range<output_stream_iterator<POD>>::iterator;
 
     public:
         output_stream_range() = default;
         output_stream_range(output_stream& stream)
-            : iterator_range<iterator>(iterator(stream), iterator())
+            : delimited_iterator_range<iterator>(iterator(stream), iterator())
         {
         }
     };

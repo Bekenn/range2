@@ -310,7 +310,7 @@ namespace iolib
         REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     position_type<Range1, is_range> search(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
-        auto range = range1;
+        auto range = subrange_from(range1, range1.begin_pos());
         auto pos = mismatch(range, range2, pred);
         for (!range1.is_end_pos(pos.first); drop_first(range))
         {
@@ -1029,7 +1029,7 @@ namespace iolib
         REQUIRES(is_random_access_range<Range>::value), REQUIRES(is_counted_range<Range>::value)>
     void sort_heap(const Range& range, Compare&& comp)
     {
-        if (range.size <= 1)
+        if (range.size() <= 1)
             return;
 
         auto subrange = subrange_from(range, range.begin_pos());
