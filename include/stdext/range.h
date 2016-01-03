@@ -350,6 +350,9 @@ namespace stdext
         template <class Range> class delimited_reverse_bidirectional_range;
         template <class Range> class delimited_reverse_random_access_range;
 
+        template <class Range> class counted_reverse_bidirectional_range;
+        template <class Range> class counted_reverse_random_access_range;
+
         template <class Generator, class TerminationPredicate> class single_pass_generator_range;
         template <class Generator, class TerminationPredicate> class multi_pass_generator_range;
         template <class Generator, class TerminationPredicate> class bidirectional_generator_range;
@@ -439,6 +442,11 @@ namespace stdext
     template <class Range> using delimited_reverse_range =
         ::std::conditional_t<is_random_access_range<Range>::value, detail::delimited_reverse_random_access_range<Range>,
             ::std::enable_if_t<is_bidirectional_range<Range>::value, detail::delimited_reverse_bidirectional_range<Range>>
+        >;
+
+    template <class Range> using counted_reverse_range =
+        ::std::conditional_t<is_random_access_range<Range>::value, detail::counted_reverse_random_access_range<Range>,
+            ::std::enable_if_t<is_bidirectional_range<Range>::value, detail::counted_reverse_bidirectional_range<Range>>
         >;
 
     template <class Generator, class TerminationPredicate> using generator_range =
@@ -696,6 +704,24 @@ namespace stdext
         return counted_range<Range>(range.base(), range.base_pos(pos), count);
     }
 
+    template <class Range, class TerminationPredicate>
+    auto make_counted_range(const reverse_range<Range, TerminationPredicate>& range, position_type<Range, is_range> pos, size_type<Range, is_range> count)
+    {
+        return counted_reverse_range<Range>(range.base(), pos, count);
+    }
+
+    template <class Range>
+    auto make_counted_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> pos, size_type<Range, is_range> count)
+    {
+        return counted_reverse_range<Range>(range.base(), pos, count);
+    }
+
+    template <class Range>
+    auto make_counted_range(const counted_reverse_range<Range>& range, position_type<counted_reverse_range<Range>, is_range> pos, size_type<counted_reverse_range<Range>, is_range> count)
+    {
+        return counted_reverse_range<Range>(range.base(), range.base_pos(pos), count);
+    }
+
     template <class Generator, class TerminationPredicate>
     auto make_counted_range(const generator_range<Generator, TerminationPredicate>& range, position_type<Generator, is_generator> pos, size_type<Generator, is_generator> count)
     {
@@ -792,6 +818,12 @@ namespace stdext
         return make_range(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
     }
 
+    template <class Range, class TerminationPredicate>
+    auto make_reverse_range(const counted_reverse_range<Range>& range, position_type<counted_reverse_range<Range>, is_range> pos, TerminationPredicate&& pred)
+    {
+        return make_range(range.base(), range.base_pos(pos), ::std::forward<TerminationPredicate>(pred));
+    }
+
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
     auto make_reverse_range(const Range& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
     {
@@ -813,13 +845,19 @@ namespace stdext
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const reverse_range<Range, TerminationPredicate>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
     {
-        return delimited_reverse_range<Range>(range.base(), p1, p2);
+        return make_range(range.base(), p2, p1);
     }
 
     template <class Range>
     auto make_reverse_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
     {
-        return delimited_reverse_range<Range>(range.base(), p1, p2);
+        return make_range(range.base(), p2, p1);
+    }
+
+    template <class Range>
+    auto make_reverse_range(const counted_reverse_range<Range>& range, position_type<counted_reverse_range<Range>, is_range> p1, position_type<counted_reverse_range<Range>, is_range> p2)
+    {
+        return make_range(range.base(), range.base_pos(p2), range.base_pos(p1));
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
@@ -2201,10 +2239,132 @@ namespace stdext
                 return size_type(distance(this->first, this->last));
             }
 
+            void resize(size_type n)
+            {
+                this->last = this->first;
+                advance_pos(this->last, n);
+            }
+
             reference operator [] (size_type n)
             {
                 auto pos = this->begin_pos();
                 this->advance_pos(pos, n);
+                return this->at_pos(pos);
+            }
+            reference at(size_type n)
+            {
+                if (n >= size())
+                    throw ::std::out_of_range("element index out of range");
+                return (*this)[n];
+            }
+        };
+
+        template <class Range>
+        class counted_reverse_bidirectional_range
+        {
+        public:
+            using range_category = range_category<Range>;
+            using value_type = value_type<Range, is_range>;
+            using difference_type = difference_type<Range, is_range>;
+            using reference = reference_type<Range, is_range>;
+            using range = Range;
+
+            using size_type = ::std::make_unsigned_t<difference_type>;
+            using position = compressed_pair<position_type<Range, is_range>, size_type>;
+
+        public:
+            counted_reverse_bidirectional_range() : r(nullptr), first(), count(0) { }
+            counted_reverse_bidirectional_range(const Range& range, position_type<Range, is_range> first, size_type count)
+                : r(&range), first(first, 0), count(count) { }
+
+            friend bool operator == (const counted_reverse_bidirectional_range& a, const counted_reverse_bidirectional_range& b) noexcept
+            {
+                return (a.r == b.r || (a.r != nullptr && b.r != nullptr && *a.r == *b.r))
+                    && a.first == b.first
+                    && a.count == b.count;
+            }
+            friend bool operator != (const counted_reverse_bidirectional_range& a, const counted_reverse_bidirectional_range& b) noexcept
+            {
+                return !(a == b);
+            }
+
+        public:
+            position begin_pos() const noexcept { return first; }
+            void begin_pos(position pos) { first = pos; }
+
+            bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
+
+            position& inc_pos(position& pos) const
+            {
+                r->dec_pos(pos.first());
+                ++pos.second();
+                return pos;
+            }
+
+            position& dec_pos(position& pos) const
+            {
+                r->inc_pos(pos.first());
+                --pos.second();
+                return pos;
+            }
+
+            reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, pos.first())); }
+
+            size_type size() const noexcept { return count - first.second(); }
+            void resize(size_type n) { count = first.second() + n; }
+
+            const range& base() const noexcept { return *r; }
+            position_type<Range, is_range> base_pos(position pos) const { return pos.second(); }
+
+        private:
+            friend class delimited_reverse_random_access_range<Range>;
+
+            const range* r;
+            position first;
+            size_type count;
+        };
+
+        template <class Range>
+        class counted_reverse_random_access_range : public counted_reverse_bidirectional_range<Range>
+        {
+        public:
+            using position = typename counted_reverse_bidirectional_range<Range>::position;
+            using difference_type = typename counted_reverse_bidirectional_range<Range>::difference_type;
+            using reference = typename counted_reverse_bidirectional_range<Range>::reference;
+            using size_type = ::std::make_unsigned_t<difference_type>;
+
+        public:
+            using counted_reverse_bidirectional_range<Range>::counted_reverse_bidirectional_range;
+
+        public:
+            position& advance_pos(position& pos, difference_type n) const
+            {
+                r->advance_pos(pos.first(), -n);
+                pos.second() += n;
+                return pos;
+            }
+
+            difference_type distance(position p1, position p2) const noexcept
+            {
+                return p2.second() - p1.second();
+            }
+
+            position end_pos() const
+            {
+                auto pos = this->begin_pos();
+                advance_pos(pos, size());
+                return pos;
+            }
+
+            void end_pos(position pos)
+            {
+                this->resize(pos.second() - this->begin_pos().second())
+            }
+
+            reference operator [] (size_type n)
+            {
+                auto pos = this->begin_pos();
+                advance_pos(pos, n);
                 return this->at_pos(pos);
             }
             reference at(size_type n)
