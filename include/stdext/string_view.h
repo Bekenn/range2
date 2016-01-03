@@ -1,13 +1,13 @@
 //
 //  string_view.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/25/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_STRING_VIEW_INCLUDED
-#define IOLIB_STRING_VIEW_INCLUDED
+#ifndef STDEXT_STRING_VIEW_INCLUDED
+#define STDEXT_STRING_VIEW_INCLUDED
 #pragma once
 
 #include "algorithm.h"
@@ -16,7 +16,7 @@
 #include <string>
 
 
-namespace iolib
+namespace stdext
 {
     template <class charT, class traits = ::std::char_traits<::std::remove_cv_t<charT>>>
     class basic_string_view;

@@ -1,13 +1,13 @@
 //
 //  stream.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/18/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_STREAM_INCLUDED
-#define IOLIB_STREAM_INCLUDED
+#ifndef STDEXT_STREAM_INCLUDED
+#define STDEXT_STREAM_INCLUDED
 #pragma once
 
 #include "iterator.h"
@@ -22,7 +22,7 @@
 #include <cstdint>
 
 
-namespace iolib
+namespace stdext
 {
     // public classes
     class input_stream;

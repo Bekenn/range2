@@ -1,13 +1,13 @@
 //
 //  range.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/19/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_RANGE_INCLUDED
-#define IOLIB_RANGE_INCLUDED
+#ifndef STDEXT_RANGE_INCLUDED
+#define STDEXT_RANGE_INCLUDED
 #pragma once
 
 #include "generator.h"
@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 
-namespace iolib
+namespace stdext
 {
     // range categories
     struct single_pass_range_tag { };
@@ -817,7 +817,7 @@ namespace iolib
     }
 
     template <class Range>
-    auto amke_reverse_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
+    auto make_reverse_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> p1, position_type<Range, is_range> p2)
     {
         return delimited_reverse_range<Range>(range.base(), p1, p2);
     }

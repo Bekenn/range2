@@ -1,33 +1,33 @@
 cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
-project(iolib)
-    set(IOLIB_SRC
+project(stdext)
+    set(STDEXT_SRC
         "src/stream.cpp"
         "src/string_view.cpp")
-    set(IOLIB_INC
-        "include/iolib/algorithm.h"
-        "include/iolib/array_view.h"
-        "include/iolib/concept.h"
-        "include/iolib/generator.h"
-        "include/iolib/iterator.h"
-		"include/iolib/meta.h"
-        "include/iolib/optional.h"
-        "include/iolib/range.h"
-        "include/iolib/stream.h"
-        "include/iolib/string_view.h"
-		"include/iolib/tuple.h"
-        "include/iolib/utility.h")
+    set(STDEXT_INC
+        "include/stdext/algorithm.h"
+        "include/stdext/array_view.h"
+        "include/stdext/concept.h"
+        "include/stdext/generator.h"
+        "include/stdext/iterator.h"
+		"include/stdext/meta.h"
+        "include/stdext/optional.h"
+        "include/stdext/range.h"
+        "include/stdext/stream.h"
+        "include/stdext/string_view.h"
+		"include/stdext/tuple.h"
+        "include/stdext/utility.h")
     include_directories("include")
-    add_library(iolib ${IOLIB_SRC} ${IOLIB_INC})
-    add_executable(iotest "test/main.cpp")
+    add_library(stdext ${STDEXT_SRC} ${STDEXT_INC})
+    add_executable(streamtest "test/main.cpp")
 
     if(WIN32)
-        target_compile_definitions(iolib PRIVATE _SCL_SECURE_NO_WARNINGS)
-        target_compile_definitions(iotest PRIVATE _SCL_SECURE_NO_WARNINGS)
+        target_compile_definitions(stdext PRIVATE _SCL_SECURE_NO_WARNINGS)
+        target_compile_definitions(streamtest PRIVATE _SCL_SECURE_NO_WARNINGS)
     endif()
 
-    target_link_libraries(iotest iolib)
+    target_link_libraries(streamtest stdext)
     if(MSVC)
-        set_property(TARGET iolib APPEND_STRING PROPERTY COMPILE_FLAGS "/wd4814")
-        set_property(TARGET iotest APPEND_STRING PROPERTY COMPILE_FLAGS "/wd4814")
+        set_property(TARGET stdext APPEND_STRING PROPERTY COMPILE_FLAGS "/wd4814")
+        set_property(TARGET streamtest APPEND_STRING PROPERTY COMPILE_FLAGS "/wd4814")
     endif()

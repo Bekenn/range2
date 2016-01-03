@@ -1,18 +1,18 @@
 //
 //  meta.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 12/25/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_META_INCLUDED
-#define IOLIB_META_INCLUDED
+#ifndef STDEXT_META_INCLUDED
+#define STDEXT_META_INCLUDED
 #pragma once
 
 #include <cstddef>
 
-namespace iolib
+namespace stdext
 {
     // Compile-time variadic boolean comparisons.
     template <bool... vs> struct const_and;

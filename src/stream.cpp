@@ -1,14 +1,14 @@
 //
 //  stream.cpp
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/18/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#include <iolib/stream.h>
+#include <stdext/stream.h>
 
-namespace iolib
+namespace stdext
 {
     stream_base::~stream_base() = default;
     input_stream::~input_stream() = default;

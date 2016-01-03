@@ -1,5 +1,5 @@
-#ifndef IOLIB_ITERATOR_INCLUDED
-#define IOLIB_ITERATOR_INCLUDED
+#ifndef STDEXT_ITERATOR_INCLUDED
+#define STDEXT_ITERATOR_INCLUDED
 #pragma once
 
 #include "concept.h"
@@ -8,7 +8,7 @@
 #include <utility>
 
 
-namespace iolib
+namespace stdext
 {
     namespace detail
     {

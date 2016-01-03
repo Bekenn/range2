@@ -1,13 +1,13 @@
 //
 //  utility.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 12/14/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_UTILITY_INCLUDED
-#define IOLIB_UTILITY_INCLUDED
+#ifndef STDEXT_UTILITY_INCLUDED
+#define STDEXT_UTILITY_INCLUDED
 #pragma once
 
 #include "concept.h"
@@ -15,7 +15,7 @@
 #include <utility>
 
 
-namespace iolib
+namespace stdext
 {
     using ::std::swap;
 

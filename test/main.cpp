@@ -6,13 +6,13 @@
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#include <iolib/stream.h>
+#include <stdext/stream.h>
 
 #undef NDEBUG
 #include <cassert>
 
 using namespace std;
-using namespace iolib;
+using namespace stdext;
 
 template <class T, size_t length>
 constexpr size_t lengthof(T (&)[length])

@@ -1,13 +1,13 @@
 //
 //  concept.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/18/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_CONCEPT_INCLUDED
-#define IOLIB_CONCEPT_INCLUDED
+#ifndef STDEXT_CONCEPT_INCLUDED
+#define STDEXT_CONCEPT_INCLUDED
 #pragma once
 
 #include <type_traits>
@@ -35,7 +35,7 @@ template <class T, class... ArgTypes> struct has_method_##MethodName            
 #define HAS_METHOD_T(T, MethodName, ...) has_method_##MethodName<T, ## __VA_ARGS__>
 #define HAS_METHOD(T, MethodName, ...) HAS_METHOD_T(T, MethodName, ## __VA_ARGS__)::value
 
-namespace iolib
+namespace stdext
 {
     namespace detail
     {

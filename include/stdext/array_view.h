@@ -1,13 +1,13 @@
 //
 //  array_view.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/25/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_ARRAY_VIEW_INCLUDED
-#define IOLIB_ARRAY_VIEW_INCLUDED
+#ifndef STDEXT_ARRAY_VIEW_INCLUDED
+#define STDEXT_ARRAY_VIEW_INCLUDED
 #pragma once
 
 #include "range.h"
@@ -15,7 +15,7 @@
 #include <cstddef>
 
 
-namespace iolib
+namespace stdext
 {
     template <class T>
     class array_view : public delimited_iterator_range<T*>

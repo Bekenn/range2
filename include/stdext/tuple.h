@@ -1,13 +1,13 @@
 //
 //  tuple.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 12/25/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_TUPLE_INCLUDED
-#define IOLIB_TUPLE_INCLUDED
+#ifndef STDEXT_TUPLE_INCLUDED
+#define STDEXT_TUPLE_INCLUDED
 #pragma once
 
 #include "meta.h"
@@ -17,7 +17,7 @@
 #include <cstddef>
 
 
-namespace iolib
+namespace stdext
 {
     template <class Tuple> struct tuple_element_list;
     template <class Tuple> using tuple_element_list_t = typename tuple_element_list<Tuple>::type;

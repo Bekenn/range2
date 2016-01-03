@@ -1,5 +1,5 @@
-#ifndef IOLIB_GENERATOR_INCLUDED
-#define IOLIB_GENERATOR_INCLUDED
+#ifndef STDEXT_GENERATOR_INCLUDED
+#define STDEXT_GENERATOR_INCLUDED
 #pragma once
 
 #include "concept.h"
@@ -8,7 +8,7 @@
 #include <cassert>
 
 
-namespace iolib
+namespace stdext
 {
     // generator categories
     struct single_pass_generator_tag { };

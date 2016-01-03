@@ -1,5 +1,5 @@
-#ifndef IOLIB_OPTIONAL_INCLUDED
-#define IOLIB_OPTIONAL_INCLUDED
+#ifndef STDEXT_OPTIONAL_INCLUDED
+#define STDEXT_OPTIONAL_INCLUDED
 #pragma once
 
 #include "concept.h"
@@ -11,7 +11,7 @@
 #include <cstddef>
 
 
-namespace iolib
+namespace stdext
 {
     // 5.3, optional for object types
     template <class T> class optional;
@@ -389,9 +389,9 @@ namespace std
 {
     // 5.11, Hash support
     template <class T>
-    struct hash<::iolib::optional<T>>
+    struct hash<::stdext::optional<T>>
     {
-        constexpr ::std::size_t operator () (const ::iolib::optional<T>& k) const
+        constexpr ::std::size_t operator () (const ::stdext::optional<T>& k) const
         {
             return k.has_value() ? hash<T>()(k.value()) : 0;
         }

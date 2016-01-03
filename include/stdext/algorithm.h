@@ -1,13 +1,13 @@
 //
 //  algorithm.h
-//  iolib
+//  stdext
 //
 //  Created by James Touton on 10/25/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef IOLIB_ALGORITHM_INCLUDED
-#define IOLIB_ALGORITHM_INCLUDED
+#ifndef STDEXT_ALGORITHM_INCLUDED
+#define STDEXT_ALGORITHM_INCLUDED
 #pragma once
 
 #include "range.h"
@@ -18,7 +18,7 @@
 #include <vector>
 
 
-namespace iolib
+namespace stdext
 {
     constexpr bool multi_and() noexcept
     {
