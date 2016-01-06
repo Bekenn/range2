@@ -942,7 +942,7 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return term(pos); }
+            bool is_end_pos(position pos) const noexcept { return term(*pos); }
 
             position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
@@ -1432,7 +1432,7 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return gen == nullptr || term(*gen, pos); }
+            bool is_end_pos(position pos) const noexcept { return gen == nullptr || term(gen.at_pos(pos)); }
 
             position& inc_pos(position& pos) const
             {
@@ -1646,7 +1646,7 @@ namespace stdext
         public:
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) { first = pos; }
-            bool is_end_pos(position pos) const noexcept { return term(*r, pos); }
+            bool is_end_pos(position pos) const noexcept { return r != nullptr && term(r->at_pos(pos)); }
             position& inc_pos(position& pos) const { return r->inc_pos(pos); }
             reference at_pos(position pos) const { return r->at_pos(pos); }
             const range& base() const noexcept { return *r; }
@@ -2109,7 +2109,7 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return term(*r, pos); }
+            bool is_end_pos(position pos) const noexcept { return r != nullptr && term(r->at_pos(pos)); }
 
             position& inc_pos(position& pos) const { return r->dec_pos(pos); }
             position& dec_pos(position& pos) const { return r->inc_pos(pos); }
