@@ -16,6 +16,12 @@
 #include <string>
 
 
+// This string_view is similar to the proposed string_view in Library Fundamentals, but has
+// been adapted to fit the definition of a stdext range.  One particularly notable difference
+// is that the equality operator returns true only for views that point to the same memory;
+// that is, two string_views are equal iff their iterators are equal.  This provides more
+// consistent behavior and performance between assignment and comparison.
+
 namespace stdext
 {
     template <class charT, class traits = ::std::char_traits<::std::remove_cv_t<charT>>>
@@ -31,65 +37,52 @@ namespace stdext
     using const_u32string_view = basic_string_view<const char32_t>;
 
     template <class charT, class traits>
-    class basic_string_view : public array_view<charT>
+    class basic_string_view : public const_array_view<charT>
     {
-        using array_view<charT>::first;
-        using array_view<charT>::last;
-
     public:
-        using value_type = typename array_view<charT>::value_type;
-        using pointer = typename array_view<charT>::pointer;
-        using reverse_iterator = typename array_view<charT>::reverse_iterator;
-        using size_type = typename array_view<charT>::size_type;
+        using value_type = typename const_array_view<charT>::value_type;
+        using pointer = typename const_array_view<charT>::pointer;
+        using reverse_iterator = typename const_array_view<charT>::reverse_iterator;
+        using size_type = typename const_array_view<charT>::size_type;
         using traits_type = traits;
-        using string_type = ::std::basic_string<::std::remove_const_t<value_type>, traits_type>;
+        template <class Allocator = ::std::allocator<::std::remove_cv_t<value_type>>>
+        using string_type = ::std::basic_string<::std::remove_cv_t<value_type>, traits_type, Allocator>;
         using const_pointer = const value_type*;
 
         static constexpr auto npos = size_type(-1);
 
     public:
-        using array_view<charT>::array_view;
+        using const_array_view<charT>::const_array_view;
 
         basic_string_view(const basic_string_view& str, size_type pos, size_type n = npos) noexcept
-            : array_view<charT>(str.data() + pos, ::std::min(n, str.length()) - pos) { }
+            : const_array_view<charT>(str.data() + pos, ::std::min(n, str.length()) - pos) { }
 
         template <class Allocator>
-        basic_string_view(string_type& str) noexcept
-            : array_view<charT>(const_cast<pointer>(str.data()), str.length()) { }
-
-        template <class Allocator>
-        basic_string_view(const string_type& str) noexcept
-            : array_view<charT>(str.data(), str.length()) { }
+        basic_string_view(const string_type<Allocator>& str) noexcept
+            : const_array_view<charT>(str.data(), str.length()) { }
 
         basic_string_view(pointer s, size_type n) noexcept
-            : array_view<charT>(s, n) { }
+            : const_array_view<charT>(s, n) { }
 
         basic_string_view(pointer s) noexcept
-            : array_view<charT>(s, traits_type::length(s)) { }
+            : const_array_view<charT>(s, traits_type::length(s)) { }
 
         basic_string_view(pointer begin, pointer end) noexcept
-            : array_view<charT>(begin, ::std::distance(begin, end)) { }
+            : const_array_view<charT>(begin, ::std::distance(begin, end)) { }
 
         template <class Allocator>
-        auto& operator = (string_type& str) noexcept
+        auto& operator = (const string_type<Allocator>& str) noexcept
         {
-            first = const_cast<pointer>(str.data());
-            last = first + str.length();
-            return *this;
-        }
-
-        template <class Allocator>
-        auto& operator = (const string_type& str) noexcept
-        {
-            first = str.data();
-            last = first + str.length();
+            auto p = str.data();
+            this->begin_pos(str.data());
+            this->end_pos(p + str.length());
             return *this;
         }
 
         auto& operator = (pointer s) noexcept
         {
-            first = s;
-            last = first + traits_type::length(s);
+            this->begin_pos(s);
+            this->end_pos(s + traits_type::length(s));
             return *this;
         }
 
@@ -99,8 +92,8 @@ namespace stdext
         auto find(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
-            auto i = ::std::search(first + pos, last, str.first, str.last);
-            return i == last ? npos : size_type(distance(first, i));
+            auto i = search(subrange_from(*this, this->begin() + pos), str);
+            return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
         auto find(const_pointer s, size_type pos, size_type n)
@@ -117,8 +110,8 @@ namespace stdext
         {
             pos = ::std::min(pos, length());
             pos = ::std::min(pos + str.length(), length());
-            auto i = ::std::find_end(first + pos, last, str.first, str.last);
-            return i == last ? npos : size_type(distance(first, i));
+            auto i = find_end(subrange_from(*this, this->begin() + pos), str);
+            return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
         auto rfind(const_pointer s, size_type pos, size_type n)
@@ -134,8 +127,8 @@ namespace stdext
         auto find_first_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
-            auto i = ::std::find_first_of(first + pos, last, str.begin(), str.end());
-            return i == last ? npos : size_type(::std::distance(first, i));
+            auto i = find_first_of(subrange_from(*this, this->begin() + pos), str);
+            return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
         auto find_first_of(const_pointer s, size_type pos, size_type n)
@@ -151,8 +144,9 @@ namespace stdext
         auto find_last_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
-            auto i = ::std::find_first_of(reverse_iterator(first + pos), reverse_iterator(first), str.begin(), str.end());
-            return i == last ? npos : size_type(::std::distance(first, i));
+            auto reverse = make_reverse_range(subrange_to(*this, this->begin() + pos));
+            auto i = reverse.base_pos(find_first_of(reverse, str));
+            return i == this->begin() ? npos : size_type(::std::distance(this->begin(), --i));
         }
 
         auto find_last_of(const_pointer s, size_type pos, size_type n)
@@ -168,9 +162,9 @@ namespace stdext
         auto find_first_not_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
-            auto i = ::std::find_if(first + pos, last,
+            auto i = find_if(subrange_from(*this, this->begin() + pos),
                 [str](value_type c) { return str.find(c) == npos; });
-            return i == last ? npos : size_type(::std::distance(first, i));
+            return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
         auto find_first_not_of(const_pointer s, size_type pos, size_type n)
@@ -186,9 +180,10 @@ namespace stdext
         auto find_last_not_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
-            auto i = ::std::find_if(reverse_iterator(first + pos), reverse_iterator(first),
-                [str](value_type c) { return str.find(c) == npos; });
-            return i == last ? npos : size_type(::std::distance(first, i));
+            auto reverse = make_reverse_range(subrange_to(*this, this->begin() + pos));
+            auto i = reverse.base_pos(find_if(reverse,
+                [str](value_type c) { return str.find(c) == npos; }));
+            return i == this->begin() ? npos : size_type(::std::distance(this->begin(), --i));
         }
 
         auto find_last_not_of(const_pointer s, size_type pos, size_type n)
@@ -206,7 +201,7 @@ namespace stdext
             if (pos > length())
                 throw ::std::out_of_range("string index out of range");
             n = ::std::min(n, length());
-            return basic_string_view(first + pos, n - pos);
+            return basic_string_view(this->data() + pos, n - pos);
         }
 
         auto compare(basic_string_view str)

@@ -22,7 +22,7 @@ namespace stdext
     {
     public:
         using const_reference = const T&;
-        using typename delimited_iterator_range<T*>::pointer;
+        using pointer = T*;
         using size_type = ::std::size_t;
 
     public:
@@ -30,14 +30,14 @@ namespace stdext
         array_view(pointer p, size_type size) noexcept : delimited_iterator_range<T*>(p, p + size) { }
 
     public:
-        auto data() const noexcept { return this->first; }
+        auto data() const noexcept { return this->begin(); }
     };
 
     template <class T>
     class const_array_view : public delimited_iterator_range<const T*>
     {
     public:
-        using typename delimited_iterator_range<const T*>::pointer;
+        using pointer = const T*;
         using size_type = ::std::size_t;
 
     public:
@@ -45,7 +45,7 @@ namespace stdext
         const_array_view(pointer p, size_type size) noexcept : delimited_iterator_range<const T*>(p, p + size) { }
 
     public:
-        auto data() const noexcept { return this->first; }
+        auto data() const noexcept { return this->begin(); }
     };
 }
 

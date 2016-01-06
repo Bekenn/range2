@@ -922,6 +922,30 @@ namespace stdext
             using reference = reference_type<Iterator, is_iterator>;
             using iterator = Iterator;
 
+            class sentinel
+            {
+            public:
+                explicit sentinel(const input_iterator_range& range) noexcept : range(&range) { }
+                friend bool operator == (const iterator& i, const sentinel& s) noexcept
+                {
+                    return s.range->is_end_pos(i);
+                }
+                friend bool operator == (const sentinel& s, const iterator& i) noexcept
+                {
+                    return i == s;
+                }
+                friend bool operator != (const iterator& i, const sentinel& s) noexcept
+                {
+                    return !(i == s);
+                }
+                friend bool operator != (const sentinel& s, const iterator& i) noexcept
+                {
+                    return !(s == i);
+                }
+            private:
+                input_iterator_range* range;
+            };
+
         public:
             input_iterator_range() noexcept : first(), term() { }
             input_iterator_range(iterator first, const TerminationPredicate& term)
@@ -946,6 +970,9 @@ namespace stdext
 
             position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
+
+            iterator begin() const { return first; }
+            sentinel end() const { return sentinel(*this); }
 
         private:
             position first;
@@ -1028,16 +1055,19 @@ namespace stdext
                 return !(a == b);
             }
 
-            position begin_pos() const noexcept { return first; }
-            void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
+            position begin_pos() const { return first; }
+            void begin_pos(position pos) { first = pos; }
 
-            position end_pos() const noexcept { return last; }
-            void end_pos(position pos) noexcept(noexcept(last = pos)) { last = pos; }
+            position end_pos() const { return last; }
+            void end_pos(position pos) { last = pos; }
 
             bool is_end_pos(position pos) const noexcept { return pos == last; }
 
             position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
+
+            iterator begin() const { return first; }
+            iterator end() const { return last; }
 
         private:
             position first;
