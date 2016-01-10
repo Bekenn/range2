@@ -19,8 +19,64 @@ namespace stdext
 {
     using ::std::swap;
 
+    template <class T, bool = ::std::is_empty<T>::value>
+    class compressed_base;
+
     template <class T1, class T2, bool = ::std::is_empty<T1>::value, bool = ::std::is_empty<T2>::value>
     class compressed_pair;
+
+    template <class T>
+    class compressed_base<T, false>
+    {
+    public:
+        using type = T;
+
+    public:
+        compressed_base() = default;
+        explicit compressed_base(const T& v) noexcept(::std::is_nothrow_copy_constructible<T>::value) : value(v) { }
+        explicit compressed_base(T&& v) noexcept(::std::is_nothrow_move_constructible<T>::value) : value(::std::move(v)) { }
+
+        friend bool operator == (const compressed_base& a, const compressed_base& b) noexcept
+        {
+            return a.value == b.value;
+        }
+        friend bool operator != (const compressed_base& a, const compressed_base& b) noexcept
+        {
+            return !(a == b);
+        }
+
+    public:
+        const T& get() const noexcept { return value; }
+        T& get() noexcept { return value; }
+
+    private:
+        T value;
+    };
+
+    template <class T>
+    class compressed_base<T, true> : private T
+    {
+    public:
+        using type = T;
+
+    public:
+        compressed_base() = default;
+        explicit compressed_base(const T& v) : T(v) { }
+        explicit compressed_base(T&& v) : T(v) { }
+
+        friend bool operator == (const compressed_base& a, const compressed_base& b) noexcept
+        {
+            return static_cast<const T&>(a) == static_cast<const T&>(b);
+        }
+        friend bool operator != (const compressed_base& a, const compressed_base& b) noexcept
+        {
+            return !(a == b);
+        }
+
+    public:
+        const T& get() const noexcept { return static_cast<const T&>(*this); }
+        T&& get() noexcept { return static_cast<T&>(*this); }
+    };
 
     template <class T1, class T2>
     class compressed_pair<T1, T2, false, false>

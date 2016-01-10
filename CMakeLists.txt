@@ -16,6 +16,7 @@ project(stdext)
         "include/stdext/stream.h"
         "include/stdext/string_view.h"
 		"include/stdext/tuple.h"
+		"include/stdext/unicode.h"
         "include/stdext/utility.h")
     include_directories("include")
     add_library(stdext ${STDEXT_SRC} ${STDEXT_INC})
