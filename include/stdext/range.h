@@ -18,6 +18,13 @@
 
 namespace stdext
 {
+    // TODO: Drop the concept of a single-pass range and rethink generators.
+    // Generators should be single-pass only; ranges should be multi-pass only.  Generators
+    // should be optionally bounded.  Generators should not have positions, whereas positions
+    // should always be meaningful for ranges.
+    // One option: ranges should extend the interface for generators so that single-pass
+    // algorithms continue to work without the use of a generator adapter.
+
     // range categories
     struct single_pass_range_tag { };
     struct multi_pass_range_tag : single_pass_range_tag { };
