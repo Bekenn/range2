@@ -245,7 +245,7 @@ namespace stdext
         reference operator * () { return value; }
         reference operator -> () { return value; }
         utf8_to_utf32_generator& operator ++ () { next(); return *this; }
-        iterator_proxy<utf8_to_utf32_generator> operator ++ ()
+        iterator_proxy<utf8_to_utf32_generator> operator ++ (int)
         {
             iterator_proxy<utf8_to_utf32_generator> proxy = value;
             next();
