@@ -41,7 +41,7 @@ namespace stdext
     }
 
     template <class Range, class Predicate,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     position_type<Range, is_range> find_if(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
@@ -55,7 +55,7 @@ namespace stdext
     }
 
     template <class Range, class Predicate,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     position_type<Range, is_range> find_if_not(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
@@ -82,35 +82,35 @@ namespace stdext
     }
 
     template <class Range, class T,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     position_type<Range, is_range> find(const Range& range, const T& value)
     {
         return find_if(range, [&value](const auto& x) { return x == value; });
     }
 
     template <class Range, class Predicate,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     bool all_of(const Range& range, Predicate&& pred)
     {
         return find_if_not(range, pred) == range.end_pos();
     }
 
     template <class Range, class Predicate,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     bool none_of(const Range& range, Predicate&& pred)
     {
         return find_if(range, pred) == range.end_pos();
     }
 
     template <class Range, class Predicate,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     bool any_of(const Range& range, Predicate&& pred)
     {
         return !none_of(range, pred);
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
-        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     position_type<Range1, is_range> find_first_of(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = range1.begin_pos();
@@ -123,7 +123,7 @@ namespace stdext
     }
 
     template <class Range1, class Range2,
-        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     position_type<Range1, is_range> find_first_of(const Range1& range1, const Range2& range2)
     {
         return find_first_of(range1, range2, ::std::equal_to<>());
@@ -174,7 +174,7 @@ namespace stdext
         }
     }
     template <class Function, class... Ranges,
-        REQUIRES(const_and<is_single_pass_range<Ranges>::value...>::value)>
+        REQUIRES(const_and<is_multi_pass_range<Ranges>::value...>::value)>
     ::std::tuple<position_type<Ranges, is_range>...> for_each(Function&& f, const Ranges&... ranges)
     {
         ::std::tuple<position_type<Ranges, is_range>...> positions(ranges.begin_pos()...);
@@ -188,7 +188,7 @@ namespace stdext
     }
 
     template <class Range, class Predicate,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     size_type<Range, is_range> count_if(const Range& range, Predicate&& pred)
     {
         size_type<Range, is_range> n = 0;
@@ -201,7 +201,7 @@ namespace stdext
     }
 
     template <class Range, class T,
-        REQUIRES(is_single_pass_range<Range>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value)>
     size_type<Range, is_range> count(const Range& range, const T& value)
     {
         return count_if(range, [&](const auto& v)
@@ -211,7 +211,7 @@ namespace stdext
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
-        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>>
         mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
@@ -227,7 +227,7 @@ namespace stdext
     }
 
     template <class Range1, class Range2,
-        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     ::std::pair<position_type<Range1, is_range>, position_type<Range2, is_range>>
         mismatch(const Range1& range1, const Range2& range2)
     {
@@ -235,7 +235,7 @@ namespace stdext
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
-        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         auto pos = mismatch(range1, range2, ::std::forward<BinaryPredicate>(pred));
@@ -243,7 +243,7 @@ namespace stdext
     }
 
     template <class Range1, class Range2,
-        REQUIRES(is_single_pass_range<Range1>::value), REQUIRES(is_single_pass_range<Range2>::value)>
+        REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2)
     {
         return equal(range1, range2, ::std::equal_to<>())
@@ -1292,7 +1292,7 @@ namespace stdext
     }
 
     template <class Range, class OutputRange, class Compare,
-        REQUIRES(is_single_pass_range<Range>::value), REQUIRES(is_random_access_range<OutputRange>::value), REQUIRES(is_counted_range<OutputRange>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_random_access_range<OutputRange>::value), REQUIRES(is_counted_range<OutputRange>::value)>
     position_type<OutputRange, is_range> partial_sort_copy(const Range& range, const OutputRange& out, Compare&& comp)
     {
         if (out.size() == 0)
@@ -1323,7 +1323,7 @@ namespace stdext
     }
 
     template <class Range, class OutputRange,
-        REQUIRES(is_single_pass_range<Range>::value), REQUIRES(is_random_access_range<OutputRange>::value), REQUIRES(is_counted_range<OutputRange>::value)>
+        REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_random_access_range<OutputRange>::value), REQUIRES(is_counted_range<OutputRange>::value)>
     position_type<OutputRange, is_range> partial_sort_copy(const Range& range, const OutputRange& out)
     {
         return partial_sort_copy(range, ::std::less<>());

@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 
 set(STDEXT_SRC
     "src/stream.cpp"
-    "src/string_view.cpp")
+    "src/string_view.cpp"
+    "src/unicode.cpp")
 set(STDEXT_INC
     "include/stdext/algorithm.h"
     "include/stdext/array_view.h"

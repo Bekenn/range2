@@ -12,33 +12,35 @@
 
 #include "range.h"
 
+#include <tuple>
+
+
 namespace stdext
 {
     enum class utf_result
     {
         ok,
-        partial,
+        partial_read,
+        partial_write,
         error
     };
 
     struct utfstate_t
     {
-        union
-        {
-            ::std::uint32_t value;
-            ::std::uint32_t
-                code : 24,
-                produced : 2,
-                consumed : 2,
-                remaining : 2;
-        };
+        ::std::uint32_t
+            code : 24,
+            produced : 2,
+            consumed : 2,
+            remaining : 2;
+
+        utfstate_t() : code(0), produced(0), consumed(0), remaining(0) { }
     };
 
     constexpr char32_t UNICODE_REPLACEMENT_CHARACTER = 0xFFFD;
     constexpr char32_t INVALID_UNICODE_CHARACTER = char32_t(-1);
     constexpr ::std::size_t MAX_UTF8_CHARACTER_LENGTH = 4;
 
-    ::std::size_t utf8_character_length(char first)
+    inline ::std::size_t utf8_character_length(char first)
     {
         if ((first & 0x80) == 0x00)
             return 1;
@@ -51,12 +53,12 @@ namespace stdext
         return 0;
     }
 
-    bool utf8_is_leading(char code)
+    inline bool utf8_is_leading(char code)
     {
         return (code & 0xC0) != 0x80 && (code & 0xF8) != 0xF8;
     }
 
-    bool utf8_is_trailing(char code)
+    inline bool utf8_is_trailing(char code)
     {
         return (code & 0xC0) == 0x80;
     }
@@ -76,427 +78,192 @@ namespace stdext
         return (code & 0xFC00) == 0xDC00;
     }
 
-    namespace detail
-    {
-        bool utf8_decode_first(::std::uint8_t code, utfstate_t& state)
-        {
-            if ((code & 0x80) == 0x00)
-            {
-                state.code = code;
-                state.remaining = 0;
-            }
-            else if ((code & 0xE0) == 0xC0)
-            {
-                state.code = code & 0x1F;
-                state.remaining = 1;
-            }
-            else if ((code & 0xF0) == 0xE0)
-            {
-                state.code = code & 0x0F;
-                state.remaining = 2;
-            }
-            else if ((code & 0xF8) == 0xF0)
-            {
-                state.code = code & 0x07;
-                state.remaining = 3;
-            }
-            else
-                return false;
-
-            return true;
-        }
-
-        bool utf8_validate_second(::std::uint8_t code, utfstate_t state)
-        {
-            switch (state.remaining)
-            {
-            case 2:
-                if ((state.code == 0x00 && code < 0xA0)
-                    || (state.code == 0x0D && code >= 0xA0))
-                {
-                    return false;
-                }
-                break;
-            case 3:
-                if ((state.code == 0x00 && code < 0x90)
-                    || (state.code == 0x04 && code >= 0x90))
-                {
-                    return false;
-                }
-                break;
-
-            default:
-                break;
-            }
-
-            return true;
-        }
-
-        bool utf8_decode_trailing(::std::uint8_t code, utfstate_t& state)
-        {
-            if ((code & 0xC0) != 0x80)
-                return false;
-
-            state.code <<= 6;
-            state.code |= code;
-            --state.remaining;
-            return true;
-        }
-    }
-
     // Converts as many code units as possible from utf8 to utf32.  This function supports partial conversions, such that
     // all utf8 code units are consumed until either the input buffer has been completely consumed or the output buffer
     // has been completely filled.  If the input buffer ends with a partial character sequence, no corresponding output
     // code point is written; instead, the partial input sequence is consumed and information regarding the partial
     // conversion is stored in state.  When this function is called again, the partial conversion information is used to
     // resume the conversion, treating the new input sequence as an extension of the previous sequence.
-    // The first time this function is called for a given input sequence, state should be initialized to zero.
-    // On return, in_first points one position beyond the last input code unit consumed, out_first points one position
-    // beyond the last output code unit produced, and state contains partial conversion information, if any, for the last
-    // input character sequence.
-    // If the function returns utf_result::ok, state == 0 and in_first == in_last.
-    // If the function returns utf_result::partial, state contains partial conversion information and either
-    // in_first == in_last or out_first == out_last.
-    // If the function returns utf_result::error, state == 0 and in_first points one position beyond the input character
+    // The first time this function is called for a given input sequence, state should be empty (default constructed).
+    // On return, state contains partial conversion information, if any, for the last input character sequence.
+    // If the function returns utf_result::ok, then state is empty and in is exhausted.
+    // If the function returns utf_result::partial, then state contains partial conversion information and either
+    // in is exhausted or out is full.
+    // If the function returns utf_result::error, then state is empty and in points one position beyond the input character
     // sequence that could not be converted.
-    // The behavior is undefined if state != 0 or if state does not contain a value from a previous call to this function.
-    utf_result utf8_to_utf32(const char*& in_first, const char* in_last, char32_t*& out_first, char32_t* out_last, utfstate_t& state)
+    // The behavior is undefined if state is non-empty and does not contain a value from a previous call to this function.
+    ::std::pair<utf_result, char> to_utf8(char16_t in, utfstate_t& state);
+    ::std::pair<utf_result, char> to_utf8(char32_t in, utfstate_t& state);
+    ::std::pair<utf_result, char16_t> to_utf16(char in, utfstate_t& state);
+    ::std::pair<utf_result, char16_t> to_utf16(char32_t in, utfstate_t& state);
+    ::std::pair<utf_result, char32_t> to_utf32(char in, utfstate_t& state);
+    ::std::pair<utf_result, char32_t> to_utf32(char16_t in, utfstate_t& state);
+
+    namespace detail
     {
-        if (in_first == in_last)
-            return state.consumed == 0 ? utf_result::ok : utf_result::partial;
-
-        state.code;
-        state.remaining;
-        state.consumed;
-
-        switch (state.consumed)
+        // It would be really nice to have function template partial specialization...
+        template <class OutChar, class InChar> struct to_utf_helper;
+        template <class InChar>
+        struct to_utf_helper<char, InChar>
         {
-            while (in_first != in_last)
+            template <class... Args> static auto call(Args&&... args) { return to_utf8(::std::forward<Args>(args)...); }
+        };
+        template <class InChar>
+        struct to_utf_helper<char16_t, InChar>
+        {
+            template <class... Args> static auto call(Args&&... args) { return to_utf16(::std::forward<Args>(args)...); }
+        };
+        template <class InChar>
+        struct to_utf_helper<char32_t, InChar>
+        {
+            template <class... Args> static auto call(Args&&... args) { return to_utf32(::std::forward<Args>(args)...); }
+        };
+
+        template <class OutChar, class InChar>
+        ::std::pair<utf_result, OutChar> to_utf(InChar in, utfstate_t& state)
+        {
+            return to_utf_helper<OutChar, InChar>::call(in, state);
+        }
+
+        template <class Char, class Generator, class Consumer>
+        utf_result to_utf(Generator&& in, Consumer&& out, utfstate_t& state)
+        {
+            auto result = utf_result::ok;
+
+            while (in)
             {
-        case 0:
-                if (!detail::utf8_decode_first(*in_first++, state))
-                {
-                    state.value = 0;
+                Char code;
+                ::std::tie(result, code) = to_utf<Char>(*in, state);
+                if (result == utf_result::error)
                     return utf_result::error;
-                }
-
-                state.consumed = 1;
-                if (in_first == in_last)
-                    return utf_result::partial;
-
-        // fall through
-        case 1:
-                if (!detail::utf8_validate_second(*in_first, state))
+                if (result != utf_result::partial_read)
                 {
-                    state.value = 0;
-                    return utf_result::error;
+                    ++in;
+                    if (!out(code))
+                        return utf_result::partial_write;
                 }
-
-        // fall through
-        default:
-                while (state.remaining != 0)
-                {
-                    if (in_first == in_last)
-                        return utf_result::partial;
-
-                    if (!detail::utf8_decode_trailing(*in_first, state))
-                    {
-                        state.value = 0;
-                        return utf_result::error;
-                    }
-
-                    ++in_first;
-                    ++state.consumed;
-                }
-
-                if (out_first == out_last)
-                    return utf_result::partial;
-
-                *out_first++ = state.code;
             }
+
+            return result;
         }
 
-        state.value = 0;
-        return utf_result::ok;
-    }
-
-    utf_result utf16_to_utf32(const char16_t*& in_first, const char16_t* in_last, char32_t*& out_first, char32_t* out_last, utfstate_t& state)
-    {
-        if (in_first == in_last)
-            return state.consumed == 0 ? utf_result::ok : utf_result::partial;
-
-        switch (state.consumed)
+        template <class Generator, class Function>
+        ::std::pair<utf_result, ::std::size_t> to_utf_length(Generator&& in, Function&& convert)
         {
-            while (in_first != in_last)
+            auto result = ::std::make_pair(utf_result::ok, size_t(0));
+            utfstate_t state;
+            while (in)
             {
-        case 0:
-                state.code = *in_first++;
-                state.consumed = 1;
-
-                if (is_leading_surrogate(char16_t(state.code)))
-                {
-                    state.code &= 0x03FF;
-                    state.code += 0x40;
-
-                    if (in_first == in_last)
-                        return utf_result::partial;
-
-        // fall through
-        case 1:
-                    auto code = *in_first;
-                    if (!is_trailing_surrogate(code))
-                    {
-                        state.value = 0;
-                        return utf_result::error;
-                    }
-                    ++in_first;
-                    ++state.consumed;
-
-                    state.code <<= 10;
-                    state.code |= code & 0x03FF;
-                }
-
-        // fall through
-        default:
-                if (out_first == out_last)
-                    return utf_result::partial;
-
-                *out_first++ = state.code;
-            }
-        }
-
-        state.value = 0;
-        return utf_result::ok;
-    }
-
-    utf_result utf32_to_utf8(const char32_t*& in_first, const char32_t* in_last, char*& out_first, char* out_last, utfstate_t& state)
-    {
-        switch (state.produced)
-        {
-        case 0:
-            while (in_first != in_last)
-            {
-                state.code = *in_first++;
-                if (state.code >= 0x110000 || (state.code < 0x10000 && is_surrogate(char16_t(state.code))))
-                {
-                    state.value = 0;
-                    return utf_result::error;
-                }
-
-                state.remaining = state.code < 0x80 ? 0
-                    : state.code < 0x800 ? 1
-                    : state.code < 0x1000 ? 2
-                    : 3;
-
-                switch (state.remaining)
-                {
-                case 0:
-                    *out_first++ = char(state.code);
+                result.first = convert(*in, state).first;
+                if (result.first == utf_result::error)
                     break;
-                case 1:
-                    *out_first++ = char(0xC0 | (state.code >> 6));
-                    break;
-                case 2:
-                    *out_first++ = char(0xE0 | (state.code >> 12));
-                    break;
-                case 3:
-                    *out_first++ = char(0xF0 | (state.code >> 18));
-                    break;
-                }
-                state.produced = 1;
-
-                while (state.remaining != 0)
-                {
-        default:
-                    if (out_first == out_last)
-                        return utf_result::partial;
-
-                    --state.remaining;
-                    *out_first++ = char(0x80 | ((state.code >> 6 * state.remaining) & 0x3F));
-                }
+                ++in;
+                ++result.second;
             }
+            return result;
         }
-
-        state.value = 0;
-        return utf_result::ok;
     }
 
-    utf_result utf32_to_utf16(const char32_t*& in_first, const char32_t* in_last, char16_t*& out_first, char16_t* out_last, utfstate_t& state)
+    template <class Generator, class Consumer>
+    utf_result to_utf8(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        switch (state.produced)
-        {
-        case 0:
-            while (in_first != in_last)
-            {
-                state.code = *in_first++;
-                if (state.code >= 0x110000 || (state.code < 0x10000 && is_surrogate(char16_t(state.code))))
-                {
-                    state.value = 0;
-                    return utf_result::error;
-                }
-
-                if (out_first == out_last)
-                    return utf_result::partial;
-
-                if (state.code < 0x10000)
-                    *out_first++ = char16_t(state.code);
-                else
-                {
-                    *out_first++ = char16_t(0xD800 | ((state.code >> 16) - 1));
-                    state.produced = 1;
-
-        default:
-                    if (out_first == out_last)
-                        return utf_result::partial;
-
-                    *out_first++ = char16_t(0xDC00 | (state.code & 0xFFFF));
-                }
-            }
-        }
-
-        state.value = 0;
-        return utf_result::ok;
+        return detail::to_utf<char>(::std::forward<Generator>(in), ::std::forward<Consumer>(out), state);
     }
 
-    utf_result utf8_to_utf16(const char*& in_first, const char* in_last, char16_t*& out_first, char16_t* out_last, utfstate_t& state)
+    template <class Generator, class Consumer>
+    utf_result to_utf16(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        char32_t code;
-        char32_t* pcode;
-        const char32_t* pccode;
-        utf_result result;
-
-        switch (state.produced)
-        {
-        case 0:
-            while (in_first != in_last)
-            {
-                pcode = &code;
-                result = utf8_to_utf32(in_first, in_last, pcode, pcode + 1, state);
-                if (result != utf_result::ok)
-                    return result;
-
-        default:
-            pccode = &code;
-            result = utf32_to_utf16(pccode, pccode + 1, out_first, out_last, state);
-            if (result != utf_result::ok)
-                return result;
-            }
-        }
-
-        state.value = 0;
-        return utf_result::ok;
+        return detail::to_utf<char16_t>(::std::forward<Generator>(in), ::std::forward<Consumer>(out), state);
     }
 
-    utf_result utf16_to_utf8(const char16_t*& in_first, const char16_t* in_last, char*& out_first, char* out_last, utfstate_t& state)
+    template <class Generator, class Consumer>
+    utf_result to_utf32(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        char32_t code;
-        char32_t* pcode;
-        const char32_t* pccode;
-        utf_result result;
+        return detail::to_utf<char32_t>(::std::forward<Generator>(in), ::std::forward<Consumer>(out), state);
+    }
 
-        switch (state.produced)
-        {
-        case 0:
-            while (in_first != in_last)
-            {
-                pcode = &code;
-                result = utf16_to_utf32(in_first, in_last, pcode, pcode + 1, state);
-                if (result != utf_result::ok)
-                    return result;
+    template <class Generator>
+    ::std::pair<utf_result, size_t> to_utf8_length(Generator&& in)
+    {
+        return detail::to_utf_length(in, [](auto&&... args) { return to_utf8(::std::forward<decltype(args)>(args)...); });
+    }
 
-        default:
-                pccode = &code;
-                result = utf32_to_utf8(pccode, pccode + 1, out_first, out_last, state);
-                if (result != utf_result::ok)
-                    return result;
-            }
-        }
+    template <class Generator>
+    ::std::pair<utf_result, size_t> to_utf16_length(Generator&& in)
+    {
+        return detail::to_utf_length(in, [](auto&&... args) { return to_utf16(::std::forward<decltype(args)>(args)...); });
+    }
 
-        state.value = 0;
-        return utf_result::ok;
+    template <class Generator>
+    ::std::pair<utf_result, ::std::size_t> to_utf32_length(Generator&& in)
+    {
+        return detail::to_utf_length(in, [](auto&&... args) { return to_utf32(::std::forward<decltype(args)>(args)...); });
     }
 
     template <class Range>
-    class utf8_to_utf32_range : private compressed_base<position_type<Range, is_range>>
+    class utf8_to_utf32_generator
     {
     public:
-        using range_category = single_pass_range_tag;
+        using iterator_category = ::std::input_iterator_tag;
         using value_type = const char32_t;
-        using position = position_type<Range, is_range>;
         using difference_type = difference_type<Range, is_range>;
+        using pointer = value_type*;
         using reference = value_type&;
+        using generator_category = basic_generator_tag;
         using range = Range;
 
-    private:
-        using base = compressed_base<position_type<Range, is_range>>;
+    public:
+        utf8_to_utf32_generator() : r(), value() { }
+        explicit utf8_to_utf32_generator(const range& r) : r(r)
+        {
+            next();
+        }
+        explicit utf8_to_utf32_generator(range&& r) : r(::std::move(r))
+        {
+            next();
+        }
 
     public:
-        explicit utf8_to_utf32_range(const range& wrapped) : base(wrapped.begin_pos()), wrapped(wrapped), value()
+        friend bool operator == (const utf8_to_utf32_generator& a, const utf8_to_utf32_generator& b) noexcept
         {
-            next();
-        }
-        explicit utf8_to_utf32_range(range&& wrapped) : base(wrapped.begin_pos()), wrapped(::std::move(wrapped)), value()
-        {
-            next();
-        }
-
-        friend bool operator == (const utf8_to_utf32_range& a, const utf8_to_utf32_range& b) noexcept
-        {
-            return a.wrapped == b.wrapped
+            return a.r == b.r
                 && a.value == b.value;
         }
-        friend bool operator != (const utf8_to_utf32_range& a, const utf8_to_utf32_range& b) noexcept
+        friend bool operator != (const utf8_to_utf32_generator& a, const utf8_to_utf32_generator& b) noexcept
         {
             return !(a == b);
         }
 
-    public:
-        position begin_pos() const { return *this; }
-        void begin_pos(position pos)
+        friend void swap(utf8_to_utf32_generator& a, utf8_to_utf32_generator& b)
         {
-            wrapped.begin_pos(pos);
-            next();
+            using ::std::swap;
+            swap(a.r, b.r);
+            swap(a.value, b.value);
         }
-        bool is_end_pos(position pos) { value == INVALID_UNICODE_CHARACTER; }
-        reference at_pos(position pos) { return value; }
 
-        position& inc_pos(position& pos)
+    public:
+        reference operator * () { return value; }
+        reference operator -> () { return value; }
+        utf8_to_utf32_generator& operator ++ () { next(); return *this; }
+        iterator_proxy<utf8_to_utf32_generator> operator ++ ()
         {
+            iterator_proxy<utf8_to_utf32_generator> proxy = value;
             next();
-            pos = begin_pos();
-            return pos;
+            return proxy;
         }
 
     private:
         void next()
         {
-            auto pos = wrapped.begin_pos();
-            *this = pos;
-            if (wrapped.is_end_pos(pos))
-            {
-                value = INVALID_UNICODE_CHARACTER;
-                break;
-            }
-
-            utfstate_t state = 0;
-            auto result = utf_result::error;
-            do
-            {
-                char utf8 = wrapped.at_pos(pos);
-                wrapped.inc_pos(pos);
-
-                const char* putf8 = &utf8;
-                auto putf32 = &value;
-
-                result = utf8_to_utf32(putf8, putf8 + 1, putf32, putf32 + 1, state);
-            } while (result == utf_result::partial && !wrapped.is_end_pos(pos));
-
+            utfstate_t state;
+            auto value_range = make_range(&value, &value + 1);
+            auto result = utf8_to_utf32(make_generator(r), make_consumer(value_range), state);
             if (result != utf_result::ok)
                 value = UNICODE_REPLACEMENT_CHARACTER;
         }
 
     private:
-        range wrapped;
+        range r;
         char32_t value;
     };
 
@@ -504,9 +271,9 @@ namespace stdext
     struct to_utf16_tag { };
     struct to_utf32_tag { };
 
-    auto to_utf8() { return to_utf8_tag(); }
-    auto to_utf16() { return to_utf16_tag(); }
-    auto to_utf32() { return to_utf32_tag(); }
+    inline auto to_utf8() { return to_utf8_tag(); }
+    inline auto to_utf16() { return to_utf16_tag(); }
+    inline auto to_utf32() { return to_utf32_tag(); }
 
     template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
     auto operator >> (::std::remove_reference_t<Range>&& range, to_utf8_tag)
@@ -522,7 +289,7 @@ namespace stdext
     template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
     auto operator >> (Range&& range, to_utf32_tag)
     {
-        return utf8_to_utf32_range<::std::decay_t<Range>>(::std::forward<Range>(range));
+        return utf8_to_utf32_generator<::std::decay_t<Range>>(::std::forward<Range>(range));
     }
 }
 
