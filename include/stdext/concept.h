@@ -37,6 +37,16 @@ template <class T, class... ArgTypes> struct has_method_##MethodName            
 
 namespace stdext
 {
+    template <class Function, class... ArgTypes>
+    struct is_callable
+    {
+        static ::std::true_type test(decltype(::std::declval<Function>()(::std::declval<ArgTypes>()...))*);
+        static ::std::false_type test(...);
+        static constexpr bool value = decltype(test(nullptr))::value;
+    };
+    template <class Function, class... ArgTypes>
+    constexpr bool is_callable_v = is_callable<Function, ArgTypes...>::value;
+
     namespace detail
     {
         template <class T, template <class> class IsT> struct value_type_of;
