@@ -10,6 +10,11 @@
 
 #include <cstddef>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4814)   // constexpr does not imply const in C++14
+#endif
+
 
 namespace stdext
 {
@@ -18,11 +23,11 @@ namespace stdext
 
     // 5.4, In-place construction
     struct in_place_t { };
-    constexpr in_place_t in_place{};
+    constexpr in_place_t in_place;
 
     // 5.5, No-value state indicator
     struct nullopt_t { };
-    constexpr nullopt_t nullopt{};
+    constexpr nullopt_t nullopt;
 
     // 5.6, Class bad_optional_access
     class bad_optional_access : public ::std::logic_error
@@ -33,18 +38,18 @@ namespace stdext
     template <class T, bool TriviallyDestructible>
     struct optional_base
     {
-        ::std::aligned_storage_t<sizeof(T), alignof(T)> storage;
-        bool initialized;
-    };
-    template <class T>
-    struct optional_base<T, true>
-    {
         ~optional_base()
         {
             if (initialized)
                 reinterpret_cast<T&>(storage).~T();
         }
 
+        ::std::aligned_storage_t<sizeof(T), alignof(T)> storage;
+        bool initialized;
+    };
+    template <class T>
+    struct optional_base<T, true>
+    {
         ::std::aligned_storage_t<sizeof(T), alignof(T)> storage;
         bool initialized;
     };
@@ -397,5 +402,9 @@ namespace std
         }
     };
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif
