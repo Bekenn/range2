@@ -13,6 +13,7 @@
 #include "algorithm.h"
 #include "array_view.h"
 
+#include <algorithm>
 #include <string>
 
 
