@@ -21,6 +21,9 @@ namespace stdext
     class array_view : public delimited_iterator_range<T*>
     {
     public:
+        using const_iterator = const T*;
+        using reverse_iterator = ::std::reverse_iterator<T*>;
+        using const_reverse_iterator = ::std::reverse_iterator<const T*>;
         using const_reference = const T&;
         using pointer = T*;
         using size_type = ::std::size_t;
@@ -37,6 +40,9 @@ namespace stdext
     class const_array_view : public delimited_iterator_range<const T*>
     {
     public:
+        using const_iterator = const T*;
+        using reverse_iterator = ::std::reverse_iterator<const T*>;
+        using const_reverse_iterator = ::std::reverse_iterator<const T*>;
         using pointer = const T*;
         using size_type = ::std::size_t;
 
