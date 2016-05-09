@@ -41,6 +41,50 @@ namespace stdext
         struct reference_type_of<Generator, is_generator> { using type = typename Generator::reference; };
     }
 
+    template <class Iterator>
+    class iterator_generator
+    {
+    public:
+        using iterator_category = ::std::input_iterator_tag;
+        using value_type = ::stdext::value_type<Iterator, is_iterator>;
+        using difference_type = ::stdext::difference_type<Iterator, is_iterator>;
+        using pointer = pointer_type<Iterator, is_iterator>;
+        using reference = reference_type<Iterator, is_iterator>;
+        using generator_category = basic_generator_tag;
+        using iterator = Iterator;
+
+    public:
+        iterator_generator() : i() { }
+        explicit iterator_generator(const iterator& i) : i(i) { }
+        explicit iterator_generator(iterator&& i) : i(::std::move(i)) { }
+
+    public:
+        friend bool operator == (const iterator_generator& a, const iterator_generator& b) noexcept
+        {
+            return a.i == b.i;
+        }
+        friend bool operator != (const iterator_generator& a, const iterator_generator& b) noexcept
+        {
+            return !(a == b);
+        }
+
+        friend void swap(iterator_generator& a, iterator_generator& b)
+        {
+            using ::std::swap;
+            swap(a.i, b.i);
+        }
+
+    public:
+        reference operator * () const { return *i; }
+        pointer operator -> () const { return i.operator -> (); }
+        iterator_generator& operator ++ () { ++i; return *this; }
+        decltype(auto) operator ++ (int) { return i++; }
+        explicit operator bool () const { return true; }
+
+    private:
+        iterator i;
+    };
+
     template <class Function>
     class function_generator
     {
@@ -50,11 +94,12 @@ namespace stdext
         using difference_type = ::std::ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
+        using generator_category = basic_generator_tag;
 
     public:
         function_generator() : f(), value() { }
-        function_generator(const Function& f) : f(f), value(this->f()) { }
-        function_generator(Function&& f) : f(::std::move(f)), value(this->f()) { }
+        explicit function_generator(const Function& f) : f(f), value(this->f()) { }
+        explicit function_generator(Function&& f) : f(::std::move(f)), value(this->f()) { }
 
     public:
         friend bool operator == (const function_generator& a, const function_generator& b) noexcept
@@ -75,8 +120,8 @@ namespace stdext
         }
 
     public:
-        reference operator * () { return value; }
-        pointer operator -> () { return &value; }
+        reference operator * () const { return value; }
+        pointer operator -> () const { return &value; }
         function_generator& operator ++ () { value = f(); return *this; }
         iterator_proxy<function_generator> operator ++ (int)
         {
@@ -84,7 +129,7 @@ namespace stdext
             ++*this;
             return proxy;
         }
-        explicit operator bool () { return true; }
+        explicit operator bool () const { return true; }
 
     private:
         Function f;
@@ -137,6 +182,18 @@ namespace stdext
     private:
         value_type v;
     };
+
+    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    auto make_generator(Iterator&& iterator)
+    {
+        return iterator_generator<::std::decay_t<Iterator>>(::std::forward<Iterator>(iterator));
+    }
+
+    template <class Function, REQUIRES(is_callable<::std::decay_t<Function>>::value)>
+    auto make_generator(Function&& function)
+    {
+        return function_generator<::std::decay_t<Function>>(::std::forward<Function>(function));
+    }
 
     template <class T>
     auto make_constant_generator(T&& v)
