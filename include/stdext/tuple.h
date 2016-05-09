@@ -45,6 +45,11 @@ namespace stdext
     namespace detail
     {
         template <class... Tuples> struct tuples_size;
+        template <class Tuple>
+        struct tuples_size<Tuple>
+        {
+            static constexpr ::std::size_t value = ::std::tuple_size<Tuple>::value;
+        };
         template <class Tuple, class... Tuples>
         struct tuples_size<Tuple, Tuples...>
         {
@@ -62,7 +67,7 @@ namespace stdext
         template <::std::size_t n, class... Tuples, ::std::size_t... tuple_indices>
         auto zip_element(const ::std::tuple<Tuples&...>& tuples, type_list<constant<::std::size_t, tuple_indices>...>)
         {
-            using element_type_list = type_list<tuple_element_t<Tuples, n>...>;
+            using element_type_list = type_list<::std::tuple_element_t<n, Tuples>...>;
             return ::std::make_tuple(wrap<list_element_t<element_type_list, tuple_indices>>(::std::get<n>(::std::get<tuple_indices>(tuples)))...);
         }
 
@@ -76,7 +81,7 @@ namespace stdext
     template <class... Tuples>
     auto zip(const Tuples&... tuples)
     {
-        return detail::zip(tuples, iota_list<tuples_size<Tuples>::value, ::std::size_t>());
+        return detail::zip(::std::tuple<Tuples&...>(tuples...), iota_list<detail::tuples_size<Tuples...>::value, ::std::size_t>());
     }
 }
 
