@@ -85,6 +85,27 @@ namespace stdext
         iterator i;
     };
 
+    template <class Iterator, class Sentinel>
+    class delimited_iterator_generator : public iterator_generator<Iterator>
+    {
+    public:
+        using typename iterator_generator::iterator;
+        using sentinel = Sentinel;
+
+    public:
+        delimited_iterator_generator() : iterator_generator(), j() { }
+        delimited_iterator_generator(const iterator& i, const sentinel& j) : iterator_generator(i), j(j) { }
+        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator(i), j(::std::move(j)) { }
+        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator(::std::move(i)), j(j) { }
+        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator(::std::move(i)), j(::std::move(j)) { }
+
+    public:
+        explicit operator bool () const { return i != j; }
+
+    private:
+        sentinel j;
+    };
+
     template <class Function>
     class function_generator
     {
@@ -183,10 +204,60 @@ namespace stdext
         value_type v;
     };
 
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
-    auto make_generator(Iterator&& iterator)
+    template <class Iterator, class TerminationPredicate>
+    class terminated_generator
     {
-        return iterator_generator<::std::decay_t<Iterator>>(::std::forward<Iterator>(iterator));
+    public:
+        using iterator_category = ::std::input_iterator_tag;
+        using value_type = stdext::value_type<Iterator, is_iterator>;
+        using difference_type = stdext::difference_type<Iterator, is_iterator>;
+        using pointer = pointer_type<Iterator, is_iterator>;
+        using reference = reference_type<Iterator, is_iterator>;
+        using generator_category = basic_generator_tag;
+        using iterator = Iterator;
+
+    public:
+        terminated_generator() : i(), term() { }
+        terminated_generator(const iterator& g, const TerminationPredicate& term)
+            : i(g), term(term) { }
+        terminated_generator(const iterator& g, TerminationPredicate&& term)
+            : i(g), term(::std::move(term)) { }
+        terminated_generator(iterator&& g, const TerminationPredicate& term)
+            : i(::std::move(g)), term(term) { }
+        terminated_generator(iterator&& g, TerminationPredicate&& term)
+            : i(::Std::move(g)), term(::std::move(term)) { }
+
+    public:
+        friend void swap(terminated_generator& a, terminated_generator& b)
+        {
+            using ::std::swap;
+            swap(a.i, b.i);
+            swap(a.term, b.term);
+        }
+
+    public:
+        reference operator * () const { return *i; }
+        pointer operator -> () const { return i.operator -> (); }
+        terminated_generator& operator ++ () { ++i; return *this; }
+        auto operator ++ (int) { return i++; }
+        explicit operator bool () const { return !term(*i); }
+
+    private:
+        iterator i;
+        TerminationPredicate term;
+    };
+
+    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    auto make_generator(Iterator&& i)
+    {
+        return iterator_generator<::std::decay_t<Iterator>>(::std::forward<Iterator>(i));
+    }
+
+    template <class Iterator, class Sentinel,
+        REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
+    auto make_generator(Iterator&& i, Sentinel&& j)
+    {
+        return delimited_iterator_generator<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(::std::forward<Iterator>(i), ::std::forward<Sentinel>(j));
     }
 
     template <class Function, REQUIRES(is_callable<::std::decay_t<Function>>::value)>
@@ -199,6 +270,14 @@ namespace stdext
     auto make_constant_generator(T&& v)
     {
         return constant_generator<::std::decay_t<T>>(::std::forward<T>(v));
+    }
+
+    template <class Iterator, class TerminationPredicate,
+    REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_callable<::std::decay_t<TerminationPredicate>(value_type<::std::decay_t<Iterator>, is_iterator>), bool>::value)>
+    auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
+    {
+        return terminated_generator<::std::decay_t<Iterator>, ::std::decay_t<TerminationPredicate>>
+            (::std::forward<Iterator>(i), ::std::forward<TerminationPredicate>(term));
     }
 }
 

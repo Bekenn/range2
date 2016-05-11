@@ -10,6 +10,7 @@
 #define STDEXT_RANGE_INCLUDED
 #pragma once
 
+#include "consumer.h"
 #include "generator.h"
 #include "utility.h"
 
@@ -40,16 +41,16 @@ namespace stdext
         template <class T>
         struct check_end_pos_getter
         {
-            static HAS_METHOD_T(T, end_pos) test(void*);
-            static ::std::false_type test(...);
-            static constexpr bool value = decltype(test(nullptr))::value;
+            template <class U> static HAS_METHOD_T(U, end_pos) test(void*);
+            template <class U> static ::std::false_type test(...);
+            static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
         template <class T>
         struct check_end_pos_setter
         {
-            static HAS_METHOD_T(T, end_pos, position_type<T, is_range>) test(void*);
-            static ::std::false_type test(...);
-            static constexpr bool value = decltype(test(nullptr))::value;
+            template <class U> static HAS_METHOD_T(U, end_pos, position_type<U, is_range>) test(void*);
+            template <class U> static ::std::false_type test(...);
+            static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
     }
     template <class T> struct is_delimited_range
@@ -64,21 +65,42 @@ namespace stdext
         template <class T>
         struct check_has_size
         {
-            static HAS_METHOD_T(T, size) test(void*);
-            static ::std::false_type test(...);
-            static constexpr bool value = decltype(test(nullptr))::value;
+            template <class U> static HAS_METHOD_T(U, size) test(void*);
+            template <class U> static ::std::false_type test(...);
+            static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
         DECLARE_HAS_METHOD(resize);
         template <class T>
         struct check_has_resize
         {
-            static HAS_METHOD_T(T, resize, size_type<T, is_range>) test(void*);
-            static ::std::false_type test(...);
-            static constexpr bool value = decltype(test(nullptr))::value;
+            template <class U> static HAS_METHOD_T(U, resize, size_type<T, is_range>) test(void*);
+            template <class U> static ::std::false_type test(...);
+            static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
     }
     template <class T> struct is_counted_range
         : ::std::conditional_t<is_range<T>::value && detail::check_has_size<T>::value && detail::check_has_resize<T>::value,
+            ::std::true_type,
+            ::std::false_type>
+    { };
+
+    namespace detail
+    {
+        template <class T>
+        struct check_stl_range
+        {
+            template <class U> static auto _begin(U&& u) { using ::std::begin; return begin(::std::forward<U>(u)); }
+            template <class U> static auto _end(U&& u) { using ::std::end; return end(::std::forward<U>(u)); }
+            template <class U> static ::std::true_type test_begin(decltype(_begin(::std::declval<U>()))*);
+            template <class U> static ::std::false_type test_begin(...);
+            template <class U> static ::std::true_type test_end(decltype(_end(::std::declval<U>()))*);
+            template <class U> static ::std::false_type test_end(...);
+            static constexpr bool value = decltype(test_begin<T>(nullptr))::value && decltype(test_end<T>(nullptr))::value
+                && is_equality_comparable<decltype(_begin(::std::declval<T>())), decltype(_end(::std::declval<T>()))>::value;
+        };
+    }
+    template <class T> struct is_stl_range_provider
+        : ::std::conditional_t<detail::check_stl_range<T>::value,
             ::std::true_type,
             ::std::false_type>
     { };
@@ -1895,6 +1917,16 @@ namespace stdext
         return range_generator<Range>(range);
     }
 
+    template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value)>
+    auto make_generator(RangeProvider& range)
+    {
+        using ::std::begin;
+        using ::std::end;
+        using I = ::std::decay_t<decltype(begin(range))>;
+        using S = ::std::decay_t<decltype(end(range))>;
+        return delimited_iterator_generator<I, S>(begin(range), end(range));
+    };
+
     template <class Range, REQUIRES(is_range<Range>::value)>
     auto make_consumer(Range& range)
     {
@@ -1907,6 +1939,16 @@ namespace stdext
             drop_first(*range);
             return true;
         };
+    }
+
+    template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value)>
+    auto make_consumer(RangeProvider& range)
+    {
+        using ::std::begin;
+        using ::std::end;
+        using I = ::std::decay_t<decltype(begin(range))>;
+        using S = ::std::decay_t<decltype(end(range))>;
+        return delimited_iterator_consumer<I, S>(begin(range), end(range));
     }
 }
 

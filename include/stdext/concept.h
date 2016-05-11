@@ -37,15 +37,35 @@ template <class T, class... ArgTypes> struct has_method_##MethodName            
 
 namespace stdext
 {
-    template <class T, class... ArgTypes>
-    struct is_callable
-    {
-        template <class U> static ::std::true_type test(decltype(::std::declval<U>()(::std::declval<ArgTypes>()...))*);
-        template <class U> static ::std::false_type test(...);
-        static constexpr bool value = decltype(test<T>(nullptr))::value;
-    };
+    template <class, class R = void> struct is_callable;
     template <class Function, class... ArgTypes>
-    constexpr bool is_callable_v = is_callable<Function, ArgTypes...>::value;
+    struct is_callable<Function(ArgTypes...), void>
+    {
+        template <class T> static ::std::true_type test(decltype(::std::declval<T>()(::std::declval<ArgTypes>()...))*);
+        template <class T> static ::std::false_type test(...);
+        static constexpr bool value = decltype(test<Function>(nullptr))::value;
+    };
+    template <class Function, class... ArgTypes, class R>
+    struct is_callable<Function(ArgTypes...), R>
+    {
+        template <class T> static R test_ret() { return ::std::declval<T>()(::std::declval<ArgTypes>()...); }
+        template <class T> static ::std::true_type test(decltype(test_ret<T>())*);
+        template <class T> static ::std::false_type test(...);
+        static constexpr bool value = decltype(test<Function>(nullptr))::value;
+    };
+    template <class F, class R = void>
+    constexpr bool is_callable_v = is_callable<F, R>::value;
+
+    template <class T1, class T2>
+    struct is_equality_comparable
+    {
+        template <class U1, class U2>
+        static ::std::true_type test(decltype(::std::declval<U1>() == ::std::declval<U2>()
+            && ::std::declval<U1>() != ::std::declval<U2>())*);
+        template <class U1, class U2>
+        static ::std::false_type test(...);
+        static constexpr bool value = decltype(test<T1, T2>(nullptr))::value;
+    };
 
     namespace detail
     {
