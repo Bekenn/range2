@@ -7,6 +7,25 @@
 
 namespace stdext
 {
+    template <class Consumer>
+    struct is_consumer
+    {
+        static constexpr bool value = false;
+    };
+    template <class Consumer, class T>
+    struct is_consumer<Consumer(T)>
+    {
+        static constexpr bool value = is_callable_v<Consumer(T), bool>;
+    };
+
+    template <class T>
+    struct is_consumer_adaptable
+    {
+        template <class U> static ::std::true_type test(decltype(make_consumer(::std::declval<T>()))*);
+        template <class U> static ::std::false_type test(...);
+        static constexpr bool value = decltype(test<T>(nullptr))::value;
+    };
+
     template <class Iterator>
     class iterator_consumer
     {
