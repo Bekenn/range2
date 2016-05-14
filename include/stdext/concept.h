@@ -48,8 +48,8 @@ namespace stdext
     template <class Function, class... ArgTypes, class R>
     struct is_callable<Function(ArgTypes...), R>
     {
-        template <class T> static R test_ret() { return ::std::declval<T>()(::std::declval<ArgTypes>()...); }
-        template <class T> static ::std::true_type test(decltype(test_ret<T>())*);
+        template <class T> static void test_ret(R);
+        template <class T> static ::std::true_type test(decltype(test_ret<T>(::std::declval<T>()(::std::declval<ArgTypes>()...)))*);
         template <class T> static ::std::false_type test(...);
         static constexpr bool value = decltype(test<Function>(nullptr))::value;
     };
