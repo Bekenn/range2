@@ -89,7 +89,7 @@ namespace stdext
     class delimited_iterator_generator : public iterator_generator<Iterator>
     {
     public:
-        using typename iterator_generator::iterator;
+        using typename iterator_generator<Iterator>::iterator;
         using sentinel = Sentinel;
 
     public:
