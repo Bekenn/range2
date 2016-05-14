@@ -126,7 +126,8 @@ namespace stdext
             return to_utf_helper<OutChar, InChar>::call(in, state);
         }
 
-        template <class Char, class Generator, class Consumer>
+        template <class Char, class Generator, class Consumer,
+            REQUIRES(is_generator<::std::decay_t<Generator>>::value && is_consumer<::std::decay_t<Consumer>(Char)>::value)>
         utf_result to_utf(Generator&& in, Consumer&& out, utfstate_t& state)
         {
             auto result = utf_result::ok;
@@ -171,10 +172,16 @@ namespace stdext
         return detail::to_utf<char>(::std::forward<Generator>(in), ::std::forward<Consumer>(out), state);
     }
 
-    template <class Char, class Consumer, REQUIRES(::std::is_pod<Char>::value)>
+    template <class Char, class Consumer, REQUIRES(::std::is_pod<Char>::value && is_consumer<::std::decay_t<Consumer>(Char)>::value)>
     utf_result to_utf8(const Char* s, Consumer&& out, utfstate_t& state)
     {
         return detail::to_utf<char>(make_cstring_generator(s), ::std::forward<Consumer>(out), state);
+    }
+
+    template <class Char, class Out, REQUIRES(::std::is_pod<Char>::value && is_consumer_adaptable<::std::decay_t<Out>>::value)>
+    utf_result to_utf8(const Char* s, Out&& out, utfstate_t& state)
+    {
+        return detail::to_utf<char>(make_cstring_generator(s), make_consumer(::std::forward<Out>(out)), state);
     }
 
     template <class Generator, class Consumer, REQUIRES(is_generator<::std::decay_t<Generator>>::value)>
