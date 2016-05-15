@@ -233,7 +233,7 @@ namespace stdext
         static constexpr bool noexcept_swappable()
         {
             using ::std::swap;
-            return noexcept(swap(::std::declval<value_type>(), ::std::declval<value_type>()));
+            return noexcept(swap(::std::declval<value_type&>(), ::std::declval<value_type&>()));
         }
 
     private:

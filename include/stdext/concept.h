@@ -37,6 +37,10 @@ template <class T, class... ArgTypes> struct has_method_##MethodName            
 
 namespace stdext
 {
+    // Debugging helpers
+    template <class T> struct error_type;
+    template <class T, T v> struct error_value;
+
     template <class, class R = void> struct is_callable;
     template <class Function, class... ArgTypes>
     struct is_callable<Function(ArgTypes...), void>
@@ -69,12 +73,14 @@ namespace stdext
 
     namespace detail
     {
-        template <class T, template <class> class IsT> struct value_type_of;
-        template <class T, template <class> class IsT> struct position_type_of;
-        template <class T, template <class> class IsT> struct difference_type_of;
-        template <class T, template <class> class IsT> struct size_type_of;
-        template <class T, template <class> class IsT> struct pointer_type_of;
-        template <class T, template <class> class IsT> struct reference_type_of;
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct value_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct position_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct difference_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct size_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct pointer_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct reference_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct iterator_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct sentinel_type_of { };
     }
 
     template <class T, template <class> class IsT> using value_type = typename detail::value_type_of<T, IsT>::type;
@@ -83,6 +89,8 @@ namespace stdext
     template <class T, template <class> class IsT> using size_type = typename detail::size_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using pointer_type = typename detail::pointer_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using reference_type = typename detail::reference_type_of<T, IsT>::type;
+    template <class T, template <class> class IsT> using iterator_type = typename detail::iterator_type_of<T, IsT>::type;
+    template <class T, template <class> class IsT> using sentinel_type = typename detail::sentinel_type_of<T, IsT>::type;
 }
 
 #endif

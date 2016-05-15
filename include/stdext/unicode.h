@@ -166,22 +166,19 @@ namespace stdext
         }
     }
 
-    template <class Generator, class Consumer, REQUIRES(is_generator<::std::decay_t<Generator>>::value)>
+    template <class Generator, class Consumer,
+        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<decltype(as_generator(::std::declval<Generator&>()))>, is_generator>)>::value)>
     utf_result to_utf8(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char>(::std::forward<Generator>(in), ::std::forward<Consumer>(out), state);
+        decltype(auto) g = as_generator(::std::forward<Generator>(in));
+        using value_type = stdext::value_type<::std::decay_t<decltype(g)>, is_generator>;
+        return detail::to_utf<char>(::std::forward<decltype(g)>(g), as_consumer<value_type>(::std::forward<Consumer>(out)), state);
     }
 
     template <class Char, class Consumer, REQUIRES(::std::is_pod<Char>::value && is_consumer<::std::decay_t<Consumer>(Char)>::value)>
     utf_result to_utf8(const Char* s, Consumer&& out, utfstate_t& state)
     {
         return detail::to_utf<char>(make_cstring_generator(s), ::std::forward<Consumer>(out), state);
-    }
-
-    template <class Char, class Out, REQUIRES(::std::is_pod<Char>::value && is_consumer_adaptable<::std::decay_t<Out>>::value)>
-    utf_result to_utf8(const Char* s, Out&& out, utfstate_t& state)
-    {
-        return detail::to_utf<char>(make_cstring_generator(s), make_consumer(::std::forward<Out>(out)), state);
     }
 
     template <class Generator, class Consumer, REQUIRES(is_generator<::std::decay_t<Generator>>::value)>
@@ -301,7 +298,7 @@ namespace stdext
         {
             utfstate_t state;
             auto value_range = make_range(&value, &value + 1);
-            auto result = utf8_to_utf32(make_generator(r), make_consumer(value_range), state);
+            auto result = utf8_to_utf32(make_generator(r), make_consumer<char32_t>(value_range), state);
             if (result != utf_result::ok)
                 value = UNICODE_REPLACEMENT_CHARACTER;
         }

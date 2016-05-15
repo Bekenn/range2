@@ -86,18 +86,24 @@ namespace stdext
 
     namespace detail
     {
-        template <class T>
-        struct check_stl_range
+        namespace iter
         {
-            template <class U> static auto _begin(U&& u) { using ::std::begin; return begin(::std::forward<U>(u)); }
-            template <class U> static auto _end(U&& u) { using ::std::end; return end(::std::forward<U>(u)); }
-            template <class U> static ::std::true_type test_begin(decltype(_begin(::std::declval<U>()))*);
-            template <class U> static ::std::false_type test_begin(...);
-            template <class U> static ::std::true_type test_end(decltype(_end(::std::declval<U>()))*);
-            template <class U> static ::std::false_type test_end(...);
-            static constexpr bool value = decltype(test_begin<T>(nullptr))::value && decltype(test_end<T>(nullptr))::value
-                && is_equality_comparable<decltype(_begin(::std::declval<T>())), decltype(_end(::std::declval<T>()))>::value;
-        };
+            using ::std::begin;
+            using ::std::end;
+
+            template <class T>
+            struct check_stl_range
+            {
+                template <class U> static is_equality_comparable<
+                    ::std::decay_t<decltype(begin(::std::declval<U&>()))>,
+                    ::std::decay_t<decltype(end(::std::declval<U&>()))>>
+                    test(::std::nullptr_t);
+                template <class U> static ::std::false_type test(...);
+                static constexpr bool value = decltype(test<T>(nullptr))::value;
+            };
+        }
+
+        using iter::check_stl_range;
     }
     template <class T> struct is_stl_range_provider
         : ::std::conditional_t<detail::check_stl_range<T>::value,
@@ -105,18 +111,52 @@ namespace stdext
             ::std::false_type>
     { };
 
+    namespace detail
+    {
+        namespace iter
+        {
+            using ::std::begin;
+            using ::std::end;
+
+            template <class T>
+            struct iterator_type_of_stl_range
+            {
+                using type = decltype(begin(::std::declval<T&>()));
+            };
+
+            template <class T>
+            struct sentinel_type_of_stl_range
+            {
+                using type = decltype(end(::std::declval<T&>()));
+            };
+        }
+
+        template <class T>
+        struct value_type_of<T, is_stl_range_provider, true> { using type = value_type<iterator_type<T, is_stl_range_provider>, is_iterator>; };
+        template <class T>
+        struct difference_type_of<T, is_stl_range_provider, true> { using type = difference_type<iterator_type<T, is_stl_range_provider>, is_iterator>; };
+        template <class T>
+        struct pointer_type_of<T, is_stl_range_provider, true> { using type = pointer_type<iterator_type<T, is_stl_range_provider>, is_iterator>; };
+        template <class T>
+        struct reference_type_of<T, is_stl_range_provider, true> { using type = reference_type<iterator_type<T, is_stl_range_provider>, is_iterator>; };
+        template <class T>
+        struct iterator_type_of<T, is_stl_range_provider, true> : iter::iterator_type_of_stl_range<T> { };
+        template <class T>
+        struct sentinel_type_of<T, is_stl_range_provider, true> : iter::sentinel_type_of_stl_range<T> { };
+    }
+
     template <class Range> using range_category = typename Range::range_category;
 
     namespace detail
     {
         template <class Range>
-        struct value_type_of<Range, is_range> { using type = typename Range::value_type; };
+        struct value_type_of<Range, is_range, true> { using type = typename Range::value_type; };
         template <class Range>
-        struct position_type_of<Range, is_range> { using type = typename Range::position; };
+        struct position_type_of<Range, is_range, true> { using type = typename Range::position; };
         template <class Range>
-        struct difference_type_of<Range, is_range> { using type = typename Range::difference_type; };
+        struct difference_type_of<Range, is_range, true> { using type = typename Range::difference_type; };
         template <class Range>
-        struct reference_type_of<Range, is_range> { using type = typename Range::reference; };
+        struct reference_type_of<Range, is_range, true> { using type = typename Range::reference; };
 
         DECLARE_HAS_INNER_TYPE(size_type);
         template <class T, bool has_inner_size_type>
@@ -131,7 +171,7 @@ namespace stdext
         };
 
         template <class Range>
-        struct size_type_of<Range, is_range> { using type = typename check_range_inner_size_type<Range, HAS_INNER_TYPE(Range, size_type)>::type; };
+        struct size_type_of<Range, is_range, true> { using type = typename check_range_inner_size_type<Range, HAS_INNER_TYPE(Range, size_type)>::type; };
     }
 
     // range concepts
@@ -1927,7 +1967,7 @@ namespace stdext
         return delimited_iterator_generator<I, S>(begin(range), end(range));
     };
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Elem, class Range, REQUIRES(::std::is_convertible<Elem, value_type<Range, is_range>>::value)>
     auto make_consumer(Range& range)
     {
         using value_type = stdext::value_type<Range, is_range>;
@@ -1941,13 +1981,11 @@ namespace stdext
         };
     }
 
-    template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value)>
+    template <class Elem, class RangeProvider, REQUIRES(::std::is_convertible<Elem, value_type<RangeProvider, is_stl_range_provider>>::value)>
     auto make_consumer(RangeProvider& range)
     {
-        using ::std::begin;
-        using ::std::end;
-        using I = ::std::decay_t<decltype(begin(range))>;
-        using S = ::std::decay_t<decltype(end(range))>;
+        using I = iterator_type<RangeProvider, is_stl_range_provider>;
+        using S = sentinel_type<RangeProvider, is_stl_range_provider>;
         return delimited_iterator_consumer<I, S>(begin(range), end(range));
     }
 }

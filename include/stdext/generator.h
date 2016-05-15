@@ -24,6 +24,31 @@ namespace stdext
             ::std::false_type>
     { };
 
+    template <class T> struct is_generator_adaptable
+    {
+        template <class U> static ::std::true_type test(decltype(make_generator(::std::declval<U&>()))*);
+        template <class U> static ::std::false_type test(...);
+        static constexpr bool value = decltype(test<T>(nullptr))::value;
+    };
+
+    template <class T> struct can_generate
+        : ::std::conditional_t<is_generator<T>::value || is_generator_adaptable<T>::value,
+            ::std::true_type,
+            ::std::false_type>
+    { };
+
+    template <class T, REQUIRES(is_generator<::std::decay_t<T>>::value)>
+    decltype(auto) as_generator(T&& g)
+    {
+        return ::std::forward<T>(g);
+    }
+
+    template <class T, REQUIRES(is_generator_adaptable<::std::decay_t<T>>::value)>
+    auto as_generator(T&& g)
+    {
+        return make_generator(::std::forward<T>(g));
+    }
+
     // The one and only generator category.
     struct basic_generator_tag { };
 
@@ -32,13 +57,13 @@ namespace stdext
     namespace detail
     {
         template <class Generator>
-        struct value_type_of<Generator, is_generator> { using type = typename Generator::value_type; };
+        struct value_type_of<Generator, is_generator, true> { using type = typename Generator::value_type; };
         template <class Generator>
-        struct difference_type_of<Generator, is_generator> { using type = typename Generator::difference_type; };
+        struct difference_type_of<Generator, is_generator, true> { using type = typename Generator::difference_type; };
         template <class Generator>
-        struct pointer_type_of<Generator, is_generator> { using type = typename Generator::pointer; };
+        struct pointer_type_of<Generator, is_generator, true> { using type = typename Generator::pointer; };
         template <class Generator>
-        struct reference_type_of<Generator, is_generator> { using type = typename Generator::reference; };
+        struct reference_type_of<Generator, is_generator, true> { using type = typename Generator::reference; };
     }
 
     template <class Iterator>

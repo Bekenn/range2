@@ -24,22 +24,22 @@ namespace stdext
     namespace detail
     {
         template <class Iterator>
-        struct value_type_of<Iterator, is_iterator>
+        struct value_type_of<Iterator, is_iterator, true>
         {
             using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::value_type>;
         };
         template <class Iterator>
-        struct difference_type_of<Iterator, is_iterator>
+        struct difference_type_of<Iterator, is_iterator, true>
         {
             using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::difference_type>;
         };
         template <class Iterator>
-        struct pointer_type_of<Iterator, is_iterator>
+        struct pointer_type_of<Iterator, is_iterator, true>
         {
             using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::pointer>;
         };
         template <class Iterator>
-        struct reference_type_of<Iterator, is_iterator>
+        struct reference_type_of<Iterator, is_iterator, true>
         {
             using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::reference>;
         };

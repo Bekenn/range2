@@ -7,24 +7,13 @@
 
 namespace stdext
 {
-    template <class Consumer>
-    struct is_consumer
-    {
-        static constexpr bool value = false;
-    };
-    template <class Consumer, class T>
-    struct is_consumer<Consumer(T)>
-    {
-        static constexpr bool value = is_callable_v<Consumer(T), bool>;
-    };
+    template <class T> struct is_consumer : ::std::false_type { };
+    template <class T, class Elem>
+    struct is_consumer<T(Elem)> : is_callable<T(Elem), bool> { };
 
-    template <class T>
-    struct is_consumer_adaptable
-    {
-        template <class U> static ::std::true_type test(decltype(make_consumer(::std::declval<T>()))*);
-        template <class U> static ::std::false_type test(...);
-        static constexpr bool value = decltype(test<T>(nullptr))::value;
-    };
+    // I would love to add is_consumer_adaptable, as_consumer, and can_consume, but I can't
+    // because there's no way to force is_consumer_adaptable to see make_consumer<Elem> as
+    // a dependent function template.
 
     template <class Iterator>
     class iterator_consumer
@@ -78,13 +67,16 @@ namespace stdext
         Sentinel j;
     };
 
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    template <class Elem, class Iterator,
+        REQUIRES(::std::is_convertible<Elem, value_type<::std::decay_t<Iterator>, is_iterator>>::value)>
     auto make_consumer(Iterator&& i)
     {
         return iterator_consumer<::std::decay_t<Iterator>>(::std::forward<Iterator>(i));
     }
 
-    template <class Iterator, class Sentinel, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    template <class Elem, class Iterator, class Sentinel,
+        REQUIRES(::std::is_convertible<Elem, value_type<::std::decay_t<Iterator>, is_iterator>>::value
+            && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)
     {
         return delimited_iterator_consumer<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(::std::forward<Iterator>(i), ::std::forward<Sentinel>(j));
