@@ -18,8 +18,8 @@ namespace stdext
     {
         DECLARE_HAS_INNER_TYPE(generator_category);
     }
-    template <class Generator> struct is_generator
-        : ::std::conditional_t<detail::HAS_INNER_TYPE(Generator, generator_category),
+    template <class T> struct is_generator
+        : ::std::conditional_t<detail::HAS_INNER_TYPE(T, generator_category),
             ::std::true_type,
             ::std::false_type>
     { };
@@ -64,6 +64,24 @@ namespace stdext
         struct pointer_type_of<Generator, is_generator, true> { using type = typename Generator::pointer; };
         template <class Generator>
         struct reference_type_of<Generator, is_generator, true> { using type = typename Generator::reference; };
+
+        template <class Generator>
+        struct value_type_of<Generator, is_generator_adaptable, true> { using type = value_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        template <class Generator>
+        struct difference_type_of<Generator, is_generator_adaptable, true> { using type = difference_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        template <class Generator>
+        struct pointer_type_of<Generator, is_generator_adaptable, true> { using type = pointer_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        template <class Generator>
+        struct reference_type_of<Generator, is_generator_adaptable, true> { using type = reference_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+
+        template <class Generator>
+        struct value_type_of<Generator, can_generate, true> : value_type_of<Generator, is_generator>, value_type_of<Generator, is_generator_adaptable> { };
+        template <class Generator>
+        struct difference_type_of<Generator, can_generate, true> : difference_type_of<Generator, is_generator>, difference_type_of<Generator, is_generator_adaptable> { };
+        template <class Generator>
+        struct pointer_type_of<Generator, can_generate, true> : pointer_type_of<Generator, is_generator>, pointer_type_of<Generator, is_generator_adaptable> { };
+        template <class Generator>
+        struct reference_type_of<Generator, can_generate, true> : reference_type_of<Generator, is_generator>, reference_type_of<Generator, is_generator_adaptable> { };
     }
 
     template <class Iterator>
@@ -272,7 +290,7 @@ namespace stdext
         TerminationPredicate term;
     };
 
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && !is_generator<::std::decay_t<Iterator>>::value)>
     auto make_generator(Iterator&& i)
     {
         return iterator_generator<::std::decay_t<Iterator>>(::std::forward<Iterator>(i));
