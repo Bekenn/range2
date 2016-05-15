@@ -1,3 +1,11 @@
+//
+//  iterator.h
+//  stdext
+//
+//  Created by James Touton on 12/15/15.
+//  Copyright © 2015 James Touton. All rights reserved.
+//
+
 #ifndef STDEXT_ITERATOR_INCLUDED
 #define STDEXT_ITERATOR_INCLUDED
 #pragma once

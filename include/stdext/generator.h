@@ -1,3 +1,11 @@
+//
+//  generator.h
+//  stdext
+//
+//  Created by James Touton on 10/31/15.
+//  Copyright © 2015 James Touton. All rights reserved.
+//
+
 #ifndef STDEXT_GENERATOR_INCLUDED
 #define STDEXT_GENERATOR_INCLUDED
 #pragma once

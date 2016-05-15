@@ -1,3 +1,13 @@
+//
+//  string.h
+//  stdext
+//
+//  Created by James Touton on 5/11/16.
+//  Copyright © 2016 James Touton. All rights reserved.
+//
+
+#ifndef STDEXT_STRING_INCLUDED
+#define STDEXT_STRING_INCLUDED
 #pragma once
 
 #include "generator.h"
@@ -18,3 +28,5 @@ namespace stdext
             cstring_termination_predicate<value_type<::std::decay_t<Iterator>, is_iterator>>);
     }
 }
+
+#endif

@@ -1,3 +1,11 @@
+//
+//  optional.h
+//  stdext
+//
+//  Created by James Touton on 10/31/15.
+//  Copyright © 2015 James Touton. All rights reserved.
+//
+
 #ifndef STDEXT_OPTIONAL_INCLUDED
 #define STDEXT_OPTIONAL_INCLUDED
 #pragma once

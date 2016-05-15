@@ -1,3 +1,11 @@
+//
+//  consumer.h
+//  stdext
+//
+//  Created by James Touton on 5/11/16.
+//  Copyright © 2016 James Touton. All rights reserved.
+//
+
 #ifndef STDEXT_CONSUMER_INCLUDED
 #define STDEXT_CONSUMER_INCLUDED
 #pragma once
