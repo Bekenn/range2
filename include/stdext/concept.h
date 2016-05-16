@@ -10,6 +10,8 @@
 #define STDEXT_CONCEPT_INCLUDED
 #pragma once
 
+#include "detail/config.h"
+
 #include <type_traits>
 
 #define REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), ::std::nullptr_t>

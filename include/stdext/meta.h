@@ -10,7 +10,10 @@
 #define STDEXT_META_INCLUDED
 #pragma once
 
+#include "detail/config.h"
+
 #include <cstddef>
+
 
 namespace stdext
 {

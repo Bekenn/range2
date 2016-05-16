@@ -4,6 +4,7 @@ set(STDEXT_SRC
     "src/stream.cpp"
     "src/unicode.cpp")
 set(STDEXT_INC
+    "include/stdext/detail/config.h"
     "include/stdext/algorithm.h"
     "include/stdext/array_view.h"
     "include/stdext/concept.h"
@@ -18,6 +19,7 @@ set(STDEXT_INC
     "include/stdext/string.h"
     "include/stdext/string_view.h"
     "include/stdext/tuple.h"
+    "include/stdext/types.h"
     "include/stdext/unicode.h"
     "include/stdext/utility.h")
 
