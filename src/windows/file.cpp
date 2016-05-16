@@ -26,7 +26,7 @@ namespace stdext
             ::CloseHandle(handle);
         }
 
-        void file_stream_base::seek(seek_from from, std::ptrdiff_t offset)
+        void file_stream_base::seek(seek_from from, ptrdiff_t offset)
         {
             LARGE_INTEGER distance;
             distance.QuadPart = offset;
@@ -59,12 +59,12 @@ namespace stdext
 
     file_input_stream::~file_input_stream() = default;
 
-    std::size_t file_input_stream::do_read(void* buffer, std::size_t size)
+    size_t file_input_stream::do_read(void* buffer, size_t size)
     {
         constexpr DWORD granularity = 0x1000;
 
-        auto p = static_cast<std::uint8_t*>(buffer);
-        std::size_t bytes = 0;
+        auto p = static_cast<uint8_t*>(buffer);
+        size_t bytes = 0;
         while (size != 0)
         {
             DWORD chunk_size = size > MAXDWORD ? MAXDWORD & ~(granularity - 1) : size;
@@ -81,7 +81,7 @@ namespace stdext
         return bytes;
     }
 
-    std::size_t file_input_stream::do_skip(std::size_t size)
+    size_t file_input_stream::do_skip(size_t size)
     {
         LARGE_INTEGER file_size;
         if (!::GetFileSizeEx(handle, &file_size))
@@ -95,7 +95,7 @@ namespace stdext
         if (!::SetFilePointerEx(handle, distance, nullptr, FILE_CURRENT))
             throw std::system_error(::GetLastError(), std::system_category());
 
-        return static_cast<std::size_t>(distance.QuadPart);
+        return static_cast<size_t>(distance.QuadPart);
     }
 
     file_output_stream::file_output_stream(const path_char* path, flags<file_open_flags> flags)
@@ -105,12 +105,12 @@ namespace stdext
 
     file_output_stream::~file_output_stream() = default;
 
-    std::size_t file_output_stream::do_write(const void* buffer, std::size_t size)
+    size_t file_output_stream::do_write(const void* buffer, size_t size)
     {
         constexpr DWORD granularity = 0x1000;
 
         auto p = static_cast<const uint8_t*>(buffer);
-        std::size_t bytes = 0;
+        size_t bytes = 0;
         while (size != 0)
         {
             DWORD chunk_size = size > MAXDWORD ? MAXDWORD & ~(granularity - 1) : size;
@@ -131,15 +131,18 @@ namespace stdext
     {
         DWORD creation_disposition(flags<file_open_flags> flags)
         {
-            switch (flags)
+            // The static_cast is here to work around a Visual Studio 2015 bug.
+            switch (static_cast<file_open_flags>(flags))
             {
             case file_open_flags::none:
                 return OPEN_EXISTING;
             case file_open_flags::create:
                 return OPEN_ALWAYS;
+            case file_open_flags::create_exclusive:
+                return CREATE_NEW;
             case file_open_flags::truncate:
                 return TRUNCATE_EXISTING;
-            case stdext::flags<file_open_flags>(file_open_flags::create, file_open_flags::truncate):
+            case make_flags(file_open_flags::create, file_open_flags::truncate):
                 return CREATE_ALWAYS;
             }
 

@@ -24,7 +24,7 @@ namespace stdext
     template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
     auto make_cstring_generator(Iterator&& i)
     {
-        return make_terminated_generator(::std::forward<Iterator>(i),
+        return make_terminated_generator(forward<Iterator>(i),
             cstring_termination_predicate<value_type<::std::decay_t<Iterator>, is_iterator>>);
     }
 }

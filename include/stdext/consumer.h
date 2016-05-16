@@ -15,7 +15,7 @@
 
 namespace stdext
 {
-    template <class T> struct is_consumer : ::std::false_type { };
+    template <class T> struct is_consumer : false_type { };
     template <class T, class Elem>
     struct is_consumer<T(Elem)> : is_callable<T(Elem), bool> { };
 
@@ -32,13 +32,13 @@ namespace stdext
     public:
         iterator_consumer() : i() { }
         explicit iterator_consumer(const iterator& i) : i(i) { }
-        explicit iterator_consumer(iterator&& i) : i(::std::move(i)) { }
+        explicit iterator_consumer(iterator&& i) : i(move(i)) { }
 
     public:
         template <class T>
         bool operator () (T&& value)
         {
-            *i++ = ::std::forward<T>(value);
+            *i++ = forward<T>(value);
             return true;
         }
 
@@ -56,9 +56,9 @@ namespace stdext
     public:
         delimited_iterator_consumer() : i(), j() { }
         delimited_iterator_consumer(const iterator& i, const sentinel& j) : i(i), j(j) { }
-        delimited_iterator_consumer(const iterator& i, sentinel&& j) : i(i), j(::std::move(j)) { }
-        delimited_iterator_consumer(iterator&& i, const sentinel& j) : i(::std::move(i)), j(j) { }
-        delimited_iterator_consumer(iterator&& i, sentinel&& j) : i(::std::move(i)), j(::std::move(j)) { }
+        delimited_iterator_consumer(const iterator& i, sentinel&& j) : i(i), j(move(j)) { }
+        delimited_iterator_consumer(iterator&& i, const sentinel& j) : i(move(i)), j(j) { }
+        delimited_iterator_consumer(iterator&& i, sentinel&& j) : i(move(i)), j(move(j)) { }
 
     public:
         template <class T>
@@ -66,7 +66,7 @@ namespace stdext
         {
             if (i == j)
                 return false;
-            *i++ = ::std::forward<T>(value);
+            *i++ = forward<T>(value);
             return true;
         }
 
@@ -79,7 +79,7 @@ namespace stdext
         REQUIRES(::std::is_convertible<Elem, value_type<::std::decay_t<Iterator>, is_iterator>>::value)>
     auto make_consumer(Iterator&& i)
     {
-        return iterator_consumer<::std::decay_t<Iterator>>(::std::forward<Iterator>(i));
+        return iterator_consumer<::std::decay_t<Iterator>>(forward<Iterator>(i));
     }
 
     template <class Elem, class Iterator, class Sentinel,
@@ -87,7 +87,7 @@ namespace stdext
             && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)
     {
-        return delimited_iterator_consumer<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(::std::forward<Iterator>(i), ::std::forward<Sentinel>(j));
+        return delimited_iterator_consumer<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
     }
 }
 

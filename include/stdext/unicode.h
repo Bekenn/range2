@@ -28,7 +28,7 @@ namespace stdext
 
     struct utfstate_t
     {
-        ::std::uint32_t
+        uint32_t
             code : 24,
             produced : 2,
             consumed : 2,
@@ -39,9 +39,9 @@ namespace stdext
 
     constexpr char32_t UNICODE_REPLACEMENT_CHARACTER = 0xFFFD;
     constexpr char32_t INVALID_UNICODE_CHARACTER = char32_t(-1);
-    constexpr ::std::size_t MAX_UTF8_CHARACTER_LENGTH = 4;
+    constexpr size_t MAX_UTF8_CHARACTER_LENGTH = 4;
 
-    inline ::std::size_t utf8_character_length(char first)
+    inline size_t utf8_character_length(char first)
     {
         if ((first & 0x80) == 0x00)
             return 1;
@@ -107,17 +107,17 @@ namespace stdext
         template <class InChar>
         struct to_utf_helper<char, InChar>
         {
-            template <class... Args> static auto call(Args&&... args) { return to_utf8(::std::forward<Args>(args)...); }
+            template <class... Args> static auto call(Args&&... args) { return to_utf8(forward<Args>(args)...); }
         };
         template <class InChar>
         struct to_utf_helper<char16_t, InChar>
         {
-            template <class... Args> static auto call(Args&&... args) { return to_utf16(::std::forward<Args>(args)...); }
+            template <class... Args> static auto call(Args&&... args) { return to_utf16(forward<Args>(args)...); }
         };
         template <class InChar>
         struct to_utf_helper<char32_t, InChar>
         {
-            template <class... Args> static auto call(Args&&... args) { return to_utf32(::std::forward<Args>(args)...); }
+            template <class... Args> static auto call(Args&&... args) { return to_utf32(forward<Args>(args)...); }
         };
 
         template <class OutChar, class InChar>
@@ -150,7 +150,7 @@ namespace stdext
         }
 
         template <class Generator, class Function>
-        ::std::pair<utf_result, ::std::size_t> to_utf_length(Generator&& in, Function&& convert)
+        ::std::pair<utf_result, size_t> to_utf_length(Generator&& in, Function&& convert)
         {
             auto result = ::std::make_pair(utf_result::ok, size_t(0));
             utfstate_t state;
@@ -170,46 +170,46 @@ namespace stdext
         REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
     utf_result to_utf8(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char>(as_generator(::std::forward<Generator>(in)), ::std::forward<Consumer>(out), state);
+        return detail::to_utf<char>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
     }
 
     template <class Char, class Consumer, REQUIRES(::std::is_pod<Char>::value && is_consumer<::std::decay_t<Consumer>(Char)>::value)>
     utf_result to_utf8(Char* s, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char>(make_cstring_generator(s), ::std::forward<Consumer>(out), state);
+        return detail::to_utf<char>(make_cstring_generator(s), forward<Consumer>(out), state);
     }
 
     template <class Generator, class Consumer,
         REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
     utf_result to_utf16(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char16_t>(as_generator(::std::forward<Generator>(in)), ::std::forward<Consumer>(out), state);
+        return detail::to_utf<char16_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
     }
 
     template <class Char, class Consumer, REQUIRES(::std::is_pod<Char>::value)>
     utf_result to_utf16(Char* s, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char16_t>(make_cstring_generator(s), ::std::forward<Consumer>(out), state);
+        return detail::to_utf<char16_t>(make_cstring_generator(s), forward<Consumer>(out), state);
     }
 
     template <class Generator, class Consumer,
         REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
     utf_result to_utf32(Generator&& in, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char32_t>(as_generator(::std::forward<Generator>(in)), ::std::forward<Consumer>(out), state);
+        return detail::to_utf<char32_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
     }
 
     template <class Char, class Consumer, REQUIRES(::std::is_pod<Char>::value)>
     utf_result to_utf32(Char* s, Consumer&& out, utfstate_t& state)
     {
-        return detail::to_utf<char32_t>(make_cstring_generator(s), ::std::forward<Consumer>(out), state);
+        return detail::to_utf<char32_t>(make_cstring_generator(s), forward<Consumer>(out), state);
     }
 
     template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     ::std::pair<utf_result, size_t> to_utf8_length(Generator&& in)
     {
-        return detail::to_utf_length(as_generator(::std::forward<Generator>(in)),
-            [](auto&&... args) { return to_utf8(::std::forward<decltype(args)>(args)...); });
+        return detail::to_utf_length(as_generator(forward<Generator>(in)),
+            [](auto&&... args) { return to_utf8(forward<decltype(args)>(args)...); });
     }
 
     template <class Char, REQUIRES(::std::is_pod<Char>::value)>
@@ -221,8 +221,8 @@ namespace stdext
     template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     ::std::pair<utf_result, size_t> to_utf16_length(Generator&& in)
     {
-        return detail::to_utf_length(as_generator(::std::forward<Generator>(in)),
-            [](auto&&... args) { return to_utf16(::std::forward<decltype(args)>(args)...); });
+        return detail::to_utf_length(as_generator(forward<Generator>(in)),
+            [](auto&&... args) { return to_utf16(forward<decltype(args)>(args)...); });
     }
 
     template <class Char, REQUIRES(::std::is_pod<Char>::value)>
@@ -232,10 +232,10 @@ namespace stdext
     }
 
     template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
-    ::std::pair<utf_result, ::std::size_t> to_utf32_length(Generator&& in)
+    ::std::pair<utf_result, size_t> to_utf32_length(Generator&& in)
     {
-        return detail::to_utf_length(as_generator(::std::forward<Generator>(in)),
-            [](auto&&... args) { return to_utf32(::std::forward<decltype(args)>(args)...); });
+        return detail::to_utf_length(as_generator(forward<Generator>(in)),
+            [](auto&&... args) { return to_utf32(forward<decltype(args)>(args)...); });
     }
 
     template <class Char, REQUIRES(::std::is_pod<Char>::value)>
@@ -262,7 +262,7 @@ namespace stdext
         {
             next();
         }
-        explicit utf8_to_utf32_generator(range&& r) : r(::std::move(r))
+        explicit utf8_to_utf32_generator(range&& r) : r(move(r))
         {
             next();
         }
@@ -280,7 +280,6 @@ namespace stdext
 
         friend void swap(utf8_to_utf32_generator& a, utf8_to_utf32_generator& b)
         {
-            using ::std::swap;
             swap(a.r, b.r);
             swap(a.value, b.value);
         }
@@ -322,7 +321,7 @@ namespace stdext
     template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
     auto operator >> (::std::remove_reference_t<Range>&& range, to_utf8_tag)
     {
-        return ::std::move(range);
+        return move(range);
     }
     template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
     auto& operator >> (const ::std::remove_reference_t<Range>& range, to_utf8_tag)
@@ -333,7 +332,7 @@ namespace stdext
     template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
     auto operator >> (Range&& range, to_utf32_tag)
     {
-        return utf8_to_utf32_generator<::std::decay_t<Range>>(::std::forward<Range>(range));
+        return utf8_to_utf32_generator<::std::decay_t<Range>>(forward<Range>(range));
     }
 }
 

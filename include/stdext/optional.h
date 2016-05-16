@@ -79,8 +79,8 @@ namespace stdext
         }
         optional(optional&& rhs) noexcept(::std::is_nothrow_move_constructible<T>::value)
         {
-            if ((initialized = ::std::move(rhs.initialized)))
-                construct(::std::move(rhs.value()));
+            if ((initialized = move(rhs.initialized)))
+                construct(move(rhs.value()));
         }
         constexpr optional(const T& v)
         {
@@ -90,19 +90,19 @@ namespace stdext
         constexpr optional(T&& v)
         {
             initialized = true;
-            construct(::std::move(v));
+            construct(move(v));
         }
         template <class... Args>
         constexpr explicit optional(in_place_t, Args&&... args)
         {
             initialized = true;
-            construct(::std::forward<Args>(args)...);
+            construct(forward<Args>(args)...);
         }
         template <class U, class... Args, REQUIRES(::std::is_constructible<T, ::std::initializer_list<U>, Args&&...>::value)>
         constexpr explicit optional(in_place_t, ::std::initializer_list<U> il, Args&&... args)
         {
             initialized = true;
-            construct(il, ::std::forward<Args>(args)...);
+            construct(il, forward<Args>(args)...);
         }
 
         // 5.3.3, Assignment
@@ -139,7 +139,7 @@ namespace stdext
             if (initialized)
             {
                 if (rhs.initialized)
-                    value() = ::std::move(rhs.value());
+                    value() = move(rhs.value());
                 else
                 {
                     destroy();
@@ -148,7 +148,7 @@ namespace stdext
             }
             else if (rhs.initialized)
             {
-                construct(::std::move(rhs.value()));
+                construct(move(rhs.value()));
                 initialized = true;
             }
             return *this;
@@ -157,10 +157,10 @@ namespace stdext
         template <class U> optional& operator=(U&& rhs)
         {
             if (initialized)
-                value() = ::std::move(rhs);
+                value() = move(rhs);
             else
             {
-                construct(::std::move(rhs));
+                construct(move(rhs));
                 initialized = true;
             }
         }
@@ -169,37 +169,35 @@ namespace stdext
         {
             if (initialized)
                 destroy();
-            construct(::std::forward<Args>(args)...);
+            construct(forward<Args>(args)...);
             initialized = true;
         }
 
         template <class U, class... Args>
         void emplace(::std::initializer_list<U> il, Args&&... args)
         {
-            emplace(il, ::std::forward<Args>(args)...);
+            emplace(il, forward<Args>(args)...);
         }
 
         // 5.3.4, Swap
         void swap(optional& rhs)
             noexcept(::std::is_nothrow_move_constructible<T>::value
-                && noexcept(swap(::std::declval<T&>(), ::std::declval<T&>())))
+                && noexcept(swap(declval<T&>(), declval<T&>())))
         {
-            using ::std::swap;
-
             if (initialized)
             {
                 if (rhs.initialized)
                     swap(value(), rhs.value());
                 else
                 {
-                    rhs.emplace(::std::move(value()));
+                    rhs.emplace(move(value()));
                     destroy();
                     initialized = false;
                 }
             }
             else if (rhs.initialized)
             {
-                emplace(::std::move(rhs.value()));
+                emplace(move(rhs.value()));
                 rhs.destroy();
                 rhs.initialized = false;
             }
@@ -226,19 +224,19 @@ namespace stdext
         template <class U, REQUIRES(::std::is_copy_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) const &
         {
-            return initialized ? *reinterpret_cast<T&>(storage) : static_cast<T>(::std::forward<U>(v));
+            return initialized ? *reinterpret_cast<T&>(storage) : static_cast<T>(forward<U>(v));
         }
         template <class U, REQUIRES(::std::is_move_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) &&
         {
-            return initialized ? ::std::move(*reinterpret_cast<T&>(storage)) : static_cast<T>(::std::forward<U>(v));
+            return initialized ? move(*reinterpret_cast<T&>(storage)) : static_cast<T>(forward<U>(v));
         }
 
     private:
         template <class... Args>
         void construct()
         {
-            new(&storage) T(::std::forward<Args>(args)...);
+            new(&storage) T(forward<Args>(args)...);
         }
 
         void destroy()
@@ -394,7 +392,7 @@ namespace stdext
     template <class T>
     constexpr optional<::std::decay_t<T>> make_optional(T&& v)
     {
-        return optional<::std::decay_t<T>>(::std::forward<T>(v));
+        return optional<::std::decay_t<T>>(forward<T>(v));
     }
 }
 
@@ -404,7 +402,7 @@ namespace std
     template <class T>
     struct hash<::stdext::optional<T>>
     {
-        constexpr ::std::size_t operator () (const ::stdext::optional<T>& k) const
+        constexpr size_t operator () (const ::stdext::optional<T>& k) const
         {
             return k.has_value() ? hash<T>()(k.value()) : 0;
         }

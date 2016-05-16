@@ -12,7 +12,6 @@
 
 #include "consumer.h"
 #include "generator.h"
-#include "utility.h"
 
 #include <stdexcept>
 
@@ -31,8 +30,8 @@ namespace stdext
     }
     template <class T> struct is_range
         : ::std::conditional_t<detail::HAS_INNER_TYPE(T, range_category),
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     namespace detail
@@ -42,21 +41,21 @@ namespace stdext
         struct check_end_pos_getter
         {
             template <class U> static HAS_METHOD_T(U, end_pos) test(void*);
-            template <class U> static ::std::false_type test(...);
+            template <class U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
         template <class T>
         struct check_end_pos_setter
         {
             template <class U> static HAS_METHOD_T(U, end_pos, position_type<U, is_range>) test(void*);
-            template <class U> static ::std::false_type test(...);
+            template <class U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
     }
     template <class T> struct is_delimited_range
         : ::std::conditional_t<is_range<T>::value && detail::check_end_pos_getter<T>::value && detail::check_end_pos_setter<T>::value,
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     namespace detail
@@ -66,7 +65,7 @@ namespace stdext
         struct check_has_size
         {
             template <class U> static HAS_METHOD_T(U, size) test(void*);
-            template <class U> static ::std::false_type test(...);
+            template <class U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
         DECLARE_HAS_METHOD(resize);
@@ -74,63 +73,37 @@ namespace stdext
         struct check_has_resize
         {
             template <class U> static HAS_METHOD_T(U, resize, size_type<T, is_range>) test(void*);
-            template <class U> static ::std::false_type test(...);
+            template <class U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
     }
     template <class T> struct is_counted_range
         : ::std::conditional_t<is_range<T>::value && detail::check_has_size<T>::value && detail::check_has_resize<T>::value,
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     namespace detail
     {
-        namespace iter
+        template <class T>
+        struct check_stl_range
         {
-            using ::std::begin;
-            using ::std::end;
-
-            template <class T>
-            struct check_stl_range
-            {
-                template <class U> static is_equality_comparable<
-                    ::std::decay_t<decltype(begin(::std::declval<U&>()))>,
-                    ::std::decay_t<decltype(end(::std::declval<U&>()))>>
-                    test(::std::nullptr_t);
-                template <class U> static ::std::false_type test(...);
-                static constexpr bool value = decltype(test<T>(nullptr))::value;
-            };
-        }
-
-        using iter::check_stl_range;
+            template <class U> static is_equality_comparable<
+                ::std::decay_t<decltype(begin(declval<U&>()))>,
+                ::std::decay_t<decltype(end(declval<U&>()))>>
+                test(nullptr_t);
+            template <class U> static false_type test(...);
+            static constexpr bool value = decltype(test<T>(nullptr))::value;
+        };
     }
     template <class T> struct is_stl_range_provider
         : ::std::conditional_t<detail::check_stl_range<T>::value,
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     namespace detail
     {
-        namespace iter
-        {
-            using ::std::begin;
-            using ::std::end;
-
-            template <class T>
-            struct iterator_type_of_stl_range
-            {
-                using type = decltype(begin(::std::declval<T&>()));
-            };
-
-            template <class T>
-            struct sentinel_type_of_stl_range
-            {
-                using type = decltype(end(::std::declval<T&>()));
-            };
-        }
-
         template <class T>
         struct value_type_of<T, is_stl_range_provider, true> { using type = value_type<iterator_type<T, is_stl_range_provider>, is_iterator>; };
         template <class T>
@@ -140,9 +113,9 @@ namespace stdext
         template <class T>
         struct reference_type_of<T, is_stl_range_provider, true> { using type = reference_type<iterator_type<T, is_stl_range_provider>, is_iterator>; };
         template <class T>
-        struct iterator_type_of<T, is_stl_range_provider, true> : iter::iterator_type_of_stl_range<T> { };
+        struct iterator_type_of<T, is_stl_range_provider, true> { using type = decltype(begin(declval<T&>())); };
         template <class T>
-        struct sentinel_type_of<T, is_stl_range_provider, true> : iter::sentinel_type_of_stl_range<T> { };
+        struct sentinel_type_of<T, is_stl_range_provider, true> { using type = decltype(end(declval<T&>())); };
     }
 
     template <class Range> using range_category = typename Range::range_category;
@@ -277,7 +250,7 @@ namespace stdext
     template <class Range, REQUIRES(is_range<Range>::value)>
     value_type<Range, is_range> consume(const Range& range, position_type<Range, is_range>& pos)
     {
-        auto value = ::std::move(range.at_pos(pos));
+        auto value = move(range.at_pos(pos));
         range.inc_pos(pos);
         return value;
     }
@@ -292,7 +265,7 @@ namespace stdext
     template <class Range, REQUIRES(is_range<Range>::value)>
     void write(const Range& range, position_type<Range, is_range>& pos, value_type<Range, is_range>&& value)
     {
-        range.at_pos(pos) = ::std::move(value);
+        range.at_pos(pos) = move(value);
         range.inc_pos(pos);
     }
 
@@ -564,7 +537,7 @@ namespace stdext
             forward_iterator_range(iterator first, const TerminationPredicate& term)
                 : first(first), term(term) { }
             forward_iterator_range(iterator first, TerminationPredicate&& term)
-                : first(first), term(::std::move(term)) { }
+                : first(first), term(move(term)) { }
 
         public:
             friend bool operator == (const forward_iterator_range& a, const forward_iterator_range& b) noexcept
@@ -1021,7 +994,7 @@ namespace stdext
             delegated_multi_pass_range(const range& r, position first, const TerminationPredicate& term)
                 : r(&r), first(first), term(term) { }
             delegated_multi_pass_range(const range& r, position first, TerminationPredicate&& term)
-                : r(&r), first(first), term(::std::move(term)) { }
+                : r(&r), first(first), term(move(term)) { }
 
             friend bool operator == (const delegated_multi_pass_range& a, const delegated_multi_pass_range& b) noexcept
             {
@@ -1334,7 +1307,7 @@ namespace stdext
             reverse_bidirectional_range(const Range& range, position_type<Range, is_range> first, const TerminationPredicate& term)
                 : r(&range), first(last), term(term) { }
             reverse_bidirectional_range(const Range& range, position_type<Range, is_range> first, TerminationPredicate&& term)
-                : r(&range), first(last), term(::std::move(term)) { }
+                : r(&range), first(last), term(move(term)) { }
 
             friend bool operator == (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
             {
@@ -1648,7 +1621,6 @@ namespace stdext
 
         friend void swap(range_generator& a, range_generator& b)
         {
-            using ::std::swap;
             swap(a.r, b.r);
         }
 
@@ -1671,43 +1643,43 @@ namespace stdext
     template <class Range, class TerminationPredicate, REQUIRES(is_range<Range>::value)>
     auto make_range(const Range& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, ::std::forward<TerminationPredicate>(pred));
+        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_range(const delegated_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_range(const delimited_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_range(const reverse_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Iterator, class DelegatedPredicate, class TerminationPredicate>
     auto make_range(const iterator_range<Iterator, DelegatedPredicate>& range, Iterator pos, TerminationPredicate&& pred)
     {
-        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, ::std::forward<TerminationPredicate>(pred));
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Iterator, class TerminationPredicate>
     auto make_range(const delimited_iterator_range<Iterator>& range, Iterator pos, TerminationPredicate&& pred)
     {
-        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, ::std::forward<TerminationPredicate>(pred));
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
@@ -1755,7 +1727,7 @@ namespace stdext
     template <class Iterator, class TerminationPredicate, REQUIRES(is_iterator<Iterator>::value)>
     auto make_range(Iterator i, TerminationPredicate&& pred)
     {
-        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(i, ::std::forward<TerminationPredicate>(pred));
+        return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(i, forward<TerminationPredicate>(pred));
     }
 
     template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
@@ -1767,7 +1739,7 @@ namespace stdext
     template <class Range, class TerminationPredicate>
     auto make_range(range_iterator<Range> i, TerminationPredicate&& pred)
     {
-        return make_range(i.base_range(), i.base_pos(), ::std::forward<TerminationPredicate>(pred));
+        return make_range(i.base_range(), i.base_pos(), forward<TerminationPredicate>(pred));
     }
 
     template <class Range>
@@ -1840,7 +1812,7 @@ namespace stdext
     template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
     auto make_counted_range(Iterator it, size_type<Iterator, is_iterator> count)
     {
-        return counted_iterator_range<Iterator>(::std::forward(it), count);
+        return counted_iterator_range<Iterator>(forward(it), count);
     }
 
     template <class Range>
@@ -1852,37 +1824,37 @@ namespace stdext
     template <class Range, class TerminationPredicate, REQUIRES(is_bidirectional_range<Range>::value)>
     auto make_reverse_range(const Range& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, ::std::forward<TerminationPredicate>(pred));
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_reverse_range(const delegated_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const delimited_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_reverse_range(const reverse_range<Range, DelegatedPredicate>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return make_range(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return make_range(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const delimited_reverse_range<Range>& range, position_type<Range, is_range> pos, TerminationPredicate&& pred)
     {
-        return make_range(range.base(), pos, ::std::forward<TerminationPredicate>(pred));
+        return make_range(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const counted_reverse_range<Range>& range, position_type<counted_reverse_range<Range>, is_range> pos, TerminationPredicate&& pred)
     {
-        return make_range(range.base(), range.base_pos(pos), ::std::forward<TerminationPredicate>(pred));
+        return make_range(range.base(), range.base_pos(pos), forward<TerminationPredicate>(pred));
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
@@ -1960,8 +1932,6 @@ namespace stdext
     template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value)>
     auto make_generator(RangeProvider& range)
     {
-        using ::std::begin;
-        using ::std::end;
         using I = ::std::decay_t<decltype(begin(range))>;
         using S = ::std::decay_t<decltype(end(range))>;
         return delimited_iterator_generator<I, S>(begin(range), end(range));

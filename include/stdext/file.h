@@ -30,7 +30,8 @@ namespace stdext
     {
         none = 0,
         create = 1,
-        truncate = 2
+        create_exclusive = 3,
+        truncate = 4
     };
 
     class file_input_stream;
@@ -45,7 +46,7 @@ namespace stdext
             ~file_stream_base() override;
 
         public:
-            void seek(seek_from from, ::std::ptrdiff_t offset) override;
+            void seek(seek_from from, ptrdiff_t offset) override;
 
         protected:
             file_handle_t handle;
@@ -59,8 +60,8 @@ namespace stdext
         ~file_input_stream() override;
 
     private:
-        ::std::size_t do_read(void* buffer, ::std::size_t size) override;
-        ::std::size_t do_skip(::std::size_t size) override;
+        size_t do_read(void* buffer, size_t size) override;
+        size_t do_skip(size_t size) override;
     };
 
     class file_output_stream : public detail::file_stream_base, public output_stream
@@ -70,7 +71,7 @@ namespace stdext
         ~file_output_stream() override;
 
     private:
-        virtual ::std::size_t do_write(const void* buffer, ::std::size_t size) override;
+        virtual size_t do_write(const void* buffer, size_t size) override;
     };
 }
 

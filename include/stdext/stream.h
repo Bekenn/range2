@@ -10,13 +10,10 @@
 #define STDEXT_STREAM_INCLUDED
 #pragma once
 
-#include "iterator.h"
 #include "range.h"
 
 #include <algorithm>
-#include <iterator>
 #include <stdexcept>
-#include <utility>
 
 #include <cstddef>
 #include <cstdint>
@@ -77,7 +74,7 @@ namespace stdext
         }
 
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t read(POD* buffer, ::std::size_t count)
+        size_t read(POD* buffer, size_t count)
         {
             auto size = do_read(buffer, count * sizeof(POD));
             if (size % sizeof(POD) != 0)
@@ -85,14 +82,14 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, ::std::size_t length, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t read(POD (&buffer)[length])
+        template <class POD, size_t length, REQUIRES(::std::is_pod<POD>::value)>
+        size_t read(POD (&buffer)[length])
         {
             return read(buffer, length);
         }
 
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t skip(::std::size_t count = 1)
+        size_t skip(size_t count = 1)
         {
             auto size = do_skip(count * sizeof(POD));
             if (size % sizeof(POD) != 0)
@@ -101,8 +98,8 @@ namespace stdext
         }
 
     private:
-        virtual ::std::size_t do_read(void* buffer, ::std::size_t size) = 0;
-        virtual ::std::size_t do_skip(::std::size_t size) = 0;
+        virtual size_t do_read(void* buffer, size_t size) = 0;
+        virtual size_t do_skip(size_t size) = 0;
     };
 
 
@@ -120,7 +117,7 @@ namespace stdext
         }
 
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t write(const POD* buffer, ::std::size_t count)
+        size_t write(const POD* buffer, size_t count)
         {
             auto size = do_write(buffer, count * sizeof(POD));
             if (size % sizeof(POD) != 0)
@@ -128,14 +125,14 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, ::std::size_t length, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t write(const POD (&buffer)[length])
+        template <class POD, size_t length, REQUIRES(::std::is_pod<POD>::value)>
+        size_t write(const POD (&buffer)[length])
         {
             return write(buffer, length);
         }
 
     private:
-        virtual ::std::size_t do_write(const void* buffer, ::std::size_t size) = 0;
+        virtual size_t do_write(const void* buffer, size_t size) = 0;
     };
 
 
@@ -150,7 +147,7 @@ namespace stdext
     {
     public:
         virtual ~seekable();
-        virtual void seek(seek_from from, ::std::ptrdiff_t offset) = 0;
+        virtual void seek(seek_from from, ptrdiff_t offset) = 0;
     };
 
 
@@ -170,7 +167,7 @@ namespace stdext
         }
 
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t peek(POD* buffer, ::std::size_t count)
+        size_t peek(POD* buffer, size_t count)
         {
             auto size = do_peek(buffer, count * sizeof(POD));
             if (size % sizeof(POD) != 0)
@@ -178,14 +175,14 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, ::std::size_t length, REQUIRES(::std::is_pod<POD>::value)>
-        ::std::size_t peek(POD (&buffer)[length])
+        template <class POD, size_t length, REQUIRES(::std::is_pod<POD>::value)>
+        size_t peek(POD (&buffer)[length])
         {
             return peek(buffer, length);
         }
 
     private:
-        virtual ::std::size_t do_peek(void* buffer, ::std::size_t size) = 0;
+        virtual size_t do_peek(void* buffer, size_t size) = 0;
     };
 
 
@@ -207,7 +204,7 @@ namespace stdext
         reference operator * () const { return value; }
         pointer operator -> () const { return &value; }
         input_stream_iterator& operator ++ () { if (stream->read(&value, 1) == 0) stream = nullptr; return *this; }
-        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(::std::move(value)); ++*this; return proxy; }
+        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(value)); ++*this; return proxy; }
 
         friend bool operator == (const input_stream_iterator& a, const input_stream_iterator& b) noexcept
         {
@@ -224,7 +221,6 @@ namespace stdext
         friend void swap(input_stream_iterator& a, input_stream_iterator& b)
             noexcept(input_stream_iterator::noexcept_swappable())
         {
-            using ::std::swap;
             swap(a.stream, b.stream);
             swap(a.value, b.value);
         }
@@ -232,8 +228,7 @@ namespace stdext
     private:
         static constexpr bool noexcept_swappable()
         {
-            using ::std::swap;
-            return noexcept(swap(::std::declval<value_type&>(), ::std::declval<value_type&>()));
+            return noexcept(swap(declval<value_type&>(), declval<value_type&>()));
         }
 
     private:
@@ -259,7 +254,6 @@ namespace stdext
 
         friend void swap(output_stream_iterator& a, output_stream_iterator& b) noexcept
         {
-            using ::std::swap;
             swap(a.stream, b.stream);
         }
 
@@ -305,7 +299,7 @@ namespace stdext
         ~memory_stream_base() override = default;
 
     public:
-        void seek(seek_from from, ::std::ptrdiff_t offset) override
+        void seek(seek_from from, ptrdiff_t offset) override
         {
             switch (from)
             {
@@ -341,82 +335,82 @@ namespace stdext
     class memory_input_stream : public input_stream, public memory_stream_base<memory_input_stream>, public peekable
     {
     public:
-        memory_input_stream(const void* buffer, ::std::size_t size) noexcept
-            : current(static_cast<const ::std::uint8_t*>(buffer)), first(current), last(first + size)
+        memory_input_stream(const void* buffer, size_t size) noexcept
+            : current(static_cast<const uint8_t*>(buffer)), first(current), last(first + size)
         {
         }
 
         ~memory_input_stream() override;
 
     public:
-        void reset(const void* buffer, ::std::size_t size) noexcept
+        void reset(const void* buffer, size_t size) noexcept
         {
             first = current = static_cast<const uint8_t*>(buffer);
             last = first + size;
         }
 
     private:
-        ::std::size_t do_read(void* buffer, ::std::size_t size) override
+        size_t do_read(void* buffer, size_t size) override
         {
-            size = ::std::min(size, ::std::size_t(last - current));
-            ::std::copy(current, current + size, static_cast<::std::uint8_t*>(buffer));
+            size = ::std::min(size, size_t(last - current));
+            ::std::copy(current, current + size, static_cast<uint8_t*>(buffer));
             current += size;
             return size;
         }
 
-        ::std::size_t do_skip(::std::size_t size) override
+        size_t do_skip(size_t size) override
         {
-            size = ::std::min(size, ::std::size_t(last - current));
+            size = ::std::min(size, size_t(last - current));
             current += size;
             return size;
         }
         
-        ::std::size_t do_peek(void* buffer, ::std::size_t size) override
+        size_t do_peek(void* buffer, size_t size) override
         {
-            size = ::std::min(size, ::std::size_t(last - current));
-            ::std::copy(current, current + size, static_cast<::std::uint8_t*>(buffer));
+            size = ::std::min(size, size_t(last - current));
+            ::std::copy(current, current + size, static_cast<uint8_t*>(buffer));
             return size;
         }
 
     private:
         friend class memory_stream_base<memory_input_stream>;
-        const ::std::uint8_t* current;
-        const ::std::uint8_t* first;
-        const ::std::uint8_t* last;
+        const uint8_t* current;
+        const uint8_t* first;
+        const uint8_t* last;
     };
 
 
     class memory_output_stream : public output_stream, public memory_stream_base<memory_output_stream>
     {
     public:
-        memory_output_stream(void* buffer, ::std::size_t size) noexcept
-            : current(static_cast<::std::uint8_t*>(buffer)), first(current), last(first + size)
+        memory_output_stream(void* buffer, size_t size) noexcept
+            : current(static_cast<uint8_t*>(buffer)), first(current), last(first + size)
         {
         }
 
         ~memory_output_stream() override;
 
     public:
-        void reset(void* buffer, ::std::size_t size) noexcept
+        void reset(void* buffer, size_t size) noexcept
         {
             first = current = static_cast<uint8_t*>(buffer);
             last = first + size;
         }
 
     private:
-        ::std::size_t do_write(const void* buffer, ::std::size_t size) override
+        size_t do_write(const void* buffer, size_t size) override
         {
-            size = ::std::min(size, ::std::size_t(last - current));
-            auto p = static_cast<const ::std::uint8_t*>(buffer);
+            size = ::std::min(size, size_t(last - current));
+            auto p = static_cast<const uint8_t*>(buffer);
             current = ::std::copy(p, p + size, current);
             return size;
         }
 
     private:
         friend class memory_stream_base<memory_output_stream>;
-        ::std::uint8_t* current;
-        ::std::uint8_t* first;
-        ::std::uint8_t* last;
+        uint8_t* current;
+        uint8_t* first;
+        uint8_t* last;
     };
 }
 

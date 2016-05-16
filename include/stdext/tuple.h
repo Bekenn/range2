@@ -29,17 +29,17 @@ namespace stdext
 
     namespace detail
     {
-        template <class Function, class... Ts, ::std::size_t... indices>
+        template <class Function, class... Ts, size_t... indices>
         decltype(auto) apply(Function&& func, const ::std::tuple<Ts...>& args, type_list<constant<size_t, indices>...>)
         {
-            return func(::std::forward<Ts>(::std::get<indices>(args))...);
+            return func(forward<Ts>(::std::get<indices>(args))...);
         }
     }
 
     template <class Function, class... Ts>
     decltype(auto) apply(Function&& func, const ::std::tuple<Ts...>& args)
     {
-        return detail::apply(::std::forward<Function>(func), args, iota_list<sizeof...(Ts), ::std::size_t>());
+        return detail::apply(forward<Function>(func), args, iota_list<sizeof...(Ts), size_t>());
     }
 
     namespace detail
@@ -48,12 +48,12 @@ namespace stdext
         template <class Tuple>
         struct tuples_size<Tuple>
         {
-            static constexpr ::std::size_t value = ::std::tuple_size<Tuple>::value;
+            static constexpr size_t value = ::std::tuple_size<Tuple>::value;
         };
         template <class Tuple, class... Tuples>
         struct tuples_size<Tuple, Tuples...>
         {
-            static constexpr ::std::enable_if_t<::std::tuple_size<Tuple>::value == tuples_size<Tuples...>::value, ::std::size_t>
+            static constexpr ::std::enable_if_t<::std::tuple_size<Tuple>::value == tuples_size<Tuples...>::value, size_t>
                 value = ::std::tuple_size<Tuple>::value;
         };
 
@@ -64,24 +64,24 @@ namespace stdext
             return arg;
         }
 
-        template <::std::size_t n, class... Tuples, ::std::size_t... tuple_indices>
-        auto zip_element(const ::std::tuple<Tuples&...>& tuples, type_list<constant<::std::size_t, tuple_indices>...>)
+        template <size_t n, class... Tuples, size_t... tuple_indices>
+        auto zip_element(const ::std::tuple<Tuples&...>& tuples, type_list<constant<size_t, tuple_indices>...>)
         {
             using element_type_list = type_list<::std::tuple_element_t<n, Tuples>...>;
             return ::std::make_tuple(wrap<list_element_t<element_type_list, tuple_indices>>(::std::get<n>(::std::get<tuple_indices>(tuples)))...);
         }
 
-        template <class Tuples, ::std::size_t... element_indices>
-        auto zip(const Tuples& tuples, type_list<constant<::std::size_t, element_indices>...>)
+        template <class Tuples, size_t... element_indices>
+        auto zip(const Tuples& tuples, type_list<constant<size_t, element_indices>...>)
         {
-            return ::std::make_tuple(zip_element<element_indices>(tuples, iota_list_t<::std::tuple_size<Tuples>::value, ::std::size_t>())...);
+            return ::std::make_tuple(zip_element<element_indices>(tuples, iota_list_t<::std::tuple_size<Tuples>::value, size_t>())...);
         }
     }
 
     template <class... Tuples>
     auto zip(const Tuples&... tuples)
     {
-        return detail::zip(::std::tuple<Tuples&...>(tuples...), iota_list<detail::tuples_size<Tuples...>::value, ::std::size_t>());
+        return detail::zip(::std::tuple<Tuples&...>(tuples...), iota_list<detail::tuples_size<Tuples...>::value, size_t>());
     }
 }
 

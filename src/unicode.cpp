@@ -5,9 +5,9 @@ namespace stdext
 {
     namespace
     {
-        bool utf8_decode_first(::std::uint8_t code, utfstate_t& state);
-        bool utf8_validate_second(::std::uint8_t code, utfstate_t state);
-        bool utf8_decode_trailing(::std::uint8_t code, utfstate_t& state);
+        bool utf8_decode_first(uint8_t code, utfstate_t& state);
+        bool utf8_validate_second(uint8_t code, utfstate_t state);
+        bool utf8_decode_trailing(uint8_t code, utfstate_t& state);
     }
 
     std::pair<utf_result, char32_t> to_utf32(char in, utfstate_t& state)
@@ -164,7 +164,7 @@ namespace stdext
 
     namespace
     {
-        bool utf8_decode_first(::std::uint8_t code, utfstate_t& state)
+        bool utf8_decode_first(uint8_t code, utfstate_t& state)
         {
             if ((code & 0x80) == 0x00)
             {
@@ -192,7 +192,7 @@ namespace stdext
             return true;
         }
 
-        bool utf8_validate_second(::std::uint8_t code, utfstate_t state)
+        bool utf8_validate_second(uint8_t code, utfstate_t state)
         {
             switch (state.remaining)
             {
@@ -218,7 +218,7 @@ namespace stdext
             return true;
         }
 
-        bool utf8_decode_trailing(::std::uint8_t code, utfstate_t& state)
+        bool utf8_decode_trailing(uint8_t code, utfstate_t& state)
         {
             if ((code & 0xC0) != 0x80)
                 return false;

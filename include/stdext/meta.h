@@ -10,7 +10,7 @@
 #define STDEXT_META_INCLUDED
 #pragma once
 
-#include "detail/config.h"
+#include "types.h"
 
 #include <cstddef>
 
@@ -72,14 +72,14 @@ namespace stdext
     };
 
     // Retrieve the nth element from a list.
-    template <class List, ::std::size_t n> struct list_element;
-    template <class List, ::std::size_t n> using list_element_t = typename list_element<List, n>::type;
+    template <class List, size_t n> struct list_element;
+    template <class List, size_t n> using list_element_t = typename list_element<List, n>::type;
     template <class T, class... Ts>
     struct list_element<type_list<T, Ts...>, 0>
     {
         using type = T;
     };
-    template <class T, class... Ts, ::std::size_t n>
+    template <class T, class... Ts, size_t n>
     struct list_element<type_list<T, Ts...>, n>
     {
         using type = list_element_t<type_list<Ts...>, n - 1>;
@@ -182,14 +182,14 @@ namespace stdext
     };
 
     // Construct a list of monotonically increasing constants with a given length and starting value.
-    template <::std::size_t length, class T = int, T start = 0> struct iota_list;
-    template <::std::size_t length, class T = int, T start = 0> using iota_list_t = typename iota_list<length, T, start>::type;
+    template <size_t length, class T = int, T start = 0> struct iota_list;
+    template <size_t length, class T = int, T start = 0> using iota_list_t = typename iota_list<length, T, start>::type;
     template <class T, T start>
     struct iota_list<0, T, start>
     {
         using type = type_list<>;
     };
-    template <::std::size_t length, class T, T start>
+    template <size_t length, class T, T start>
     struct iota_list
     {
         using type = list_prepend_t<constant<T, start>, iota_list_t<length - 1, T, start + 1>>;

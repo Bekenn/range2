@@ -10,14 +10,18 @@
 #define STDEXT_UTILITY_INCLUDED
 #pragma once
 
-#include "concept.h"
+#include "detail/config.h"
 
 #include <utility>
 
 
 namespace stdext
 {
+    // Useful declarations
     using ::std::swap;
+    using ::std::move;
+    using ::std::forward;
+    using ::std::declval;
 
     template <class T, bool = ::std::is_empty<T>::value>
     class compressed_base;

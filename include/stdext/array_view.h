@@ -26,7 +26,7 @@ namespace stdext
         using const_reverse_iterator = ::std::reverse_iterator<const T*>;
         using const_reference = const T&;
         using pointer = T*;
-        using size_type = ::std::size_t;
+        using size_type = size_t;
 
     public:
         array_view() noexcept = default;
@@ -44,7 +44,7 @@ namespace stdext
         using reverse_iterator = ::std::reverse_iterator<const T*>;
         using const_reverse_iterator = ::std::reverse_iterator<const T*>;
         using pointer = const T*;
-        using size_type = ::std::size_t;
+        using size_type = size_t;
 
     public:
         const_array_view() noexcept = default;

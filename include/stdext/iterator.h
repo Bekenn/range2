@@ -13,19 +13,22 @@
 #include "concept.h"
 
 #include <iterator>
-#include <utility>
 
 
 namespace stdext
 {
+    // Useful declarations
+    using ::std::begin;
+    using ::std::end;
+
     namespace detail
     {
         DECLARE_HAS_INNER_TYPE(iterator_category);
     };
     template <class Iterator> struct is_iterator
         : ::std::conditional_t<detail::HAS_INNER_TYPE(::std::iterator_traits<Iterator>, iterator_category),
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     template <class Iterator> using iterator_category = typename ::std::iterator_traits<Iterator>::iterator_category;
@@ -78,10 +81,10 @@ namespace stdext
 
     public:
         explicit iterator_proxy(const value_type& value) : value(value) { }
-        explicit iterator_proxy(value_type&& value) : value(::std::move(value)) { }
+        explicit iterator_proxy(value_type&& value) : value(move(value)) { }
 
     public:
-        value_type operator * () { return ::std::move(value); }
+        value_type operator * () { return move(value); }
 
     private:
         value_type value;

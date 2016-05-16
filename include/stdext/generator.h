@@ -28,33 +28,33 @@ namespace stdext
     }
     template <class T> struct is_generator
         : ::std::conditional_t<detail::HAS_INNER_TYPE(T, generator_category),
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     template <class T> struct is_generator_adaptable
     {
-        template <class U> static ::std::true_type test(decltype(make_generator(::std::declval<U&>()))*);
-        template <class U> static ::std::false_type test(...);
+        template <class U> static true_type test(decltype(make_generator(declval<U&>()))*);
+        template <class U> static false_type test(...);
         static constexpr bool value = decltype(test<T>(nullptr))::value;
     };
 
     template <class T> struct can_generate
         : ::std::conditional_t<is_generator<T>::value || is_generator_adaptable<T>::value,
-            ::std::true_type,
-            ::std::false_type>
+            true_type,
+            false_type>
     { };
 
     template <class T, REQUIRES(is_generator<::std::decay_t<T>>::value)>
     decltype(auto) as_generator(T&& g)
     {
-        return ::std::forward<T>(g);
+        return forward<T>(g);
     }
 
     template <class T, REQUIRES(is_generator_adaptable<::std::decay_t<T>>::value)>
     auto as_generator(T&& g)
     {
-        return make_generator(::std::forward<T>(g));
+        return make_generator(forward<T>(g));
     }
 
     // The one and only generator category.
@@ -74,13 +74,13 @@ namespace stdext
         struct reference_type_of<Generator, is_generator, true> { using type = typename Generator::reference; };
 
         template <class Generator>
-        struct value_type_of<Generator, is_generator_adaptable, true> { using type = value_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        struct value_type_of<Generator, is_generator_adaptable, true> { using type = value_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
-        struct difference_type_of<Generator, is_generator_adaptable, true> { using type = difference_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        struct difference_type_of<Generator, is_generator_adaptable, true> { using type = difference_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
-        struct pointer_type_of<Generator, is_generator_adaptable, true> { using type = pointer_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        struct pointer_type_of<Generator, is_generator_adaptable, true> { using type = pointer_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
-        struct reference_type_of<Generator, is_generator_adaptable, true> { using type = reference_type<decltype(make_generator(::std::declval<Generator&>())), is_generator>; };
+        struct reference_type_of<Generator, is_generator_adaptable, true> { using type = reference_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
 
         template <class Generator>
         struct value_type_of<Generator, can_generate, true> : value_type_of<Generator, is_generator>, value_type_of<Generator, is_generator_adaptable> { };
@@ -107,7 +107,7 @@ namespace stdext
     public:
         iterator_generator() : i() { }
         explicit iterator_generator(const iterator& i) : i(i) { }
-        explicit iterator_generator(iterator&& i) : i(::std::move(i)) { }
+        explicit iterator_generator(iterator&& i) : i(move(i)) { }
 
     public:
         friend bool operator == (const iterator_generator& a, const iterator_generator& b) noexcept
@@ -121,7 +121,6 @@ namespace stdext
 
         friend void swap(iterator_generator& a, iterator_generator& b)
         {
-            using ::std::swap;
             swap(a.i, b.i);
         }
 
@@ -146,9 +145,9 @@ namespace stdext
     public:
         delimited_iterator_generator() : iterator_generator(), j() { }
         delimited_iterator_generator(const iterator& i, const sentinel& j) : iterator_generator(i), j(j) { }
-        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator(i), j(::std::move(j)) { }
-        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator(::std::move(i)), j(j) { }
-        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator(::std::move(i)), j(::std::move(j)) { }
+        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator(i), j(move(j)) { }
+        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator(move(i)), j(j) { }
+        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator(move(i)), j(move(j)) { }
 
     public:
         explicit operator bool () const { return i != j; }
@@ -163,7 +162,7 @@ namespace stdext
     public:
         using iterator_category = ::std::input_iterator_tag;
         using value_type = const ::std::remove_cv_t<decltype(::std::declval<Function>()())>;
-        using difference_type = ::std::ptrdiff_t;
+        using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
         using generator_category = basic_generator_tag;
@@ -171,7 +170,7 @@ namespace stdext
     public:
         function_generator() : f(), value() { }
         explicit function_generator(const Function& f) : f(f), value(this->f()) { }
-        explicit function_generator(Function&& f) : f(::std::move(f)), value(this->f()) { }
+        explicit function_generator(Function&& f) : f(move(f)), value(this->f()) { }
 
     public:
         friend bool operator == (const function_generator& a, const function_generator& b) noexcept
@@ -186,7 +185,6 @@ namespace stdext
 
         friend void swap(function_generator&& a, function_generator&& b)
         {
-            using ::std::swap;
             swap(a.f, b.f);
             swap(a.value, b.value);
         }
@@ -214,7 +212,7 @@ namespace stdext
     public:
         using iterator_category = ::std::input_iterator_tag;
         using value_type = const T;
-        using difference_type = ::std::ptrdiff_t;
+        using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
         using generator_category = basic_generator_tag;
@@ -226,7 +224,7 @@ namespace stdext
             : v(v) { }
         explicit constant_generator(value_type&& v)
             noexcept(::std::is_nothrow_move_constructible<value_type>::value)
-            : v(::std::move(v)) { }
+            : v(move(v)) { }
 
     public:
         friend bool operator == (const constant_generator& a, const constant_generator& b) noexcept
@@ -240,7 +238,6 @@ namespace stdext
 
         friend void swap(constant_generator& a, constant_generator& b)
         {
-            using ::std::swap;
             swap(a.v, b.v);
         }
 
@@ -272,16 +269,15 @@ namespace stdext
         terminated_generator(const iterator& g, const TerminationPredicate& term)
             : i(g), term(term) { }
         terminated_generator(const iterator& g, TerminationPredicate&& term)
-            : i(g), term(::std::move(term)) { }
+            : i(g), term(move(term)) { }
         terminated_generator(iterator&& g, const TerminationPredicate& term)
-            : i(::std::move(g)), term(term) { }
+            : i(move(g)), term(term) { }
         terminated_generator(iterator&& g, TerminationPredicate&& term)
-            : i(::Std::move(g)), term(::std::move(term)) { }
+            : i(::Std::move(g)), term(move(term)) { }
 
     public:
         friend void swap(terminated_generator& a, terminated_generator& b)
         {
-            using ::std::swap;
             swap(a.i, b.i);
             swap(a.term, b.term);
         }
@@ -301,26 +297,26 @@ namespace stdext
     template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && !is_generator<::std::decay_t<Iterator>>::value)>
     auto make_generator(Iterator&& i)
     {
-        return iterator_generator<::std::decay_t<Iterator>>(::std::forward<Iterator>(i));
+        return iterator_generator<::std::decay_t<Iterator>>(forward<Iterator>(i));
     }
 
     template <class Iterator, class Sentinel,
         REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
     auto make_generator(Iterator&& i, Sentinel&& j)
     {
-        return delimited_iterator_generator<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(::std::forward<Iterator>(i), ::std::forward<Sentinel>(j));
+        return delimited_iterator_generator<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
     }
 
     template <class Function, REQUIRES(is_callable<::std::decay_t<Function>>::value)>
     auto make_generator(Function&& function)
     {
-        return function_generator<::std::decay_t<Function>>(::std::forward<Function>(function));
+        return function_generator<::std::decay_t<Function>>(forward<Function>(function));
     }
 
     template <class T>
     auto make_constant_generator(T&& v)
     {
-        return constant_generator<::std::decay_t<T>>(::std::forward<T>(v));
+        return constant_generator<::std::decay_t<T>>(forward<T>(v));
     }
 
     template <class Iterator, class TerminationPredicate,
@@ -328,7 +324,7 @@ namespace stdext
     auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
     {
         return terminated_generator<::std::decay_t<Iterator>, ::std::decay_t<TerminationPredicate>>
-            (::std::forward<Iterator>(i), ::std::forward<TerminationPredicate>(term));
+            (forward<Iterator>(i), forward<TerminationPredicate>(term));
     }
 }
 

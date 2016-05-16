@@ -81,7 +81,7 @@ namespace stdext
     using ::std::uintmax_t;
     using ::std::uintptr_t;
 
-    template <class T>
+    template <typename T>
     class flags
     {
     private:
@@ -97,7 +97,6 @@ namespace stdext
     public:
         friend constexpr bool operator == (flags a, flags b) noexcept { return a.value == b.value; }
         friend constexpr bool operator != (flags a, flags b) noexcept { return !(a == b); }
-        friend void swap(flags& a, flags& b) noexcept { using ::std::swap; swap(a.value, b.value); }
 
     public:
         constexpr operator T () const noexcept { return value; }
@@ -134,7 +133,7 @@ namespace stdext
 
         constexpr bool test_any(flags mask) const noexcept
         {
-            return static_cast<U>(value) & static_cast<U>(mask) != 0;
+            return (static_cast<U>(value) & static_cast<U>(mask)) != 0;
         }
 
         constexpr bool test_all(flags mask) const noexcept
@@ -145,6 +144,12 @@ namespace stdext
     private:
         T value;
     };
+
+    template <typename T, typename... Ts>
+    constexpr flags<T> make_flags(T value, Ts... values) noexcept
+    {
+        return { value, values... };
+    }
 }
 
 #endif
