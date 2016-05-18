@@ -67,7 +67,7 @@ namespace stdext
     class file_output_stream : public detail::file_stream_base, public output_stream
     {
     public:
-        file_output_stream(const path_char* path, flags<file_open_flags> flags);
+        explicit file_output_stream(const path_char* path, flags<file_open_flags> flags = { file_open_flags::create, file_open_flags::truncate });
         ~file_output_stream() override;
 
     private:
