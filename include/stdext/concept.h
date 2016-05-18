@@ -89,6 +89,7 @@ namespace stdext
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct reference_type_of { };
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct iterator_type_of { };
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct sentinel_type_of { };
+        template <class T, template <class> class IsT, bool = IsT<T>::value> struct generator_type_of { };
     }
 
     template <class T, template <class> class IsT> using value_type = typename detail::value_type_of<T, IsT>::type;
@@ -99,6 +100,7 @@ namespace stdext
     template <class T, template <class> class IsT> using reference_type = typename detail::reference_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using iterator_type = typename detail::iterator_type_of<T, IsT>::type;
     template <class T, template <class> class IsT> using sentinel_type = typename detail::sentinel_type_of<T, IsT>::type;
+    template <class T, template <class> class IsT> using generator_type = typename detail::generator_type_of<T, IsT>::type;
 }
 
 #endif

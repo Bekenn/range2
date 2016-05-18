@@ -11,7 +11,7 @@
 #pragma once
 
 #include "concept.h"
-#include "iterator.h"
+#include "consumer.h"
 
 #include <cassert>
 
@@ -81,6 +81,8 @@ namespace stdext
         struct pointer_type_of<Generator, is_generator_adaptable, true> { using type = pointer_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
         struct reference_type_of<Generator, is_generator_adaptable, true> { using type = reference_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
+        template <class Generator>
+        struct generator_type_of<Generator, is_generator_adaptable, true> { using type = decltype(make_generator(declval<Generator&>())); };
 
         template <class Generator>
         struct value_type_of<Generator, can_generate, true> : value_type_of<Generator, is_generator>, value_type_of<Generator, is_generator_adaptable> { };
@@ -90,6 +92,22 @@ namespace stdext
         struct pointer_type_of<Generator, can_generate, true> : pointer_type_of<Generator, is_generator>, pointer_type_of<Generator, is_generator_adaptable> { };
         template <class Generator>
         struct reference_type_of<Generator, can_generate, true> : reference_type_of<Generator, is_generator>, reference_type_of<Generator, is_generator_adaptable> { };
+        template <class Generator>
+        struct generator_type_of<Generator, can_generate, true> { using type = ::std::decay_t<decltype(as_generator(declval<Generator&>()))>; };
+    }
+
+    template <class Generator, class Consumer, REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
+    size_t operator >> (Generator&& g, Consumer&& c)
+    {
+        size_t count = 0;
+        for (decltype(auto) gen = as_generator(forward<Generator>(g)); gen; ++gen)
+        {
+            if (!c(*gen))
+                break;
+            ++count;
+        }
+
+        return count;
     }
 
     template <class Iterator>
