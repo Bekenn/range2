@@ -6,7 +6,7 @@ namespace stdext
     namespace
     {
         bool utf8_decode_first(uint8_t code, utfstate_t& state);
-        bool utf8_validate_second(uint8_t code, utfstate_t state);
+        bool utf8_validate_second(uint8_t code, utfstate_t& state);
         bool utf8_decode_trailing(uint8_t code, utfstate_t& state);
     }
 
@@ -42,6 +42,8 @@ namespace stdext
         }
 
         state.consumed = 0;
+        if (is_noncharacter(state.code))
+            return { utf_result::error, char32_t() };
         return { utf_result::ok, state.code };
     }
 
@@ -51,7 +53,11 @@ namespace stdext
         {
         case 0:
             if (!is_surrogate(in))
+            {
+                if (is_noncharacter(in))
+                    return { utf_result::error, char32_t() };
                 return { utf_result::ok, in };
+            }
 
             if (is_trailing_surrogate(in))
                 return { utf_result::error, char32_t() };
@@ -68,6 +74,8 @@ namespace stdext
             state.code = (state.code << 10) | (in & 0x03FF);
             state.consumed = 0;
             state.remaining = 0;
+            if (is_noncharacter(state.code))
+                return { utf_result::error, char32_t() };
             return { utf_result::ok, state.code };
         }
 
@@ -81,7 +89,7 @@ namespace stdext
             if (in < 0x80)
                 return { utf_result::ok, char(in) };
 
-            if (in >= 0x110000 || (in < 0x10000 && is_surrogate(char16_t(in))))
+            if (!utf32_is_valid(in))
                 return { utf_result::error, char() };
 
             state.code = in;
@@ -108,22 +116,22 @@ namespace stdext
         }
 
         state.produced = 0;
-        return { utf_result::ok, char(0x80 | (state.remaining & 0x3F)) };
+        return { utf_result::ok, char(0x80 | (state.code & 0x3F)) };
     }
 
     std::pair<utf_result, char16_t> to_utf16(char32_t in, utfstate_t& state)
     {
         if (state.produced == 0)
         {
+            if (is_noncharacter(in))
+                return { utf_result::error, char16_t() };
+
             if (in < 0x10000)
             {
                 if (is_surrogate(char16_t(in)))
                     return { utf_result::error, char16_t() };
                 return { utf_result::ok, char16_t(in) };
             }
-
-            if (in >= 0x110000)
-                return { utf_result::error, char16_t() };
 
             state.code = in;
             state.produced = 1;
@@ -192,7 +200,7 @@ namespace stdext
             return true;
         }
 
-        bool utf8_validate_second(uint8_t code, utfstate_t state)
+        bool utf8_validate_second(uint8_t code, utfstate_t& state)
         {
             switch (state.remaining)
             {
@@ -200,6 +208,7 @@ namespace stdext
                 if ((state.code == 0x00 && code < 0xA0)
                     || (state.code == 0x0D && code >= 0xA0))
                 {
+                    state = utfstate_t();
                     return false;
                 }
                 break;
@@ -207,6 +216,7 @@ namespace stdext
                 if ((state.code == 0x00 && code < 0x90)
                     || (state.code == 0x04 && code >= 0x90))
                 {
+                    state = utfstate_t();
                     return false;
                 }
                 break;
@@ -221,10 +231,13 @@ namespace stdext
         bool utf8_decode_trailing(uint8_t code, utfstate_t& state)
         {
             if ((code & 0xC0) != 0x80)
+            {
+                state = utfstate_t();
                 return false;
+            }
 
             state.code <<= 6;
-            state.code |= code;
+            state.code |= code & 0x3F;
             return true;
         }
     }

@@ -79,6 +79,18 @@ namespace stdext
         return (code & 0xFC00) == 0xDC00;
     }
 
+    inline bool is_noncharacter(char32_t code)
+    {
+        return (code & 0xFFFE) == 0xFFFE;
+    }
+
+    inline bool utf32_is_valid(char32_t code)
+    {
+        return code < 0x110000
+            && (code >= 0x10000 || !is_surrogate(static_cast<char16_t>(code)))
+            && !is_noncharacter(code);
+    }
+
     // Converts as many code units as possible from utf8 to utf32.  This function supports partial conversions, such that
     // all utf8 code units are consumed until either the input buffer has been completely consumed or the output buffer
     // has been completely filled.  If the input buffer ends with a partial character sequence, no corresponding output
@@ -102,6 +114,24 @@ namespace stdext
 
     namespace detail
     {
+        template <class Char> struct utf_sentinel;
+        template <>
+        struct utf_sentinel<char>
+        {
+            static constexpr char value = '\xFF';
+        };
+        template <>
+        struct utf_sentinel<char16_t>
+        {
+            static constexpr char16_t value = u'\xFFFF';
+        };
+        template <>
+        struct utf_sentinel<char32_t>
+        {
+            static constexpr char32_t value = U'\x10FFFF';
+        };
+        template <class Char> constexpr Char utf_sentinel_v = utf_sentinel<Char>::value;
+
         // It would be really nice to have function template partial specialization...
         template <class OutChar, class InChar> struct to_utf_helper;
         template <class InChar>
@@ -164,6 +194,10 @@ namespace stdext
             }
             return result;
         }
+
+        inline bool utf_is_leading(char code) { return utf8_is_leading(code); }
+        inline bool utf_is_leading(char16_t code) { return !is_trailing_surrogate(code); }
+        inline bool utf_is_leading(char32_t code) { return utf32_is_valid(code); }
     }
 
     template <class Generator, class Consumer,
@@ -244,70 +278,94 @@ namespace stdext
         return to_utf32_length(make_cstring_generator(str));
     }
 
-    template <class Range>
-    class utf8_to_utf32_generator
+    template <class Generator, class Char>
+    class to_utf_generator
     {
     public:
         using iterator_category = ::std::input_iterator_tag;
-        using value_type = const char32_t;
-        using difference_type = difference_type<Range, is_range>;
+        using value_type = const Char;
+        using difference_type = difference_type<Generator, is_generator>;
         using pointer = value_type*;
         using reference = value_type&;
         using generator_category = basic_generator_tag;
-        using range = Range;
+        using generator = Generator;
 
     public:
-        utf8_to_utf32_generator() : r(), value() { }
-        explicit utf8_to_utf32_generator(const range& r) : r(r)
+        to_utf_generator() : g(), value() { }
+        explicit to_utf_generator(const generator& g) : g(g), value(detail::utf_sentinel_v<Char>)
         {
             next();
         }
-        explicit utf8_to_utf32_generator(range&& r) : r(move(r))
+        explicit to_utf_generator(generator&& g) : g(move(g)), value(detail::utf_sentinel_v<Char>)
         {
             next();
         }
 
     public:
-        friend bool operator == (const utf8_to_utf32_generator& a, const utf8_to_utf32_generator& b) noexcept
+        friend bool operator == (const to_utf_generator& a, const to_utf_generator& b) noexcept
         {
-            return a.r == b.r
+            return a.g == b.g
                 && a.value == b.value;
         }
-        friend bool operator != (const utf8_to_utf32_generator& a, const utf8_to_utf32_generator& b) noexcept
+        friend bool operator != (const to_utf_generator& a, const to_utf_generator& b) noexcept
         {
             return !(a == b);
         }
 
-        friend void swap(utf8_to_utf32_generator& a, utf8_to_utf32_generator& b)
+        friend void swap(to_utf_generator& a, to_utf_generator& b)
         {
-            swap(a.r, b.r);
+            swap(a.g, b.g);
             swap(a.value, b.value);
         }
 
     public:
         reference operator * () { return value; }
         reference operator -> () { return value; }
-        utf8_to_utf32_generator& operator ++ () { next(); return *this; }
-        iterator_proxy<utf8_to_utf32_generator> operator ++ (int)
+        to_utf_generator& operator ++ () { next(); return *this; }
+        iterator_proxy<to_utf_generator> operator ++ (int)
         {
-            iterator_proxy<utf8_to_utf32_generator> proxy = value;
+            iterator_proxy<to_utf_generator> proxy = value;
             next();
             return proxy;
+        }
+
+        explicit operator bool () const noexcept
+        {
+            return value != detail::utf_sentinel_v<Char> || g;
         }
 
     private:
         void next()
         {
-            utfstate_t state;
-            auto value_range = make_range(&value, &value + 1);
-            auto result = utf8_to_utf32(make_generator(r), make_consumer<char32_t>(value_range), state);
-            if (result != utf_result::ok)
-                value = UNICODE_REPLACEMENT_CHARACTER;
+            while (g)
+            {
+                auto result = detail::to_utf<Char>(*g, state);
+                switch (result.first)
+                {
+                case utf_result::ok:
+                    ++g;
+                    value = result.second;
+                    return;
+                case utf_result::partial_read:
+                    ++g;
+                    continue;
+                case utf_result::partial_write:
+                    value = result.second;
+                    return;
+                case utf_result::error:
+                    result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
+                    while (g && !detail::utf_is_leading(*g))
+                        ++g;
+                    value = result.second;
+                    return;
+                }
+            }
         }
 
     private:
-        range r;
-        char32_t value;
+        generator g;
+        utfstate_t state;
+        Char value;
     };
 
     struct to_utf8_tag { };
@@ -318,21 +376,40 @@ namespace stdext
     inline auto to_utf16() { return to_utf16_tag(); }
     inline auto to_utf32() { return to_utf32_tag(); }
 
-    template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
-    auto operator >> (::std::remove_reference_t<Range>&& range, to_utf8_tag)
+    template <class Generator, REQUIRES(::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char>::value)>
+    decltype(auto) operator >> (Generator&& g, to_utf8_tag)
     {
-        return move(range);
-    }
-    template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
-    auto& operator >> (const ::std::remove_reference_t<Range>& range, to_utf8_tag)
-    {
-        return range;
+        return as_generator(forward<Generator>(g));
     }
 
-    template <class Range, REQUIRES(::std::is_same<::std::remove_cv_t<value_type<Range, is_range>>, char>::value)>
-    auto operator >> (Range&& range, to_utf32_tag)
+    template <class Generator, REQUIRES(!::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char>::value)>
+    auto operator >> (Generator&& g, to_utf8_tag)
     {
-        return utf8_to_utf32_generator<::std::decay_t<Range>>(forward<Range>(range));
+        return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char>(as_generator(forward<Generator>(g)));
+    }
+
+    template <class Generator, REQUIRES(::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char16_t>::value)>
+    decltype(auto) operator >> (Generator&& g, to_utf16_tag)
+    {
+        return as_generator(forward<Generator>(g));
+    }
+
+    template <class Generator, REQUIRES(!::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char16_t>::value)>
+    auto operator >> (Generator&& g, to_utf16_tag)
+    {
+        return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char16_t>(as_generator(forward<Generator>(g)));
+    }
+
+    template <class Generator, REQUIRES(::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char32_t>::value)>
+    decltype(auto) operator >> (Generator&& g, to_utf32_tag)
+    {
+        return as_generator(forward<Generator>(g));
+    }
+
+    template <class Generator, REQUIRES(!::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char32_t>::value)>
+    auto operator >> (Generator&& g, to_utf32_tag)
+    {
+        return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char32_t>(as_generator(forward<Generator>(g)));
     }
 }
 
