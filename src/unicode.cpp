@@ -97,7 +97,7 @@ namespace stdext
             state.code = in;
             state.produced = 1;
             state.remaining = in < 0x800 ? 1
-                : in < 0x1000 ? 2
+                : in < 0x10000 ? 2
                 : 3;
 
             switch (state.remaining)
