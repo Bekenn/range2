@@ -53,7 +53,7 @@ namespace stdext
     }
 
     file_input_stream::file_input_stream(const path_char* path)
-        : file_stream_base(::CreateFile(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, 0, nullptr))
+        : file_stream_base(::CreateFile(path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, 0, nullptr))
     {
     }
 
@@ -99,7 +99,7 @@ namespace stdext
     }
 
     file_output_stream::file_output_stream(const path_char* path, flags<file_open_flags> flags)
-        : file_stream_base(::CreateFile(path, GENERIC_WRITE, 0, nullptr, creation_disposition(flags), FILE_ATTRIBUTE_NORMAL, nullptr))
+        : file_stream_base(::CreateFile(path, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, creation_disposition(flags), FILE_ATTRIBUTE_NORMAL, nullptr))
     {
     }
 
