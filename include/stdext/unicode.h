@@ -81,7 +81,7 @@ namespace stdext
 
     inline bool is_noncharacter(char32_t code)
     {
-        return (code & 0xFFFE) == 0xFFFE;
+        return (code & 0xFFFE) == 0xFFFE || (code >= 0xFDD0 && code < 0xFDF0);
     }
 
     inline bool utf32_is_valid(char32_t code)
@@ -194,10 +194,6 @@ namespace stdext
             }
             return result;
         }
-
-        inline bool utf_is_leading(char code) { return utf8_is_leading(code); }
-        inline bool utf_is_leading(char16_t code) { return !is_trailing_surrogate(code); }
-        inline bool utf_is_leading(char32_t code) { return utf32_is_valid(code); }
     }
 
     template <class Generator, class Consumer,
@@ -331,13 +327,28 @@ namespace stdext
 
         explicit operator bool () const noexcept
         {
-            return value != detail::utf_sentinel_v<Char> || g;
+            return value != detail::utf_sentinel_v<Char>;
         }
 
     private:
         void next()
         {
-            while (g)
+            if (!g)
+            {
+                if (state.produced != 0)
+                {
+                    // The code point is in state, the code unit that we pass doesn't matter.
+                    auto result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
+                    value = result.second;
+                    return;
+                }
+
+                // End of sequence.
+                value = detail::utf_sentinel_v<Char>;
+                return;
+            }
+
+            do
             {
                 auto result = detail::to_utf<Char>(*g, state);
                 switch (result.first)
@@ -353,13 +364,19 @@ namespace stdext
                     value = result.second;
                     return;
                 case utf_result::error:
-                    result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
-                    while (g && !detail::utf_is_leading(*g))
+                    if (state.consumed == 0)
                         ++g;
+                    state = utfstate_t();
+                    result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
                     value = result.second;
                     return;
                 }
-            }
+            } while (g);
+
+            // Ran out of characters during a partial read.
+            state = utfstate_t();
+            auto result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
+            value = result.second;
         }
 
     private:

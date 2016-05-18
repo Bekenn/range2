@@ -71,12 +71,14 @@ namespace stdext
             if (!is_trailing_surrogate(in))
                 return { utf_result::error, char32_t() };
 
-            state.code = (state.code << 10) | (in & 0x03FF);
+            char32_t code = (state.code << 10) | (in & 0x03FF);
+            if (is_noncharacter(code))
+                return { utf_result::error, char32_t() };
+
+            state.code = code;
             state.consumed = 0;
             state.remaining = 0;
-            if (is_noncharacter(state.code))
-                return { utf_result::error, char32_t() };
-            return { utf_result::ok, state.code };
+            return { utf_result::ok, code };
         }
 
         return { utf_result::error, char32_t() };
@@ -204,11 +206,14 @@ namespace stdext
         {
             switch (state.remaining)
             {
+            case 1:
+                if (state.code < 2)
+                    return false;
+                break;
             case 2:
                 if ((state.code == 0x00 && code < 0xA0)
                     || (state.code == 0x0D && code >= 0xA0))
                 {
-                    state = utfstate_t();
                     return false;
                 }
                 break;
@@ -216,7 +221,6 @@ namespace stdext
                 if ((state.code == 0x00 && code < 0x90)
                     || (state.code == 0x04 && code >= 0x90))
                 {
-                    state = utfstate_t();
                     return false;
                 }
                 break;
@@ -231,10 +235,7 @@ namespace stdext
         bool utf8_decode_trailing(uint8_t code, utfstate_t& state)
         {
             if ((code & 0xC0) != 0x80)
-            {
-                state = utfstate_t();
                 return false;
-            }
 
             state.code <<= 6;
             state.code |= code & 0x3F;
