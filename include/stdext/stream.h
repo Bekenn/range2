@@ -33,9 +33,9 @@ namespace stdext
     class output_stream_iterator;
 
     template <class POD, REQUIRES(::std::is_pod<POD>::value)>
-    class input_stream_range;
+    class stream_generator;
     template <class POD, REQUIRES(::std::is_pod<POD>::value)>
-    class output_stream_range;
+    class stream_consumer;
 
     class memory_input_stream;
     class memory_output_stream;
@@ -201,11 +201,6 @@ namespace stdext
         explicit input_stream_iterator(input_stream& stream) : stream(&stream) { ++*this; }
 
     public:
-        reference operator * () const { return value; }
-        pointer operator -> () const { return &value; }
-        input_stream_iterator& operator ++ () { if (stream->read(&value, 1) == 0) stream = nullptr; return *this; }
-        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(value)); ++*this; return proxy; }
-
         friend bool operator == (const input_stream_iterator& a, const input_stream_iterator& b) noexcept
         {
             if (a.stream != b.stream)
@@ -224,6 +219,12 @@ namespace stdext
             swap(a.stream, b.stream);
             swap(a.value, b.value);
         }
+
+    public:
+        reference operator * () const { return value; }
+        pointer operator -> () const { return &value; }
+        input_stream_iterator& operator ++ () { if (stream->read(&value, 1) == 0) stream = nullptr; return *this; }
+        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(value)); ++*this; return proxy; }
 
     private:
         static constexpr bool noexcept_swappable()
@@ -263,32 +264,96 @@ namespace stdext
 
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
-    class input_stream_range : public delimited_iterator_range<input_stream_iterator<POD>>
+    class stream_generator
     {
     public:
-        using iterator = typename delimited_iterator_range<input_stream_iterator<POD>>::iterator;
+        using iterator_category = ::std::input_iterator_tag;
+        using value_type = const POD;
+        using difference_type = ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
+        using generator_category = basic_generator_tag;
 
     public:
-        input_stream_range() = default;
-        input_stream_range(input_stream& stream)
-            : delimited_iterator_range<iterator>(iterator(stream), iterator())
+        stream_generator() noexcept : stream(), value() { }
+        explicit stream_generator(input_stream& stream) noexcept : stream(&stream)
         {
+            next();
         }
+
+    public:
+        friend bool operator == (const stream_generator& a, const stream_generator& b) noexcept
+        {
+            return a.stream == b.stream && a.value == b.value;
+        }
+        friend bool operator != (const stream_generator& a, const stream_generator& b) noexcept
+        {
+            return !(a == b);
+        }
+
+        friend void swap(stream_generator& a, stream_generator& b) noexcept
+        {
+            swap(a.stream, b.stream);
+            swap(a.value, b.value);
+        }
+
+    public:
+        reference operator * () const noexcept { return value; }
+        pointer operator -> () const noexcept { return &value; }
+        stream_generator& operator ++ () { next(); return *this; }
+        iterator_proxy<stream_generator> operator ++ (int)
+        {
+            iterator_proxy<stream_generator> proxy(value);
+            ++*this;
+            return proxy;
+        }
+
+        explicit operator bool () const noexcept { return stream != nullptr; }
+
+    private:
+        void next()
+        {
+            if (stream->read(&value, 1) == 0)
+            {
+                stream = nullptr;
+                value = POD();
+            }
+        }
+
+    private:
+        input_stream* stream;
+        POD value;
     };
 
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
-    class output_stream_range : public delimited_iterator_range<output_stream_iterator<POD>>
+    class stream_consumer
     {
     public:
-        using iterator = typename delimited_iterator_range<output_stream_iterator<POD>>::iterator;
+        using value_type = POD;
 
     public:
-        output_stream_range() = default;
-        output_stream_range(output_stream& stream)
-            : delimited_iterator_range<iterator>(iterator(stream), iterator())
+        stream_consumer() noexcept : stream() { }
+        explicit stream_consumer(output_stream& stream) noexcept : stream(&stream) { }
+
+    public:
+        friend bool operator == (const stream_consumer& a, const stream_consumer& b) noexcept
         {
+            return a.stream == b.stream;
         }
+        friend bool operator != (const stream_consumer& a, const stream_consumer& b) noexcept
+        {
+            return !(a == b);
+        }
+
+    public:
+        bool operator () (const value_type& value)
+        {
+            return stream->write(&value, 1) != 0;
+        }
+
+    private:
+        output_stream* stream;
     };
 
 
