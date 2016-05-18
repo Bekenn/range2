@@ -84,6 +84,13 @@ namespace stdext
         return { utf_result::error, char32_t() };
     }
 
+    std::pair<utf_result, char32_t> to_utf32(char32_t in, utfstate_t& state)
+    {
+        if (!utf32_is_valid(in))
+            return { utf_result::error, char32_t() };
+        return { utf_result::ok, in };
+    }
+
     std::pair<utf_result, char> to_utf8(char32_t in, utfstate_t& state)
     {
         if (state.produced == 0)
@@ -170,6 +177,32 @@ namespace stdext
         }
 
         return to_utf8(char32_t(state.code), state);
+    }
+
+    std::pair<utf_result, char> to_utf8(char in, utfstate_t& state)
+    {
+        if (state.produced == 0)
+        {
+            auto result = to_utf32(in, state);
+            if (result.first != utf_result::ok)
+                return { result.first, char() };
+            state.code = result.second;
+        }
+
+        return to_utf8(char32_t(state.code), state);
+    }
+
+    std::pair<utf_result, char16_t> to_utf16(char16_t in, utfstate_t& state)
+    {
+        if (state.produced == 0)
+        {
+            auto result = to_utf32(in, state);
+            if (result.first != utf_result::ok)
+                return { result.first, char16_t() };
+            state.code = result.second;
+        }
+
+        return to_utf16(char32_t(state.code), state);
     }
 
     namespace

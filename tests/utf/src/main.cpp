@@ -11,5 +11,5 @@ int main()
     auto generator = stdext::stream_generator<char>(infile);
     auto consumer = stdext::stream_consumer<char>(outfile);
 
-    generator >> stdext::to_utf16() >> stdext::to_utf8() >> consumer;
+    generator >> stdext::to_utf32() >> stdext::to_utf8() >> consumer;
 }

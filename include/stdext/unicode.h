@@ -105,12 +105,15 @@ namespace stdext
     // If the function returns utf_result::error, then state is empty and in points one position beyond the input character
     // sequence that could not be converted.
     // The behavior is undefined if state is non-empty and does not contain a value from a previous call to this function.
+    ::std::pair<utf_result, char> to_utf8(char in, utfstate_t& state);
     ::std::pair<utf_result, char> to_utf8(char16_t in, utfstate_t& state);
     ::std::pair<utf_result, char> to_utf8(char32_t in, utfstate_t& state);
     ::std::pair<utf_result, char16_t> to_utf16(char in, utfstate_t& state);
+    ::std::pair<utf_result, char16_t> to_utf16(char16_t in, utfstate_t& state);
     ::std::pair<utf_result, char16_t> to_utf16(char32_t in, utfstate_t& state);
     ::std::pair<utf_result, char32_t> to_utf32(char in, utfstate_t& state);
     ::std::pair<utf_result, char32_t> to_utf32(char16_t in, utfstate_t& state);
+    ::std::pair<utf_result, char32_t> to_utf32(char32_t in, utfstate_t& state);
 
     namespace detail
     {
