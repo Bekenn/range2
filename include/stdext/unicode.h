@@ -32,59 +32,56 @@ namespace stdext
             code : 24,
             produced : 2,
             consumed : 2,
-            remaining : 2;
+            remaining : 2,
+            error : 1;
 
-        utfstate_t() : code(0), produced(0), consumed(0), remaining(0) { }
+        utfstate_t() : code(0), produced(0), consumed(0), remaining(0), error(0) { }
     };
 
     constexpr char32_t UNICODE_REPLACEMENT_CHARACTER = 0xFFFD;
     constexpr char32_t INVALID_UNICODE_CHARACTER = char32_t(-1);
     constexpr size_t MAX_UTF8_CHARACTER_LENGTH = 4;
 
-    inline size_t utf8_character_length(char first)
+    constexpr size_t utf8_character_length(char first)
     {
-        if ((first & 0x80) == 0x00)
-            return 1;
-        if ((first & 0xE0) == 0xC0)
-            return 2;
-        if ((first & 0xF0) == 0xE0)
-            return 3;
-        if ((first & 0xF8) == 0xF0)
-            return 4;
-        return 0;
+        return (first & 0x80) == char(0x00) ? 1
+            : (first & 0xE0) == char(0xC0) ? 2
+            : (first & 0xF0) == char(0xE0) ? 3
+            : (first & 0xF8) == char(0xF0) ? 4
+            : 0;
     }
 
-    inline bool utf8_is_leading(char code)
+    constexpr bool utf8_is_leading(char code)
     {
-        return (code & 0xC0) != 0x80 && (code & 0xF8) != 0xF8;
+        return uint8_t(code) < 0x80 || (uint8_t(code) >= 0xC2 && uint8_t(code) < 0xF5);
     }
 
-    inline bool utf8_is_trailing(char code)
+    constexpr bool utf8_is_trailing(char code)
     {
         return (code & 0xC0) == 0x80;
     }
 
-    inline bool is_surrogate(char16_t code)
+    constexpr bool is_surrogate(char16_t code)
     {
         return (code & 0xF800) == 0xD800;
     }
 
-    inline bool is_leading_surrogate(char16_t code)
+    constexpr bool is_leading_surrogate(char16_t code)
     {
         return (code & 0xFC00) == 0xD800;
     }
 
-    inline bool is_trailing_surrogate(char16_t code)
+    constexpr bool is_trailing_surrogate(char16_t code)
     {
         return (code & 0xFC00) == 0xDC00;
     }
 
-    inline bool is_noncharacter(char32_t code)
+    constexpr bool is_noncharacter(char32_t code)
     {
         return (code & 0xFFFE) == 0xFFFE || (code >= 0xFDD0 && code < 0xFDF0);
     }
 
-    inline bool utf32_is_valid(char32_t code)
+    constexpr bool utf32_is_valid(char32_t code)
     {
         return code < 0x110000
             && (code >= 0x10000 || !is_surrogate(static_cast<char16_t>(code)))
@@ -291,11 +288,11 @@ namespace stdext
 
     public:
         to_utf_generator() : g(), value() { }
-        explicit to_utf_generator(const generator& g) : g(g), value(detail::utf_sentinel_v<Char>)
+        explicit to_utf_generator(const generator& g) : g(g)
         {
             next();
         }
-        explicit to_utf_generator(generator&& g) : g(move(g)), value(detail::utf_sentinel_v<Char>)
+        explicit to_utf_generator(generator&& g) : g(move(g))
         {
             next();
         }
@@ -336,6 +333,15 @@ namespace stdext
     private:
         void next()
         {
+            if (state.error)
+            {
+                auto result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
+                value = result.second;
+                if (result.first == utf_result::ok)
+                    state.error = 0;
+                return;
+            }
+
             if (!g)
             {
                 if (state.produced != 0)
@@ -372,6 +378,8 @@ namespace stdext
                     state = utfstate_t();
                     result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
                     value = result.second;
+                    if (result.first != utf_result::ok)
+                        state.error = 1;
                     return;
                 }
             } while (g);
@@ -392,41 +400,23 @@ namespace stdext
     struct to_utf16_tag { };
     struct to_utf32_tag { };
 
-    inline auto to_utf8() { return to_utf8_tag(); }
-    inline auto to_utf16() { return to_utf16_tag(); }
-    inline auto to_utf32() { return to_utf32_tag(); }
+    constexpr auto to_utf8() { return to_utf8_tag(); }
+    constexpr auto to_utf16() { return to_utf16_tag(); }
+    constexpr auto to_utf32() { return to_utf32_tag(); }
 
-    template <class Generator, REQUIRES(::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char>::value)>
-    decltype(auto) operator >> (Generator&& g, to_utf8_tag)
-    {
-        return as_generator(forward<Generator>(g));
-    }
-
-    template <class Generator, REQUIRES(!::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char>::value)>
+    template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_utf8_tag)
     {
         return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char>(as_generator(forward<Generator>(g)));
     }
 
-    template <class Generator, REQUIRES(::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char16_t>::value)>
-    decltype(auto) operator >> (Generator&& g, to_utf16_tag)
-    {
-        return as_generator(forward<Generator>(g));
-    }
-
-    template <class Generator, REQUIRES(!::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char16_t>::value)>
+    template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_utf16_tag)
     {
         return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char16_t>(as_generator(forward<Generator>(g)));
     }
 
-    template <class Generator, REQUIRES(::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char32_t>::value)>
-    decltype(auto) operator >> (Generator&& g, to_utf32_tag)
-    {
-        return as_generator(forward<Generator>(g));
-    }
-
-    template <class Generator, REQUIRES(!::std::is_same<::std::decay_t<value_type<::std::decay_t<Generator>, can_generate>>, char32_t>::value)>
+    template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_utf32_tag)
     {
         return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char32_t>(as_generator(forward<Generator>(g)));
