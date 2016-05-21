@@ -145,12 +145,15 @@ namespace stdext
             state.code = in;
             state.produced = 1;
             state.remaining = 1;
-            return { utf_result::partial_write, char16_t(0xD800 | ((state.code >> 16) - 1)) };
+            auto high = char16_t(0xD800
+                | ((state.code >> 16) - 1) << 6
+                | (state.code & 0xFFFF) >> 10);
+            return { utf_result::partial_write, high };
         }
 
         state.produced = 0;
         state.remaining = 0;
-        return { utf_result::ok, char16_t(0xDC00 | (state.code & 0xFFFF)) };
+        return { utf_result::ok, char16_t(0xDC00 | (state.code & 0x03FF)) };
     }
 
     std::pair<utf_result, char16_t> to_utf16(char in, utfstate_t& state)
@@ -216,6 +219,9 @@ namespace stdext
             }
             else if ((code & 0xE0) == 0xC0)
             {
+                if (code < 0xC2)
+                    return false;
+
                 state.code = code & 0x1F;
                 state.remaining = 1;
             }
@@ -226,6 +232,9 @@ namespace stdext
             }
             else if ((code & 0xF8) == 0xF0)
             {
+                if (code >= 0xF5)
+                    return false;
+
                 state.code = code & 0x07;
                 state.remaining = 3;
             }

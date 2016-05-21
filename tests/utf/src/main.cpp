@@ -6,10 +6,13 @@
 int main()
 {
     stdext::file_input_stream infile(PATH_STR("UTF-8-test.txt"));
-    stdext::file_output_stream outfile(PATH_STR("UTF-8-fixed.txt"));
+    stdext::file_output_stream outfile(PATH_STR("utf8-utf16-utf8.txt"));
 
     auto generator = stdext::stream_generator<char>(infile);
     auto consumer = stdext::stream_consumer<char>(outfile);
 
-    generator >> stdext::to_utf32() >> stdext::to_utf8() >> consumer;
+    generator
+        >> stdext::to_utf16()
+        >> stdext::to_utf8()
+        >> consumer;
 }
