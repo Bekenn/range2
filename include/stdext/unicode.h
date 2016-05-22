@@ -278,12 +278,11 @@ namespace stdext
     class to_utf_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = const Char;
         using difference_type = difference_type<Generator, is_generator>;
         using pointer = value_type*;
         using reference = value_type&;
-        using generator_category = basic_generator_tag;
         using generator = Generator;
 
     public:

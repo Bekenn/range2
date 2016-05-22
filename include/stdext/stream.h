@@ -267,12 +267,11 @@ namespace stdext
     class stream_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = const POD;
         using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
-        using generator_category = basic_generator_tag;
 
     public:
         stream_generator() noexcept : stream(), value() { }

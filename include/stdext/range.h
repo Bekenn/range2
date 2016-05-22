@@ -1597,12 +1597,11 @@ namespace stdext
     class range_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = const stdext::value_type<Range, is_range>;
         using difference_type = stdext::difference_type<Range, is_range>;
         using pointer = value_type*;
         using reference = value_type&;
-        using generator_category = basic_generator_tag;
         using range = Range;
 
     public:

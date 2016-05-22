@@ -18,18 +18,24 @@
 
 // Generators are input iterators that know when the underlying sequence is exhausted. The user
 // can test for this by applying a conversion to bool. To distinguish generators from other
-// iterators, all generators should declare the member type generator_category, which should be
-// an alias for basic_generator_tag.
+// iterators, all generators should have an iterator_category of generator_tag.
 namespace stdext
 {
+    struct generator_tag : ::std::forward_iterator_tag { };
+
     namespace detail
     {
-        DECLARE_HAS_INNER_TYPE(generator_category);
+        template <class T, bool = is_iterator<T>::value>
+        struct is_generator_helper { static constexpr bool value = false; };
+        template <class T>
+        struct is_generator_helper<T, true>
+        {
+            static constexpr bool value = ::std::is_base_of<iterator_category<T>, generator_tag>::value;
+        };
     }
+
     template <class T> struct is_generator
-        : ::std::conditional_t<detail::HAS_INNER_TYPE(T, generator_category),
-            true_type,
-            false_type>
+        : ::std::conditional_t<detail::is_generator_helper<T>::value, true_type, false_type>
     { };
 
     template <class T> struct is_generator_adaptable
@@ -56,11 +62,6 @@ namespace stdext
     {
         return make_generator(forward<T>(g));
     }
-
-    // The one and only generator category.
-    struct basic_generator_tag { };
-
-    template <class Generator> using generator_category = typename Generator::generator_category;
 
     namespace detail
     {
@@ -114,12 +115,11 @@ namespace stdext
     class iterator_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = ::stdext::value_type<Iterator, is_iterator>;
         using difference_type = ::stdext::difference_type<Iterator, is_iterator>;
         using pointer = pointer_type<Iterator, is_iterator>;
         using reference = reference_type<Iterator, is_iterator>;
-        using generator_category = basic_generator_tag;
         using iterator = Iterator;
 
     public:
@@ -178,12 +178,11 @@ namespace stdext
     class function_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = const ::std::remove_cv_t<decltype(::std::declval<Function>()())>;
         using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
-        using generator_category = basic_generator_tag;
 
     public:
         function_generator() : f(), value() { }
@@ -228,12 +227,11 @@ namespace stdext
     class constant_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = const T;
         using difference_type = ptrdiff_t;
         using pointer = value_type*;
         using reference = value_type&;
-        using generator_category = basic_generator_tag;
 
     public:
         constant_generator() : v() { }
@@ -274,12 +272,11 @@ namespace stdext
     class terminated_generator
     {
     public:
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = generator_tag;
         using value_type = stdext::value_type<Iterator, is_iterator>;
         using difference_type = stdext::difference_type<Iterator, is_iterator>;
         using pointer = pointer_type<Iterator, is_iterator>;
         using reference = reference_type<Iterator, is_iterator>;
-        using generator_category = basic_generator_tag;
         using iterator = Iterator;
 
     public:
