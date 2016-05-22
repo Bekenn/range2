@@ -75,13 +75,13 @@ namespace stdext
         struct reference_type_of<Generator, is_generator, true> { using type = typename Generator::reference; };
 
         template <class Generator>
-        struct value_type_of<Generator, is_generator_adaptable, true> { using type = value_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
+        struct value_type_of<Generator, is_generator_adaptable, true> { using type = value_type_t<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
-        struct difference_type_of<Generator, is_generator_adaptable, true> { using type = difference_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
+        struct difference_type_of<Generator, is_generator_adaptable, true> { using type = difference_type_t<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
-        struct pointer_type_of<Generator, is_generator_adaptable, true> { using type = pointer_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
+        struct pointer_type_of<Generator, is_generator_adaptable, true> { using type = pointer_type_t<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
-        struct reference_type_of<Generator, is_generator_adaptable, true> { using type = reference_type<decltype(make_generator(declval<Generator&>())), is_generator>; };
+        struct reference_type_of<Generator, is_generator_adaptable, true> { using type = reference_type_t<decltype(make_generator(declval<Generator&>())), is_generator>; };
         template <class Generator>
         struct generator_type_of<Generator, is_generator_adaptable, true> { using type = decltype(make_generator(declval<Generator&>())); };
 
@@ -97,7 +97,7 @@ namespace stdext
         struct generator_type_of<Generator, can_generate, true> { using type = ::std::decay_t<decltype(as_generator(declval<Generator&>()))>; };
     }
 
-    template <class Generator, class Consumer, REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
+    template <class Generator, class Consumer, REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
     size_t operator >> (Generator&& g, Consumer&& c)
     {
         size_t count = 0;
@@ -116,10 +116,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = ::stdext::value_type<Iterator, is_iterator>;
-        using difference_type = ::stdext::difference_type<Iterator, is_iterator>;
-        using pointer = pointer_type<Iterator, is_iterator>;
-        using reference = reference_type<Iterator, is_iterator>;
+        using value_type = ::stdext::value_type_t<Iterator, is_iterator>;
+        using difference_type = ::stdext::difference_type_t<Iterator, is_iterator>;
+        using pointer = pointer_type_t<Iterator, is_iterator>;
+        using reference = reference_type_t<Iterator, is_iterator>;
         using iterator = Iterator;
 
     public:
@@ -273,10 +273,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = stdext::value_type<Iterator, is_iterator>;
-        using difference_type = stdext::difference_type<Iterator, is_iterator>;
-        using pointer = pointer_type<Iterator, is_iterator>;
-        using reference = reference_type<Iterator, is_iterator>;
+        using value_type = stdext::value_type_t<Iterator, is_iterator>;
+        using difference_type = stdext::difference_type_t<Iterator, is_iterator>;
+        using pointer = pointer_type_t<Iterator, is_iterator>;
+        using reference = reference_type_t<Iterator, is_iterator>;
         using iterator = Iterator;
 
     public:
@@ -335,7 +335,7 @@ namespace stdext
     }
 
     template <class Iterator, class TerminationPredicate,
-    REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_callable<::std::decay_t<TerminationPredicate>(value_type<::std::decay_t<Iterator>, is_iterator>), bool>::value)>
+    REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_callable<::std::decay_t<TerminationPredicate>(value_type_t<::std::decay_t<Iterator>, is_iterator>), bool>::value)>
     auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
     {
         return terminated_generator<::std::decay_t<Iterator>, ::std::decay_t<TerminationPredicate>>

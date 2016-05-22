@@ -92,15 +92,25 @@ namespace stdext
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct generator_type_of { };
     }
 
-    template <class T, template <class> class IsT> using value_type = typename detail::value_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using position_type = typename detail::position_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using difference_type = typename detail::difference_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using size_type = typename detail::size_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using pointer_type = typename detail::pointer_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using reference_type = typename detail::reference_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using iterator_type = typename detail::iterator_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using sentinel_type = typename detail::sentinel_type_of<T, IsT>::type;
-    template <class T, template <class> class IsT> using generator_type = typename detail::generator_type_of<T, IsT>::type;
+    template <class T, template <class> class IsT> struct value_type : detail::value_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct position_type : detail::position_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct difference_type : detail::difference_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct size_type : detail::size_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct pointer_type : detail::pointer_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct reference_type : detail::reference_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct iterator_type : detail::iterator_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct sentinel_type : detail::sentinel_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct generator_type : detail::generator_type_of<T, IsT> { };
+
+    template <class T, template <class> class IsT> using value_type_t = typename value_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using position_type_t = typename position_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using difference_type_t = typename difference_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using size_type_t = typename size_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using pointer_type_t = typename pointer_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using reference_type_t = typename reference_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using iterator_type_t = typename iterator_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using sentinel_type_t = typename sentinel_type<T, IsT>::type;
+    template <class T, template <class> class IsT> using generator_type_t = typename generator_type<T, IsT>::type;
 }
 
 #endif

@@ -197,7 +197,7 @@ namespace stdext
     }
 
     template <class Generator, class Consumer,
-        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
+        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
     utf_result to_utf8(Generator&& in, Consumer&& out, utfstate_t& state)
     {
         return detail::to_utf<char>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
@@ -210,7 +210,7 @@ namespace stdext
     }
 
     template <class Generator, class Consumer,
-        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
+        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
     utf_result to_utf16(Generator&& in, Consumer&& out, utfstate_t& state)
     {
         return detail::to_utf<char16_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
@@ -223,7 +223,7 @@ namespace stdext
     }
 
     template <class Generator, class Consumer,
-        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type<::std::decay_t<Generator>, can_generate>)>::value)>
+        REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
     utf_result to_utf32(Generator&& in, Consumer&& out, utfstate_t& state)
     {
         return detail::to_utf<char32_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
@@ -280,7 +280,7 @@ namespace stdext
     public:
         using iterator_category = generator_tag;
         using value_type = const Char;
-        using difference_type = difference_type<Generator, is_generator>;
+        using difference_type = difference_type_t<Generator, is_generator>;
         using pointer = value_type*;
         using reference = value_type&;
         using generator = Generator;
@@ -406,19 +406,19 @@ namespace stdext
     template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_utf8_tag)
     {
-        return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char>(as_generator(forward<Generator>(g)));
+        return to_utf_generator<generator_type_t<::std::decay_t<Generator>, can_generate>, char>(as_generator(forward<Generator>(g)));
     }
 
     template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_utf16_tag)
     {
-        return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char16_t>(as_generator(forward<Generator>(g)));
+        return to_utf_generator<generator_type_t<::std::decay_t<Generator>, can_generate>, char16_t>(as_generator(forward<Generator>(g)));
     }
 
     template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_utf32_tag)
     {
-        return to_utf_generator<generator_type<::std::decay_t<Generator>, can_generate>, char32_t>(as_generator(forward<Generator>(g)));
+        return to_utf_generator<generator_type_t<::std::decay_t<Generator>, can_generate>, char32_t>(as_generator(forward<Generator>(g)));
     }
 }
 
