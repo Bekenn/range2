@@ -105,13 +105,13 @@ namespace stdext
     namespace detail
     {
         template <class T>
-        struct value_type_of<T, is_stl_range_provider, true> { using type = value_type_t<iterator_type_t<T, is_stl_range_provider>, is_iterator>; };
+        struct value_type_of<T, is_stl_range_provider, true> { using type = iterator_value_type_t<iterator_type_t<T, is_stl_range_provider>>; };
         template <class T>
-        struct difference_type_of<T, is_stl_range_provider, true> { using type = difference_type_t<iterator_type_t<T, is_stl_range_provider>, is_iterator>; };
+        struct difference_type_of<T, is_stl_range_provider, true> { using type = iterator_difference_type_t<iterator_type_t<T, is_stl_range_provider>>; };
         template <class T>
-        struct pointer_type_of<T, is_stl_range_provider, true> { using type = pointer_type_t<iterator_type_t<T, is_stl_range_provider>, is_iterator>; };
+        struct pointer_type_of<T, is_stl_range_provider, true> { using type = iterator_pointer_type_t<iterator_type_t<T, is_stl_range_provider>>; };
         template <class T>
-        struct reference_type_of<T, is_stl_range_provider, true> { using type = reference_type_t<iterator_type_t<T, is_stl_range_provider>, is_iterator>; };
+        struct reference_type_of<T, is_stl_range_provider, true> { using type = iterator_reference_type_t<iterator_type_t<T, is_stl_range_provider>>; };
         template <class T>
         struct iterator_type_of<T, is_stl_range_provider, true> { using type = decltype(begin(declval<T&>())); };
         template <class T>
@@ -147,6 +147,17 @@ namespace stdext
         struct size_type_of<Range, is_range, true> { using type = typename check_range_inner_size_type<Range, HAS_INNER_TYPE(Range, size_type)>::type; };
     }
 
+    template <class Range> using range_value_type = value_type<Range, is_range>;
+    template <class Range> using range_value_type_t = value_type_t<Range, is_range>;
+    template <class Range> using range_position_type = position_type<Range, is_range>;
+    template <class Range> using range_position_type_t = position_type_t<Range, is_range>;
+    template <class Range> using range_difference_type = difference_type<Range, is_range>;
+    template <class Range> using range_difference_type_t = difference_type_t<Range, is_range>;
+    template <class Range> using range_reference_type = reference_type<Range, is_range>;
+    template <class Range> using range_reference_type_t = reference_type_t<Range, is_range>;
+    template <class Range> using range_size_type = size_type<Range, is_range>;
+    template <class Range> using range_size_type_t = size_type_t<Range, is_range>;
+
     // range concepts
     template <class Range> struct is_multi_pass_range
     {
@@ -163,13 +174,13 @@ namespace stdext
 
     // generic range utilities
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    position_type_t<Range, is_range> next_pos(const Range& range, position_type_t<Range, is_range> pos)
+    range_position_type_t<Range> next_pos(const Range& range, range_position_type_t<Range> pos)
     {
         return range.inc_pos(pos);
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
-    position_type_t<Range, is_range> prev_pos(const Range& range, position_type_t<Range, is_range> pos)
+    range_position_type_t<Range> prev_pos(const Range& range, range_position_type_t<Range> pos)
     {
         return range.dec_pos(pos);
     }
@@ -177,7 +188,7 @@ namespace stdext
     namespace detail
     {
         template <class Range>
-        position_type_t<Range, is_range>& advance_pos(const Range& range, position_type_t<Range, is_range>& pos, difference_type_t<Range, is_range> n, multi_pass_range_tag)
+        range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n, multi_pass_range_tag)
         {
             assert(n >= 0);
 
@@ -187,7 +198,7 @@ namespace stdext
         }
 
         template <class Range>
-        position_type_t<Range, is_range>& advance_pos(const Range& range, position_type_t<Range, is_range>& pos, difference_type_t<Range, is_range> n, bidirectional_range_tag)
+        range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n, bidirectional_range_tag)
         {
             for (; n > 0; --n)
                 range.inc_pos(pos);
@@ -197,14 +208,14 @@ namespace stdext
         }
 
         template <class Range>
-        position_type_t<Range, is_range>& advance_pos(const Range& range, position_type_t<Range, is_range>& pos, difference_type_t<Range, is_range> n, random_access_range_tag)
+        range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n, random_access_range_tag)
         {
             return range.advance_pos(pos, n);
         }
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    position_type_t<Range, is_range>& advance_pos(const Range& range, position_type_t<Range, is_range>& pos, difference_type_t<Range, is_range> n)
+    range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n)
     {
         return detail::advance_pos(range, pos, n, range_category<Range>());
     }
@@ -212,23 +223,23 @@ namespace stdext
     namespace detail
     {
         template <class Range>
-        difference_type_t<Range, is_range> distance(const Range& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2, multi_pass_range_tag)
+        range_difference_type_t<Range> distance(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2, multi_pass_range_tag)
         {
-            difference_type_t<Range, is_range> d = 0;
+            range_difference_type_t<Range> d = 0;
             for (; p1 != p2; range.inc_pos(p1))
                 ++d;
             return d;
         }
 
         template <class Range>
-        difference_type_t<Range, is_range> distance(const Range& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2, random_access_range_tag)
+        range_difference_type_t<Range> distance(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2, random_access_range_tag)
         {
             return range.distance(p1, p2);
         }
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    difference_type_t<Range, is_range> distance(const Range& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    range_difference_type_t<Range> distance(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return detail::distance(range, p1, p2, range_category<Range>());
     }
@@ -240,7 +251,7 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    value_type_t<Range, is_range> read(const Range& range, position_type_t<Range, is_range>& pos)
+    range_value_type_t<Range> read(const Range& range, range_position_type_t<Range>& pos)
     {
         auto value = range.at_pos(pos);
         range.inc_pos(pos);
@@ -248,7 +259,7 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    value_type_t<Range, is_range> consume(const Range& range, position_type_t<Range, is_range>& pos)
+    range_value_type_t<Range> consume(const Range& range, range_position_type_t<Range>& pos)
     {
         auto value = move(range.at_pos(pos));
         range.inc_pos(pos);
@@ -256,14 +267,14 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    void write(const Range& range, position_type_t<Range, is_range>& pos, const value_type_t<Range, is_range>& value)
+    void write(const Range& range, range_position_type_t<Range>& pos, const range_value_type_t<Range>& value)
     {
         range.at_pos(pos) = value;
         range.inc_pos(pos);
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    void write(const Range& range, position_type_t<Range, is_range>& pos, value_type_t<Range, is_range>&& value)
+    void write(const Range& range, range_position_type_t<Range>& pos, range_value_type_t<Range>&& value)
     {
         range.at_pos(pos) = move(value);
         range.inc_pos(pos);
@@ -272,50 +283,50 @@ namespace stdext
     namespace detail
     {
         template <class Range>
-        size_type_t<Range, is_range> size_before(const Range& range, position_type_t<Range, is_range> pos, multi_pass_range_tag)
+        range_size_type_t<Range> size_before(const Range& range, range_position_type_t<Range> pos, multi_pass_range_tag)
         {
-            size_type_t<Range, is_range> size = 0;
+            range_size_type_t<Range> size = 0;
             for (auto p = range.begin_pos(); p != pos; range.inc_pos(p))
                 ++size;
             return size;
         }
 
         template <class Range>
-        size_type_t<Range, is_range> size_before(const Range& range, position_type_t<Range, is_range> pos, random_access_range_tag)
+        range_size_type_t<Range> size_before(const Range& range, range_position_type_t<Range> pos, random_access_range_tag)
         {
-            return size_type_t<Range, is_range>(range.distance(range.begin_pos(), pos));
+            return range_size_type_t<Range>(range.distance(range.begin_pos(), pos));
         }
 
         template <class Range>
-        size_type_t<Range, is_range> size_after(const Range& range, position_type_t<Range, is_range> pos, multi_pass_range_tag)
+        range_size_type_t<Range> size_after(const Range& range, range_position_type_t<Range> pos, multi_pass_range_tag)
         {
-            size_type_t<Range, is_range> size = 0;
+            range_size_type_t<Range> size = 0;
             for (auto p = pos; !range.is_end_pos(p); range.inc_pos(p))
                 ++size;
             return size;
         }
 
         template <class Range, REQUIRES(is_delimited_range<Range>::value)>
-        size_type_t<Range, is_range> size_after(const Range& range, position_type_t<Range, is_range> pos, random_access_range_tag)
+        range_size_type_t<Range> size_after(const Range& range, range_position_type_t<Range> pos, random_access_range_tag)
         {
-            return size_type_t<Range, is_range>(range.distance(pos, range.end_pos()));
+            return range_size_type_t<Range>(range.distance(pos, range.end_pos()));
         }
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    size_type_t<Range, is_range> size_before(const Range& range, position_type_t<Range, is_range> pos)
+    range_size_type_t<Range> size_before(const Range& range, range_position_type_t<Range> pos)
     {
         return detail::size_before(range, pos, range_category<Range>());
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    size_type_t<Range, is_range> size_after(const Range& range, position_type_t<Range, is_range> pos)
+    range_size_type_t<Range> size_after(const Range& range, range_position_type_t<Range> pos)
     {
         return detail::size_after(range, pos, range_category<Range>());
     }
 
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
-    Range& drop_first(Range& range, size_type_t<Range, is_range> n = 1)
+    Range& drop_first(Range& range, range_size_type_t<Range> n = 1)
     {
         auto pos = range.begin_pos();
         range.begin_pos(advance_pos(range, pos, n));
@@ -323,21 +334,21 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
-    Range& drop_last(Range& range, size_type_t<Range, is_range> n = 1)
+    Range& drop_last(Range& range, range_size_type_t<Range> n = 1)
     {
         auto pos = range.end_pos();
-        range.end_pos(advance_pos(range, pos, -difference_type_t<Range, is_range>(n)));
+        range.end_pos(advance_pos(range, pos, -range_difference_type_t<Range>(n)));
         return range;
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    reference_type_t<Range, is_range> head(const Range& range)
+    range_reference_type_t<Range> head(const Range& range)
     {
         return range.at_pos(range.begin_pos());
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
-    reference_type_t<Range, is_range> last(const Range& range)
+    range_reference_type_t<Range> last(const Range& range)
     {
         auto pos = range.end_pos();
         return range.at_pos(range.dec_pos(pos));
@@ -477,19 +488,19 @@ namespace stdext
     template <class Range> class range_generator;
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    auto subrange_from(const Range& range, position_type_t<Range, is_range> first)
+    auto subrange_from(const Range& range, range_position_type_t<Range> first)
     {
         return make_range(range, first, [&](const auto& pos) { return range.is_end_pos(pos); });
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    auto subrange_to(const Range& range, position_type_t<Range, is_range> last)
+    auto subrange_to(const Range& range, range_position_type_t<Range> last)
     {
         return make_range(range, range.begin_pos(), last);
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    auto split_range(const Range& range, position_type_t<Range, is_range> pos)
+    auto split_range(const Range& range, range_position_type_t<Range> pos)
     {
         return ::std::make_pair(subrange_to(range, pos), subrange_from(range, pos));
     }
@@ -502,10 +513,10 @@ namespace stdext
         {
         public:
             using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
-            using value_type = value_type_t<Iterator, is_iterator>;
+            using value_type = iterator_value_type_t<Iterator>;
             using position = Iterator;
-            using difference_type = difference_type_t<Iterator, is_iterator>;
-            using reference = reference_type_t<Iterator, is_iterator>;
+            using difference_type = iterator_difference_type_t<Iterator>;
+            using reference = iterator_reference_type_t<Iterator>;
             using iterator = Iterator;
 
             class sentinel
@@ -613,10 +624,10 @@ namespace stdext
         {
         public:
             using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
-            using value_type = value_type_t<Iterator, is_iterator>;
+            using value_type = iterator_value_type_t<Iterator>;
             using position = Iterator;
-            using difference_type = difference_type_t<Iterator, is_iterator>;
-            using reference = reference_type_t<Iterator, is_iterator>;
+            using difference_type = iterator_difference_type_t<Iterator>;
+            using reference = iterator_reference_type_t<Iterator>;
             using iterator = Iterator;
 
         public:
@@ -703,9 +714,9 @@ namespace stdext
         {
         public:
             using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
-            using value_type = value_type_t<Iterator, is_iterator>;
-            using difference_type = difference_type_t<Iterator, is_iterator>;
-            using reference = reference_type_t<Iterator, is_iterator>;
+            using value_type = iterator_value_type_t<Iterator>;
+            using difference_type = iterator_difference_type_t<Iterator>;
+            using reference = iterator_reference_type_t<Iterator>;
             using iterator = Iterator;
 
             using size_type = ::std::make_unsigned_t<difference_type>;
@@ -820,11 +831,11 @@ namespace stdext
         {
         public:
             using iterator_category = detail::range_iterator_category_map<range_category<Range>>;
-            using value_type = stdext::value_type_t<Range, is_range>;
-            using difference_type = stdext::difference_type_t<Range, is_range>;
+            using value_type = stdext::range_value_type_t<Range>;
+            using difference_type = stdext::range_difference_type_t<Range>;
             using pointer = value_type*;
-            using reference = stdext::reference_type_t<Range, is_range>;
-            using position = stdext::position_type_t<Range, is_range>;
+            using reference = stdext::range_reference_type_t<Range>;
+            using position = stdext::range_position_type_t<Range>;
             using range = Range;
 
         public:
@@ -983,10 +994,10 @@ namespace stdext
         {
         public:
             using range_category = range_category<Range>;
-            using value_type = value_type_t<Range, is_range>;
-            using position = position_type_t<Range, is_range>;
-            using difference_type = difference_type_t<Range, is_range>;
-            using reference = reference_type_t<Range, is_range>;
+            using value_type = range_value_type_t<Range>;
+            using position = range_position_type_t<Range>;
+            using difference_type = range_difference_type_t<Range>;
+            using reference = range_reference_type_t<Range>;
             using range = Range;
 
         public:
@@ -1069,10 +1080,10 @@ namespace stdext
         {
         public:
             using range_category = range_category<Range>;
-            using value_type = value_type_t<Range, is_range>;
-            using position = position_type_t<Range, is_range>;
-            using difference_type = difference_type_t<Range, is_range>;
-            using reference = reference_type_t<Range, is_range>;
+            using value_type = range_value_type_t<Range>;
+            using position = range_position_type_t<Range>;
+            using difference_type = range_difference_type_t<Range>;
+            using reference = range_reference_type_t<Range>;
             using range = Range;
 
         public:
@@ -1169,17 +1180,17 @@ namespace stdext
         {
         public:
             using range_category = range_category<Range>;
-            using value_type = value_type_t<Range, is_range>;
-            using difference_type = difference_type_t<Range, is_range>;
-            using reference = reference_type_t<Range, is_range>;
+            using value_type = range_value_type_t<Range>;
+            using difference_type = range_difference_type_t<Range>;
+            using reference = range_reference_type_t<Range>;
             using range = Range;
 
             using size_type = ::std::make_unsigned_t<difference_type>;
-            using position = compressed_pair<position_type_t<Range, is_range>, size_type>;
+            using position = compressed_pair<range_position_type_t<Range>, size_type>;
 
         public:
             counted_multi_pass_range() : underlying(nullptr), first(), count(0) { }
-            counted_multi_pass_range(const range& r, position_type_t<Range, is_range> pos, size_type count) : underlying(&r), first(pos, 0), count(count) { }
+            counted_multi_pass_range(const range& r, range_position_type_t<Range> pos, size_type count) : underlying(&r), first(pos, 0), count(count) { }
 
             friend bool operator == (const counted_multi_pass_range& a, const counted_multi_pass_range& b) noexcept
             {
@@ -1210,7 +1221,7 @@ namespace stdext
             }
 
             const range& base() const noexcept { return underlying; }
-            position_type_t<range, is_range> base_pos(position pos) { return pos.first(); }
+            range_position_type_t<range> base_pos(position pos) { return pos.first(); }
 
             size_type size() const noexcept { return count - first.second(); }
             void resize(size_type n) noexcept { count = first.second() + n; }
@@ -1296,17 +1307,17 @@ namespace stdext
         {
         public:
             using range_category = range_category<Range>;
-            using value_type = value_type_t<Range, is_range>;
-            using position = position_type_t<Range, is_range>;
-            using difference_type = difference_type_t<Range, is_range>;
-            using reference = reference_type_t<Range, is_range>;
+            using value_type = range_value_type_t<Range>;
+            using position = range_position_type_t<Range>;
+            using difference_type = range_difference_type_t<Range>;
+            using reference = range_reference_type_t<Range>;
             using range = Range;
 
         public:
             reverse_bidirectional_range() : r(nullptr), first(), term() { }
-            reverse_bidirectional_range(const Range& range, position_type_t<Range, is_range> first, const TerminationPredicate& term)
+            reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, const TerminationPredicate& term)
                 : r(&range), first(last), term(term) { }
-            reverse_bidirectional_range(const Range& range, position_type_t<Range, is_range> first, TerminationPredicate&& term)
+            reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, TerminationPredicate&& term)
                 : r(&range), first(last), term(move(term)) { }
 
             friend bool operator == (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
@@ -1382,15 +1393,15 @@ namespace stdext
         {
         public:
             using range_category = range_category<Range>;
-            using value_type = value_type_t<Range, is_range>;
-            using position = position_type_t<Range, is_range>;
-            using difference_type = difference_type_t<Range, is_range>;
-            using reference = reference_type_t<Range, is_range>;
+            using value_type = range_value_type_t<Range>;
+            using position = range_position_type_t<Range>;
+            using difference_type = range_difference_type_t<Range>;
+            using reference = range_reference_type_t<Range>;
             using range = Range;
 
         public:
             delimited_reverse_bidirectional_range() : r(nullptr), first(), last() { }
-            delimited_reverse_bidirectional_range(const Range& range, position_type_t<Range, is_range> first, position_type_t<Range, is_range> last)
+            delimited_reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, range_position_type_t<Range> last)
                 : r(&range), first(first), last(last) { }
 
             friend bool operator == (const delimited_reverse_bidirectional_range& a, const delimited_reverse_bidirectional_range& b) noexcept
@@ -1479,17 +1490,17 @@ namespace stdext
         {
         public:
             using range_category = range_category<Range>;
-            using value_type = value_type_t<Range, is_range>;
-            using difference_type = difference_type_t<Range, is_range>;
-            using reference = reference_type_t<Range, is_range>;
+            using value_type = range_value_type_t<Range>;
+            using difference_type = range_difference_type_t<Range>;
+            using reference = range_reference_type_t<Range>;
             using range = Range;
 
             using size_type = ::std::make_unsigned_t<difference_type>;
-            using position = compressed_pair<position_type_t<Range, is_range>, size_type>;
+            using position = compressed_pair<range_position_type_t<Range>, size_type>;
 
         public:
             counted_reverse_bidirectional_range() : r(nullptr), first(), count(0) { }
-            counted_reverse_bidirectional_range(const Range& range, position_type_t<Range, is_range> first, size_type count)
+            counted_reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, size_type count)
                 : r(&range), first(first, 0), count(count) { }
 
             friend bool operator == (const counted_reverse_bidirectional_range& a, const counted_reverse_bidirectional_range& b) noexcept
@@ -1529,7 +1540,7 @@ namespace stdext
             void resize(size_type n) { count = first.second() + n; }
 
             const range& base() const noexcept { return *r; }
-            position_type_t<Range, is_range> base_pos(position pos) const { return pos.second(); }
+            range_position_type_t<Range> base_pos(position pos) const { return pos.second(); }
 
         private:
             friend class delimited_reverse_random_access_range<Range>;
@@ -1598,8 +1609,8 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = const stdext::value_type_t<Range, is_range>;
-        using difference_type = stdext::difference_type_t<Range, is_range>;
+        using value_type = const stdext::range_value_type_t<Range>;
+        using difference_type = stdext::range_difference_type_t<Range>;
         using pointer = value_type*;
         using reference = value_type&;
         using range = Range;
@@ -1640,31 +1651,31 @@ namespace stdext
     };
 
     template <class Range, class TerminationPredicate, REQUIRES(is_range<Range>::value)>
-    auto make_range(const Range& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_range(const Range& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
-    auto make_range(const delegated_range<Range, DelegatedPredicate>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_range(const delegated_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_range(const delimited_range<Range>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_range(const delimited_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
-    auto make_range(const reverse_range<Range, DelegatedPredicate>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_range(const reverse_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_range(const delimited_reverse_range<Range>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
@@ -1682,31 +1693,31 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    auto make_range(const Range& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_range(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_range<Range>(range, p1, p2);
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_range(const delegated_range<Range, TerminationPredicate>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_range(const delegated_range<Range, TerminationPredicate>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_range<Range>(range.base(), p1, p2);
     }
 
     template <class Range>
-    auto make_range(const delimited_range<Range>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_range(const delimited_range<Range>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_range<Range>(range.base(), p1, p2);
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_range(const reverse_range<Range, TerminationPredicate>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_range(const reverse_range<Range, TerminationPredicate>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_reverse_range<Range>(range, p1, p2);
     }
 
     template <class Range>
-    auto make_range(const delimited_reverse_range<Range>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_reverse_range<Range>(range, p1, p2);
     }
@@ -1749,145 +1760,145 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    auto make_counted_range(const Range& range, position_type_t<Range, is_range> pos, size_type_t<Range, is_range> count)
+    auto make_counted_range(const Range& range, range_position_type_t<Range> pos, range_size_type_t<Range> count)
     {
         return counted_range<Range>(range, pos, count);
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_counted_range(const delegated_range<Range, TerminationPredicate>& range, position_type_t<Range, is_range> pos, size_type_t<Range, is_range> count)
+    auto make_counted_range(const delegated_range<Range, TerminationPredicate>& range, range_position_type_t<Range> pos, range_size_type_t<Range> count)
     {
         return counted_range<Range>(range.base(), pos, count);
     }
 
     template <class Range>
-    auto make_counted_range(const delimited_range<Range>& range, position_type_t<Range, is_range> pos, size_type_t<Range, is_range> count)
+    auto make_counted_range(const delimited_range<Range>& range, range_position_type_t<Range> pos, range_size_type_t<Range> count)
     {
         return counted_range<Range>(range.base(), pos, count);
     }
 
     template <class Range>
-    auto make_counted_range(const counted_range<Range>& range, position_type_t<counted_range<Range>, is_range> pos, size_type_t<counted_range<Range>, is_range> count)
+    auto make_counted_range(const counted_range<Range>& range, range_position_type_t<counted_range<Range>> pos, range_size_type_t<counted_range<Range>> count)
     {
         return counted_range<Range>(range.base(), range.base_pos(pos), count);
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_counted_range(const reverse_range<Range, TerminationPredicate>& range, position_type_t<Range, is_range> pos, size_type_t<Range, is_range> count)
+    auto make_counted_range(const reverse_range<Range, TerminationPredicate>& range, range_position_type_t<Range> pos, range_size_type_t<Range> count)
     {
         return counted_reverse_range<Range>(range.base(), pos, count);
     }
 
     template <class Range>
-    auto make_counted_range(const delimited_reverse_range<Range>& range, position_type_t<Range, is_range> pos, size_type_t<Range, is_range> count)
+    auto make_counted_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> pos, range_size_type_t<Range> count)
     {
         return counted_reverse_range<Range>(range.base(), pos, count);
     }
 
     template <class Range>
-    auto make_counted_range(const counted_reverse_range<Range>& range, position_type_t<counted_reverse_range<Range>, is_range> pos, size_type_t<counted_reverse_range<Range>, is_range> count)
+    auto make_counted_range(const counted_reverse_range<Range>& range, range_position_type_t<counted_reverse_range<Range>> pos, range_size_type_t<counted_reverse_range<Range>> count)
     {
         return counted_reverse_range<Range>(range.base(), range.base_pos(pos), count);
     }
 
     template <class Iterator, class TerminationPredicate>
-    auto make_counted_range(const iterator_range<Iterator, TerminationPredicate>& range, Iterator pos, size_type_t<Iterator, is_iterator> count)
+    auto make_counted_range(const iterator_range<Iterator, TerminationPredicate>& range, Iterator pos, iterator_size_type_t<Iterator> count)
     {
         return counted_iterator_range<Iterator>(pos, count);
     }
 
     template <class Iterator>
-    auto make_counted_range(const delimited_iterator_range<Iterator>& range, Iterator pos, size_type_t<Iterator, is_iterator> count)
+    auto make_counted_range(const delimited_iterator_range<Iterator>& range, Iterator pos, iterator_size_type_t<Iterator> count)
     {
         return counted_iterator_range<Iterator>(pos, count);
     }
 
     template <class Iterator>
-    auto make_counted_range(const counted_iterator_range<Iterator>& range, position_type_t<counted_iterator_range<Iterator>, is_range> pos, size_type_t<counted_iterator_range<Iterator>, is_range> count)
+    auto make_counted_range(const counted_iterator_range<Iterator>& range, range_position_type_t<counted_iterator_range<Iterator>> pos, range_size_type_t<counted_iterator_range<Iterator>> count)
     {
         return counted_iterator_range<Iterator>(range.base_pos(pos), count);
     }
 
     template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
-    auto make_counted_range(Iterator it, size_type_t<Iterator, is_iterator> count)
+    auto make_counted_range(Iterator it, iterator_size_type_t<Iterator> count)
     {
         return counted_iterator_range<Iterator>(forward(it), count);
     }
 
     template <class Range>
-    auto make_counted_range(range_iterator<Range> it, size_type_t<Range, is_range> count)
+    auto make_counted_range(range_iterator<Range> it, range_size_type_t<Range> count)
     {
         return make_counted_range(it.base_range(), it.base_pos(), count);
     }
 
     template <class Range, class TerminationPredicate, REQUIRES(is_bidirectional_range<Range>::value)>
-    auto make_reverse_range(const Range& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_reverse_range(const Range& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
-    auto make_reverse_range(const delegated_range<Range, DelegatedPredicate>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_reverse_range(const delegated_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_reverse_range(const delimited_range<Range>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_reverse_range(const delimited_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
-    auto make_reverse_range(const reverse_range<Range, DelegatedPredicate>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_reverse_range(const reverse_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return make_range(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_reverse_range(const delimited_reverse_range<Range>& range, position_type_t<Range, is_range> pos, TerminationPredicate&& pred)
+    auto make_reverse_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return make_range(range.base(), pos, forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_reverse_range(const counted_reverse_range<Range>& range, position_type_t<counted_reverse_range<Range>, is_range> pos, TerminationPredicate&& pred)
+    auto make_reverse_range(const counted_reverse_range<Range>& range, range_position_type_t<counted_reverse_range<Range>> pos, TerminationPredicate&& pred)
     {
         return make_range(range.base(), range.base_pos(pos), forward<TerminationPredicate>(pred));
     }
 
     template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
-    auto make_reverse_range(const Range& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_reverse_range(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_reverse_range<Range>(range, p1, p2);
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_reverse_range(const delegated_range<Range, TerminationPredicate>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_reverse_range(const delegated_range<Range, TerminationPredicate>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_reverse_range<Range>(range.base(), p1, p2);
     }
 
     template <class Range>
-    auto make_reverse_range(const delimited_range<Range>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_reverse_range(const delimited_range<Range>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_reverse_range<Range>(range.base(), p1, p2);
     }
 
     template <class Range, class TerminationPredicate>
-    auto make_reverse_range(const reverse_range<Range, TerminationPredicate>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_reverse_range(const reverse_range<Range, TerminationPredicate>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return make_range(range.base(), p2, p1);
     }
 
     template <class Range>
-    auto make_reverse_range(const delimited_reverse_range<Range>& range, position_type_t<Range, is_range> p1, position_type_t<Range, is_range> p2)
+    auto make_reverse_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return make_range(range.base(), p2, p1);
     }
 
     template <class Range>
-    auto make_reverse_range(const counted_reverse_range<Range>& range, position_type_t<counted_reverse_range<Range>, is_range> p1, position_type_t<counted_reverse_range<Range>, is_range> p2)
+    auto make_reverse_range(const counted_reverse_range<Range>& range, range_position_type_t<counted_reverse_range<Range>> p1, range_position_type_t<counted_reverse_range<Range>> p2)
     {
         return make_range(range.base(), range.base_pos(p2), range.base_pos(p1));
     }
@@ -1899,7 +1910,7 @@ namespace stdext
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
-    auto make_iterator(const Range& range, position_type_t<Range, is_range> pos)
+    auto make_iterator(const Range& range, range_position_type_t<Range> pos)
     {
         return range_iterator<Range>(pos);
     }
@@ -1917,7 +1928,7 @@ namespace stdext
     }
 
     template <class Iterator>
-    auto make_iterator(const counted_iterator_range<Iterator>& range, position_type_t<counted_iterator_range<Iterator>, is_range> pos)
+    auto make_iterator(const counted_iterator_range<Iterator>& range, range_position_type_t<counted_iterator_range<Iterator>> pos)
     {
         return range.base_pos(pos);
     }
@@ -1936,10 +1947,10 @@ namespace stdext
         return delimited_iterator_generator<I, S>(begin(range), end(range));
     };
 
-    template <class Elem, class Range, REQUIRES(::std::is_convertible<Elem, value_type_t<Range, is_range>>::value)>
+    template <class Elem, class Range, REQUIRES(::std::is_convertible<Elem, range_value_type_t<Range>>::value)>
     auto make_consumer(Range& range)
     {
-        using value_type = stdext::value_type_t<Range, is_range>;
+        using value_type = stdext::range_value_type_t<Range>;
         return [range = &range](value_type value)
         {
             if (range == nullptr || is_empty(*range))

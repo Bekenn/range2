@@ -97,6 +97,15 @@ namespace stdext
         struct generator_type_of<Generator, can_generate, true> { using type = ::std::decay_t<decltype(as_generator(declval<Generator&>()))>; };
     }
 
+    template <class Generator> using generator_value_type = value_type<Generator, is_generator>;
+    template <class Generator> using generator_value_type_t = value_type_t<Generator, is_generator>;
+    template <class Generator> using generator_difference_type = difference_type<Generator, is_generator>;
+    template <class Generator> using generator_difference_type_t = difference_type_t<Generator, is_generator>;
+    template <class Generator> using generator_pointer_type = pointer_type<Generator, is_generator>;
+    template <class Generator> using generator_pointer_type_t = pointer_type_t<Generator, is_generator>;
+    template <class Generator> using generator_reference_type = generator_type<Generator, is_generator>;
+    template <class Generator> using generator_reference_type_t = generator_type_t<Generator, is_generator>;
+
     template <class Generator, class Consumer, REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
     size_t operator >> (Generator&& g, Consumer&& c)
     {
@@ -116,10 +125,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = ::stdext::value_type_t<Iterator, is_iterator>;
-        using difference_type = ::stdext::difference_type_t<Iterator, is_iterator>;
-        using pointer = pointer_type_t<Iterator, is_iterator>;
-        using reference = reference_type_t<Iterator, is_iterator>;
+        using value_type = iterator_value_type_t<Iterator>;
+        using difference_type = iterator_difference_type_t<Iterator>;
+        using pointer = iterator_pointer_type_t<Iterator>;
+        using reference = iterator_reference_type_t<Iterator>;
         using iterator = Iterator;
 
     public:
@@ -273,10 +282,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = stdext::value_type_t<Iterator, is_iterator>;
-        using difference_type = stdext::difference_type_t<Iterator, is_iterator>;
-        using pointer = pointer_type_t<Iterator, is_iterator>;
-        using reference = reference_type_t<Iterator, is_iterator>;
+        using value_type = iterator_value_type_t<Iterator>;
+        using difference_type = iterator_difference_type_t<Iterator>;
+        using pointer = iterator_pointer_type_t<Iterator>;
+        using reference = iterator_reference_type_t<Iterator>;
         using iterator = Iterator;
 
     public:
@@ -335,7 +344,7 @@ namespace stdext
     }
 
     template <class Iterator, class TerminationPredicate,
-    REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_callable<::std::decay_t<TerminationPredicate>(value_type_t<::std::decay_t<Iterator>, is_iterator>), bool>::value)>
+    REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_callable<::std::decay_t<TerminationPredicate>(iterator_value_type_t<::std::decay_t<Iterator>>), bool>::value)>
     auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
     {
         return terminated_generator<::std::decay_t<Iterator>, ::std::decay_t<TerminationPredicate>>

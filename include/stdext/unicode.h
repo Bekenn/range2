@@ -280,7 +280,7 @@ namespace stdext
     public:
         using iterator_category = generator_tag;
         using value_type = const Char;
-        using difference_type = difference_type_t<Generator, is_generator>;
+        using difference_type = generator_difference_type_t<Generator>;
         using pointer = value_type*;
         using reference = value_type&;
         using generator = Generator;

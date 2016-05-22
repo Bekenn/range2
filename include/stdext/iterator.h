@@ -54,7 +54,23 @@ namespace stdext
         {
             using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::reference>;
         };
+        template <class Iterator>
+        struct size_type_of<Iterator, is_iterator, true>
+        {
+            using type = ::std::make_unsigned_t<difference_type_t<Iterator, is_iterator>>;
+        };
     }
+
+    template <class Iterator> using iterator_value_type = value_type<Iterator, is_iterator>;
+    template <class Iterator> using iterator_value_type_t = value_type_t<Iterator, is_iterator>;
+    template <class Iterator> using iterator_difference_type = difference_type<Iterator, is_iterator>;
+    template <class Iterator> using iterator_difference_type_t = difference_type_t<Iterator, is_iterator>;
+    template <class Iterator> using iterator_pointer_type = pointer_type<Iterator, is_iterator>;
+    template <class Iterator> using iterator_pointer_type_t = pointer_type_t<Iterator, is_iterator>;
+    template <class Iterator> using iterator_reference_type = reference_type<Iterator, is_iterator>;
+    template <class Iterator> using iterator_reference_type_t = reference_type_t<Iterator, is_iterator>;
+    template <class Iterator> using iterator_size_type = size_type<Iterator, is_iterator>;
+    template <class Iterator> using iterator_size_type_t = size_type_t<Iterator, is_iterator>;
 
     template <class Iterator> struct is_input_iterator
     {

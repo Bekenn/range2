@@ -25,7 +25,7 @@ namespace stdext
     auto make_cstring_generator(Iterator&& i)
     {
         return make_terminated_generator(forward<Iterator>(i),
-            cstring_termination_predicate<value_type_t<::std::decay_t<Iterator>, is_iterator>>);
+            cstring_termination_predicate<iterator_value_type_t<::std::decay_t<Iterator>>>);
     }
 }
 
