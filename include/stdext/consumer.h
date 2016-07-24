@@ -76,14 +76,14 @@ namespace stdext
     };
 
     template <class Elem, class Iterator,
-        REQUIRES(::std::is_convertible<Elem, iterator_value_type_t<::std::decay_t<Iterator>>>::value)>
+        REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value)>
     auto make_consumer(Iterator&& i)
     {
         return iterator_consumer<::std::decay_t<Iterator>>(forward<Iterator>(i));
     }
 
     template <class Elem, class Iterator, class Sentinel,
-        REQUIRES(::std::is_convertible<Elem, iterator_value_type_t<::std::decay_t<Iterator>>>::value
+        REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value
             && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)
     {
