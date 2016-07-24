@@ -611,12 +611,6 @@ namespace stdext
             difference_type distance(position p1, position p2) const noexcept { return ::std::distance(p1, p2); }
 
             reference operator [] (size_type n) const { return this->begin_pos()[n]; }
-            reference at(size_type n) const
-            {
-                if (n >= size())
-                    throw ::std::out_of_range("element index out of range");
-                return this->begin_pos()[n];
-            }
         };
 
         template <class Iterator>
@@ -816,10 +810,10 @@ namespace stdext
                 return difference_type(p2.second() - p1.second());
             }
 
-            reference operator [] (size_type n) const { return *(first.first() + n); }
+            reference operator [] (size_type n) const { return *(this->begin_pos().first() + n); }
             reference at(size_type n) const
             {
-                if (n >= size())
+                if (n >= this->size())
                     throw ::std::out_of_range("element index out of range");
                 return (*this)[n];
             }
@@ -1093,7 +1087,7 @@ namespace stdext
 
             friend bool operator == (const delimited_multi_pass_range& a, const delimited_multi_pass_range& b) noexcept
             {
-                return (a.r == b.r || (a.r != nullptr && b.r !== nullptr && *a.r == *b.r))
+                return (a.r == b.r || (a.r != nullptr && b.r != nullptr && *a.r == *b.r))
                     && a.first == b.first
                     && a.last == b.last;
             }
@@ -1295,7 +1289,7 @@ namespace stdext
             }
             reference at(size_type n) const
             {
-                if (n >= size())
+                if (n >= this->size())
                     throw ::std::out_of_range("element index out of range");
                 return (*this)[n];
             }
@@ -1366,7 +1360,7 @@ namespace stdext
         public:
             position& advance_pos(position& pos, difference_type n) const
             {
-                return r->advance_pos(pos, -n);
+                return this->r->advance_pos(pos, -n);
             }
 
             difference_type distance(position p1, position p2) const noexcept
@@ -1379,12 +1373,6 @@ namespace stdext
                 auto pos = this->begin_pos();
                 this->advance_pos(pos, n);
                 return this->at_pos(pos);
-            }
-            reference at(size_type n)
-            {
-                if (n >= size())
-                    throw ::std::out_of_range("element index out of range");
-                return (*this)[n];
             }
         };
 
@@ -1452,7 +1440,7 @@ namespace stdext
         public:
             position& advance_pos(position& pos, difference_type n) const
             {
-                return r->advance_pos(pos, -n);
+                return this->r->advance_pos(pos, -n);
             }
 
             difference_type distance(position p1, position p2) const noexcept
@@ -1543,7 +1531,7 @@ namespace stdext
             range_position_type_t<Range> base_pos(position pos) const { return pos.second(); }
 
         private:
-            friend class delimited_reverse_random_access_range<Range>;
+            friend class counted_reverse_random_access_range<Range>;
 
             const range* r;
             position first;
@@ -1565,7 +1553,7 @@ namespace stdext
         public:
             position& advance_pos(position& pos, difference_type n) const
             {
-                r->advance_pos(pos.first(), -n);
+                this->r->advance_pos(pos.first(), -n);
                 pos.second() += n;
                 return pos;
             }
@@ -1578,13 +1566,13 @@ namespace stdext
             position end_pos() const
             {
                 auto pos = this->begin_pos();
-                advance_pos(pos, size());
+                advance_pos(pos, this->size());
                 return pos;
             }
 
             void end_pos(position pos)
             {
-                this->resize(pos.second() - this->begin_pos().second())
+                this->resize(pos.second() - this->begin_pos().second());
             }
 
             reference operator [] (size_type n)
@@ -1595,7 +1583,7 @@ namespace stdext
             }
             reference at(size_type n)
             {
-                if (n >= size())
+                if (n >= this->size())
                     throw ::std::out_of_range("element index out of range");
                 return (*this)[n];
             }

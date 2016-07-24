@@ -161,7 +161,7 @@ namespace stdext
     template <class Function, class... Args>
     void for_each_argument(Function&& func, Args&&... args)
     {
-        func(forward<Args>(args))...;
+        auto x = { (func(forward<Args>(args)), 0)... };
     }
 
     namespace detail
@@ -181,7 +181,7 @@ namespace stdext
         auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list<sizeof...(Ranges), size_t>());
         apply([&](auto&... rp)
         {
-            for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))); for_each_argument([](auto& rp) { ::std::get<0>(rp).inc_pos(::std::get<1>(rp)); }, rp...))
+            for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))...); for_each_argument([](auto& rp) { ::std::get<0>(rp).inc_pos(::std::get<1>(rp)); }, rp...))
                 for_each_argument([&](const auto& rp) { f(::std::get<0>(rp).at_pos(::std::get<1>(rp))); });
         }, args);
         return positions;
@@ -246,7 +246,7 @@ namespace stdext
         REQUIRES(is_multi_pass_range<Range1>::value), REQUIRES(is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2)
     {
-        return equal(range1, range2, ::std::equal_to<>())
+        return equal(range1, range2, ::std::equal_to<>());
     }
 
     namespace detail
@@ -312,9 +312,9 @@ namespace stdext
     {
         auto range = subrange_from(range1, range1.begin_pos());
         auto pos = mismatch(range, range2, pred);
-        for (!range1.is_end_pos(pos.first); drop_first(range))
+        for (; !range1.is_end_pos(pos.first); drop_first(range))
         {
-            if (pos.second == last2)
+            if (pos.second == range2.end_pos())
                 return range.begin_pos();
         }
 
@@ -1419,7 +1419,7 @@ namespace stdext
         REQUIRES(is_multi_pass_range<Range>::value), REQUIRES(is_counted_range<Range>::value || is_delimited_range<Range>::value)>
     bool binary_search(const Range& range, const T& value, Compare&& comp)
     {
-        auto pos = lower_bound(range, t, comp);
+        auto pos = lower_bound(range, value, comp);
         if (range.is_end_pos(pos))
             return false;
 
@@ -1749,13 +1749,15 @@ namespace stdext
         if (range.is_end_pos(best.first))
             return best;
 
-        for_each([&](const auto& value)
+        auto subrange = subrange_from(range, next_pos(range, best.first));
+        for (auto pos = subrange.begin_pos(); pos != subrange.end_pos(); subrange.inc_pos(pos))
         {
+            decltype(auto) value = subrange.at_pos(pos);
             if (comp(value, range.at_pos(best.first)))
                 best.first = pos;
             if (comp(range.at_pos(best.second), value))
                 best.second = pos;
-        }, subrange_from(range, next_pos(range, best.first)));
+        }
 
         return best;
     }

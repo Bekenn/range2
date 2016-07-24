@@ -124,7 +124,7 @@ namespace stdext
         compressed_pair() : T2(), v1() { }
         compressed_pair(const T1& v1, const T2& v2) : T2(v2), v1(v1) { }
         compressed_pair(const T1& v1, T2&& v2) : T2(::std::move(v2)), v1(v1) { }
-        compressed_pair(T1&& v1, const T2& v2) : T2(v2), first(::std::v1(v1)) { }
+        compressed_pair(T1&& v1, const T2& v2) : T2(v2), v1(::std::move(v1)) { }
         compressed_pair(T1&& v1, T2&& v2) : T2(::std::move(v2)), v1(::std::move(v1)) { }
 
         T1& first() noexcept { return v1; }
@@ -193,24 +193,36 @@ namespace stdext
         void swap(compressed_pair& p) noexcept { }
     };
 
+    namespace detail
+    {
+        template <class T, int>
+        struct unique_base : T
+        {
+            using T::T;
+        };
+    }
+
     template <class T>
-    class compressed_pair<T, T, true, true> : T
+    class compressed_pair<T, T, true, true> : detail::unique_base<T, 1>, detail::unique_base<T, 2>
     {
     public:
         using first_type = T;
         using second_type = T;
+    private:
+        using base1 = detail::unique_base<T, 1>;
+        using base2 = detail::unique_base<T, 2>;
 
     public:
-        compressed_pair() : T(), T() { }
-        compressed_pair(const T& v1, const T& v2) : T(v1), T(v2) { }
-        compressed_pair(const T& v1, T&& v2) : T(v1), T(::std::move(v2)) { }
-        compressed_pair(T&& v1, const T& v2) : T(::std::move(v1)), T(v2) { }
-        compressed_pair(T&& v1, T&& v2) : T(::std::move(v1)), T(::std::move(v2)) { }
+        compressed_pair() : base1(), base2() { }
+        compressed_pair(const T& v1, const T& v2) : base1(v1), base2(v2) { }
+        compressed_pair(const T& v1, T&& v2) : base1(v1), base2(::std::move(v2)) { }
+        compressed_pair(T&& v1, const T& v2) : base1(::std::move(v1)), base2(v2) { }
+        compressed_pair(T&& v1, T&& v2) : base1(::std::move(v1)), base2(::std::move(v2)) { }
 
-        T& first() noexcept { return static_cast<T&>(*this); }
-        const T& first() const noexcept { return static_cast<const T&>(*this); }
-        T& second() noexcept { return static_cast<T&>(*this); }
-        const T& second() const noexcept { return static_cast<const T&>(*this); }
+        T& first() noexcept { return static_cast<base1&>(*this); }
+        const T& first() const noexcept { return static_cast<const base1&>(*this); }
+        T& second() noexcept { return static_cast<base2&>(*this); }
+        const T& second() const noexcept { return static_cast<const base2&>(*this); }
 
         void swap(compressed_pair& p) noexcept { }
     };

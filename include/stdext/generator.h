@@ -157,6 +157,7 @@ namespace stdext
         iterator_generator& operator ++ () { ++i; return *this; }
         decltype(auto) operator ++ (int) { return i++; }
         explicit operator bool () const { return true; }
+        const iterator& base() const { return i; }
 
     private:
         iterator i;
@@ -170,14 +171,14 @@ namespace stdext
         using sentinel = Sentinel;
 
     public:
-        delimited_iterator_generator() : iterator_generator(), j() { }
-        delimited_iterator_generator(const iterator& i, const sentinel& j) : iterator_generator(i), j(j) { }
-        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator(i), j(move(j)) { }
-        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator(move(i)), j(j) { }
-        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator(move(i)), j(move(j)) { }
+        delimited_iterator_generator() : iterator_generator<Iterator>(), j() { }
+        delimited_iterator_generator(const iterator& i, const sentinel& j) : iterator_generator<Iterator>(i), j(j) { }
+        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator<Iterator>(i), j(move(j)) { }
+        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator<Iterator>(move(i)), j(j) { }
+        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator<Iterator>(move(i)), j(move(j)) { }
 
     public:
-        explicit operator bool () const { return i != j; }
+        explicit operator bool () const { return this->base() != j; }
 
     private:
         sentinel j;
@@ -297,7 +298,7 @@ namespace stdext
         terminated_generator(iterator&& g, const TerminationPredicate& term)
             : i(move(g)), term(term) { }
         terminated_generator(iterator&& g, TerminationPredicate&& term)
-            : i(::Std::move(g)), term(move(term)) { }
+            : i(::std::move(g)), term(move(term)) { }
 
     public:
         friend void swap(terminated_generator& a, terminated_generator& b)
@@ -312,6 +313,7 @@ namespace stdext
         terminated_generator& operator ++ () { ++i; return *this; }
         auto operator ++ (int) { return i++; }
         explicit operator bool () const { return !term(*i); }
+        const iterator& base() const { return i; }
 
     private:
         iterator i;
