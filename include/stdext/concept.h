@@ -19,22 +19,22 @@
 #define REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), nullptr_t>
 #define REQUIRES(...) REQUIRED(__VA_ARGS__) = nullptr
 
-#define DECLARE_HAS_INNER_TYPE(Inner)                                       \
-template <class T> struct has_inner_type_##Inner                            \
-{                                                                           \
+#define DECLARE_HAS_INNER_TYPE(Inner)                                \
+template <class T> struct has_inner_type_##Inner                     \
+{                                                                    \
     template <class U> static true_type test(typename U::Inner*);    \
     template <class U> static false_type test(...);                  \
-    static constexpr bool value = decltype(test<T>(nullptr))::value;        \
+    static constexpr bool value = decltype(test<T>(nullptr))::value; \
 }
 #define HAS_INNER_TYPE_T(T, Inner) has_inner_type_##Inner<T>
 #define HAS_INNER_TYPE(T, Inner) HAS_INNER_TYPE_T(T, Inner)::value
 
-#define DECLARE_HAS_METHOD(MethodName)                                                                                          \
-template <class T, class... ArgTypes> struct has_method_##MethodName                                                            \
-{                                                                                                                               \
+#define DECLARE_HAS_METHOD(MethodName)                                                                     \
+template <class T, class... ArgTypes> struct has_method_##MethodName                                       \
+{                                                                                                          \
     template <class U> static true_type test(decltype(declval<U>().MethodName(declval<ArgTypes>()...))*);  \
-    template <class U> static false_type test(...);                                                                      \
-    static constexpr bool value = decltype(test<T>(nullptr))::value;                                                            \
+    template <class U> static false_type test(...);                                                        \
+    static constexpr bool value = decltype(test<T>(nullptr))::value;                                       \
 }
 #define HAS_METHOD_T(T, MethodName, ...) has_method_##MethodName<T, ## __VA_ARGS__>
 #define HAS_METHOD(T, MethodName, ...) HAS_METHOD_T(T, MethodName, ## __VA_ARGS__)::value
@@ -78,6 +78,21 @@ namespace stdext
         static false_type test(...);
         static constexpr bool value = decltype(test<T1, T2>(nullptr))::value;
     };
+    template <class T1, class T2>
+    constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
+
+    template <class From, class To>
+    struct preserve_const
+    {
+        using type = To;
+    };
+    template <class From, class To>
+    struct preserve_const<const From, To>
+    {
+        using type = const To;
+    };
+    template <class From, class To>
+    using preserve_const_t = typename preserve_const<From, To>::type;
 
     namespace detail
     {
