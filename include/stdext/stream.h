@@ -24,6 +24,7 @@ namespace stdext
     // public classes
     class input_stream;
     class output_stream;
+    class stream;
     class seekable;
     class peekable;
 
@@ -37,8 +38,12 @@ namespace stdext
     template <class POD, REQUIRES(::std::is_pod<POD>::value)>
     class stream_consumer;
 
+    template <class Pointer> class memory_stream_base;
+    template <class Pointer> class memory_input_stream_base;
+    class memory_output_stream_base;
     class memory_input_stream;
     class memory_output_stream;
+    class memory_stream;
 
     class stream_error : public ::std::runtime_error
     {
@@ -54,14 +59,15 @@ namespace stdext
         stream_base& operator = (const stream_base&) = delete;
         stream_base(stream_base&&) = delete;
         stream_base& operator = (stream_base&&) = delete;
-        virtual ~stream_base();
+    protected:
+        ~stream_base() = default;
     };
 
 
     class input_stream : public stream_base
     {
     public:
-        ~input_stream() override;
+        virtual ~input_stream();
 
     public:
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
@@ -106,7 +112,7 @@ namespace stdext
     class output_stream : public stream_base
     {
     public:
-        ~output_stream() override;
+        virtual ~output_stream();
 
     public:
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
@@ -135,6 +141,9 @@ namespace stdext
         virtual size_t do_write(const void* buffer, size_t size) = 0;
     };
 
+    class stream : public input_stream, public output_stream
+    {
+    };
 
     enum class seek_from
     {
@@ -356,11 +365,27 @@ namespace stdext
     };
 
 
-    template <class Stream>
+    template <class Pointer>
     class memory_stream_base : public seekable
     {
+    private:
+        using _void = preserve_const_t<::std::remove_pointer_t<Pointer>, void>;
+
+    private:
+        memory_stream_base() = default; // not used
+    protected:
+        memory_stream_base(_void* buffer, size_t size) noexcept
+            : current(static_cast<Pointer>(buffer)), first(current), last(first + size)
+        {
+        }
+        ~memory_stream_base() override;
+
     public:
-        ~memory_stream_base() override = default;
+        void reset(_void* buffer, size_t size) noexcept
+        {
+            first = current = static_cast<Pointer>(buffer);
+            last = first + size;
+        }
 
     public:
         void seek(seek_from from, ptrdiff_t offset) override
@@ -370,51 +395,45 @@ namespace stdext
                 case seek_from::begin:
                     if (offset < 0)
                         throw ::std::invalid_argument("negative offset for seek_from::begin");
-                    if (offset > self().last - self().first)
+                    if (offset > last - first)
                         throw ::std::invalid_argument("offset out of range");
-                    self().current = self().first + offset;
+                    current = first + offset;
                     break;
 
                 case seek_from::current:
-                    if (offset < self().first - self().current || offset > self().last - self().current)
+                    if (offset < first - current || offset > last - current)
                         throw ::std::invalid_argument("offset out of range");
-                    self().current += offset;
+                    current += offset;
                     break;
 
                 case seek_from::end:
                     if (offset > 0)
                         throw ::std::invalid_argument("positive offset for seek_from::end");
-                    if (offset < self().first - self().last)
+                    if (offset < first - last)
                         throw ::std::invalid_argument("offset out of range");
-                    self().current = self().last + offset;
+                    current = last + offset;
                     break;
             }
         }
 
     private:
-        Stream& self() { return static_cast<Stream&>(*this); }
+        friend class memory_input_stream_base<Pointer>;
+        friend class memory_output_stream_base;
+        Pointer current;
+        Pointer first;
+        Pointer last;
     };
 
 
-    class memory_input_stream : public input_stream, public memory_stream_base<memory_input_stream>, public peekable
+    template <class Pointer>
+    class memory_input_stream_base : public peekable, public virtual memory_stream_base<Pointer>
     {
-    public:
-        memory_input_stream(const void* buffer, size_t size) noexcept
-            : current(static_cast<const uint8_t*>(buffer)), first(current), last(first + size)
-        {
-        }
+    protected:
+        memory_input_stream_base() = default;
+        ~memory_input_stream_base() override;
 
-        ~memory_input_stream() override;
-
-    public:
-        void reset(const void* buffer, size_t size) noexcept
-        {
-            first = current = static_cast<const uint8_t*>(buffer);
-            last = first + size;
-        }
-
-    private:
-        size_t do_read(void* buffer, size_t size) override
+    protected:
+        size_t read_impl(void* buffer, size_t size)
         {
             size = ::std::min(size, size_t(last - current));
             ::std::copy(current, current + size, static_cast<uint8_t*>(buffer));
@@ -422,59 +441,105 @@ namespace stdext
             return size;
         }
 
-        size_t do_skip(size_t size) override
+        size_t skip_impl(size_t size)
         {
             size = ::std::min(size, size_t(last - current));
             current += size;
             return size;
         }
-        
+
+    private:
         size_t do_peek(void* buffer, size_t size) override
         {
             size = ::std::min(size, size_t(last - current));
             ::std::copy(current, current + size, static_cast<uint8_t*>(buffer));
             return size;
         }
-
-    private:
-        friend class memory_stream_base<memory_input_stream>;
-        const uint8_t* current;
-        const uint8_t* first;
-        const uint8_t* last;
     };
 
 
-    class memory_output_stream : public output_stream, public memory_stream_base<memory_output_stream>
+    class memory_output_stream_base : public virtual memory_stream_base<uint8_t*>
     {
-    public:
-        memory_output_stream(void* buffer, size_t size) noexcept
-            : current(static_cast<uint8_t*>(buffer)), first(current), last(first + size)
-        {
-        }
+    protected:
+        memory_output_stream_base() = default;
+        ~memory_output_stream_base() override;
 
-        ~memory_output_stream() override;
-
-    public:
-        void reset(void* buffer, size_t size) noexcept
-        {
-            first = current = static_cast<uint8_t*>(buffer);
-            last = first + size;
-        }
-
-    private:
-        size_t do_write(const void* buffer, size_t size) override
+    protected:
+        size_t write_impl(const void* buffer, size_t size)
         {
             size = ::std::min(size, size_t(last - current));
             auto p = static_cast<const uint8_t*>(buffer);
             current = ::std::copy(p, p + size, current);
             return size;
         }
+    };
+
+
+    class memory_input_stream : public memory_input_stream_base<const uint8_t*>, public input_stream
+    {
+    public:
+        memory_input_stream(const void* buffer, size_t size) noexcept
+            : memory_stream_base<const uint8_t*>(buffer, size)
+        {
+        }
+
+        ~memory_input_stream() override;
 
     private:
-        friend class memory_stream_base<memory_output_stream>;
-        uint8_t* current;
-        uint8_t* first;
-        uint8_t* last;
+        size_t do_read(void* buffer, size_t size) override
+        {
+            return read_impl(buffer, size);
+        }
+
+        size_t do_skip(size_t size) override
+        {
+            return skip_impl(size);
+        }
+    };
+
+
+    class memory_output_stream : public memory_output_stream_base, public output_stream
+    {
+    public:
+        memory_output_stream(void* buffer, size_t size) noexcept
+            : memory_stream_base<uint8_t*>(buffer, size)
+        {
+        }
+
+        ~memory_output_stream() override;
+
+    private:
+        size_t do_write(const void* buffer, size_t size) override
+        {
+            return write_impl(buffer, size);
+        }
+    };
+
+    class memory_stream : public memory_input_stream_base<uint8_t*>, public memory_output_stream_base, public stream
+    {
+    public:
+        memory_stream(void* buffer, size_t size) noexcept
+            : memory_stream_base<uint8_t*>(buffer, size)
+        {
+        }
+
+        ~memory_stream() override;
+
+    private:
+        size_t do_read(void* buffer, size_t size) override
+        {
+            return read_impl(buffer, size);
+        }
+
+        size_t do_write(const void* buffer, size_t size) override
+        {
+            return write_impl(buffer, size);
+        }
+
+        size_t do_skip(size_t size) override
+        {
+            return skip_impl(size);
+        }
     };
 }
 
