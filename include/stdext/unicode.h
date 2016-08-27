@@ -168,9 +168,10 @@ namespace stdext
                 ::std::tie(result, code) = to_utf<Char>(*in, state);
                 if (result == utf_result::error)
                     return utf_result::error;
+                if (result != utf_result::partial_write)
+                    ++in;
                 if (result != utf_result::partial_read)
                 {
-                    ++in;
                     if (!out(code))
                         return utf_result::partial_write;
                 }
@@ -189,8 +190,10 @@ namespace stdext
                 result.first = convert(*in, state).first;
                 if (result.first == utf_result::error)
                     break;
-                ++in;
-                ++result.second;
+                if (result.first != utf_result::partial_write)
+                    ++in;
+                if (result.first != utf_result::partial_read)
+                    ++result.second;
             }
             return result;
         }
