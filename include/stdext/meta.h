@@ -192,7 +192,7 @@ namespace stdext
     template <size_t length, class T, T start>
     struct iota_list
     {
-        using type = list_prepend_t<constant<T, start>, iota_list_t<length - 1, T, start + 1>>;
+        using type = list_prepend_t<iota_list_t<length - 1, T, start + 1>, constant<T, start>>;
     };
 }
 

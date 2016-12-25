@@ -29,17 +29,31 @@ namespace stdext
 
     namespace detail
     {
+        template <typename T> struct show_type;
         template <class Function, class... Ts, size_t... indices>
         decltype(auto) apply(Function&& func, const ::std::tuple<Ts...>& args, type_list<constant<size_t, indices>...>)
         {
-            return func(forward<Ts>(::std::get<indices>(args))...);
+            return func(::std::get<indices>(args)...);
+        }
+
+        template <typename T> struct show_type;
+        template <class Function, class... Ts, size_t... indices>
+        decltype(auto) apply(Function&& func, ::std::tuple<Ts...>&& args, type_list<constant<size_t, indices>...>)
+        {
+            return func(move(::std::get<indices>(args))...);
         }
     }
 
     template <class Function, class... Ts>
     decltype(auto) apply(Function&& func, const ::std::tuple<Ts...>& args)
     {
-        return detail::apply(forward<Function>(func), args, iota_list<sizeof...(Ts), size_t>());
+        return detail::apply(forward<Function>(func), args, iota_list_t<sizeof...(Ts), size_t>());
+    }
+
+    template <class Function, class... Ts>
+    decltype(auto) apply(Function&& func, ::std::tuple<Ts...>&& args)
+    {
+        return detail::apply(forward<Function>(func), move(args), iota_list_t<sizeof...(Ts), size_t>());
     }
 
     namespace detail

@@ -161,7 +161,8 @@ namespace stdext
     template <class Function, class... Args>
     void for_each_argument(Function&& func, Args&&... args)
     {
-        auto x = { (func(forward<Args>(args)), 0)... };
+        using t = int[sizeof...(Args)];
+        t{(func(forward<Args>(args)), 0)...};
     }
 
     namespace detail
@@ -178,7 +179,7 @@ namespace stdext
     ::std::tuple<range_position_type_t<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
     {
         ::std::tuple<range_position_type_t<Ranges>...> positions(ranges.begin_pos()...);
-        auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list<sizeof...(Ranges), size_t>());
+        auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list_t<sizeof...(Ranges), size_t>());
         apply([&](auto&... rp)
         {
             for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))...); for_each_argument([](auto& rp) { ::std::get<0>(rp).inc_pos(::std::get<1>(rp)); }, rp...))
@@ -428,7 +429,7 @@ namespace stdext
         REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> replace_if(const Range& range, Predicate&& pred, const T& new_value)
     {
-        return ::std::get<0>(for_each([&](auto& value) { if (pred(value)) value = new_value; }));
+        return ::std::get<0>(for_each([&](auto& value) { if (pred(value)) value = new_value; }, range));
     }
 
     template <class Range, class T,
