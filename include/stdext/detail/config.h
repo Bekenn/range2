@@ -3,7 +3,7 @@
 //  stdext
 //
 //  Created by James Touton on 5/15/16.
-//  Copyright © 2016 James Touton. All rights reserved.
+//  Copyright Â© 2016 James Touton. All rights reserved.
 //
 
 #ifndef STDEXT_CONFIG_INCLUDED
