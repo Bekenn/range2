@@ -110,7 +110,7 @@ namespace stdext
             size_t bytes = 0;
             while (size != 0)
             {
-                DWORD chunk_size = size > MAXDWORD ? MAXDWORD & ~(granularity - 1) : size;
+                DWORD chunk_size = size > MAXDWORD ? MAXDWORD & ~(granularity - 1) : DWORD(size);
                 DWORD chunk_bytes;
                 if (!::ReadFile(self().handle, p, chunk_size, &chunk_bytes, nullptr))
                     throw std::system_error(::GetLastError(), std::system_category());
@@ -155,7 +155,7 @@ namespace stdext
             size_t bytes = 0;
             while (size != 0)
             {
-                DWORD chunk_size = size > MAXDWORD ? MAXDWORD & ~(granularity - 1) : size;
+                DWORD chunk_size = size > MAXDWORD ? MAXDWORD & ~(granularity - 1) : DWORD(size);
                 DWORD chunk_bytes;
                 if (!::WriteFile(self().handle, p, chunk_size, &chunk_bytes, nullptr))
                     throw std::system_error(::GetLastError(), std::system_category());
