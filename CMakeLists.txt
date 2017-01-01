@@ -11,6 +11,7 @@ set(STDEXT_INC
     include/stdext/consumer.h
     include/stdext/endian.h
     include/stdext/file.h
+    include/stdext/filesystem.h
     include/stdext/generator.h
     include/stdext/iterator.h
     include/stdext/meta.h
@@ -28,7 +29,8 @@ set(STDEXT_INC
 
 if(WIN32)
     list(APPEND STDEXT_SRC
-        src/windows/file.cpp)
+        src/windows/file.cpp
+        src/windows/filesystem.cpp)
     list(APPEND STDEXT_INC
         src/windows/platform.h)
 elseif(UNIX)
