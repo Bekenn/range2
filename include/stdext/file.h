@@ -13,6 +13,8 @@
 #include "stream.h"
 #include "types.h"
 
+#include <system_error>
+
 
 namespace stdext
 {
@@ -21,7 +23,7 @@ namespace stdext
     using file_handle_t = void*;
 #define PATH_STR(s) L ## s
 #else
-    using pach_char = char;
+    using path_char = char;
     using file_handle_t = int;
 #define PATH_STR(s) s
 #endif
@@ -34,44 +36,117 @@ namespace stdext
         truncate = 4
     };
 
+    struct utf8_path_encoding { };
+
     class file_input_stream;
     class file_output_stream;
+    class file_stream;
 
     namespace detail
     {
         class file_stream_base : public seekable
         {
-        public:
-            explicit file_stream_base(file_handle_t handle);
+        protected:
+            file_stream_base();
+            file_stream_base(const file_stream_base&) = delete;
+            file_stream_base& operator = (const file_stream_base&) = delete;
+            file_stream_base(file_stream_base&& other);
+            file_stream_base& operator = (file_stream_base&& other);
             ~file_stream_base() override;
 
+            explicit file_stream_base(file_handle_t handle);
+
         public:
-            void seek(seek_from from, ptrdiff_t offset) override;
+            bool is_open() const noexcept;
+            void close() noexcept;
+
+        public:
+            stream_position seek(seek_from from, stream_offset offset) override;
+            void set_position(stream_position position) override;
 
         protected:
+            template <class Stream> friend class file_input_stream_base;
+            template <class Stream> friend class file_output_stream_base;
+
             file_handle_t handle;
+        };
+
+        template <class Stream>
+        class file_input_stream_base : public input_stream
+        {
+        private:
+            size_t do_read(void* buffer, size_t size) override;
+            size_t do_skip(size_t size) override;
+
+        private:
+            Stream& self() noexcept { return static_cast<Stream&>(*this); }
+            const Stream& self() const noexcept { return static_cast<const Stream&>(*this); }
+        };
+
+        template <class Stream>
+        class file_output_stream_base : public output_stream
+        {
+        private:
+            size_t do_write(const void* buffer, size_t size) override;
+
+        private:
+            Stream& self() noexcept { return static_cast<Stream&>(*this); }
+            const Stream& self() const noexcept { return static_cast<const Stream&>(*this); }
         };
     }
 
-    class file_input_stream : public detail::file_stream_base, public input_stream
+    class file_input_stream : public detail::file_stream_base, public detail::file_input_stream_base<file_input_stream>
     {
     public:
-        explicit file_input_stream(const path_char* path);
+        file_input_stream() = default;
+        file_input_stream(file_input_stream&&) = default;
+        file_input_stream& operator = (file_input_stream&&) = default;
         ~file_input_stream() override;
 
-    private:
-        size_t do_read(void* buffer, size_t size) override;
-        size_t do_skip(size_t size) override;
+        explicit file_input_stream(const path_char* path);
+        file_input_stream(const char* path, utf8_path_encoding);
+
+    public:
+        ::std::error_code open(const path_char* path);
+        ::std::error_code open(const char* path, utf8_path_encoding);
     };
 
-    class file_output_stream : public detail::file_stream_base, public output_stream
+    class file_output_stream : public detail::file_stream_base, public detail::file_output_stream_base<file_output_stream>
     {
+    private:
+        static constexpr flags<file_open_flags> default_flags = { file_open_flags::create, file_open_flags::truncate };
+
     public:
-        explicit file_output_stream(const path_char* path, flags<file_open_flags> flags = { file_open_flags::create, file_open_flags::truncate });
+        file_output_stream() = default;
+        file_output_stream(file_output_stream&&) = default;
+        file_output_stream& operator = (file_output_stream&&) = default;
         ~file_output_stream() override;
 
+        explicit file_output_stream(const path_char* path, flags<file_open_flags> flags = default_flags);
+        file_output_stream(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
+
+    public:
+        ::std::error_code open(const path_char* path, flags<file_open_flags> flags = default_flags);
+        ::std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
+    };
+
+    class file_stream : public detail::file_stream_base, public detail::file_input_stream_base<file_stream>, public detail::file_output_stream_base<file_stream>, public stream
+    {
     private:
-        virtual size_t do_write(const void* buffer, size_t size) override;
+        static constexpr flags<file_open_flags> default_flags = { file_open_flags::create };
+
+    public:
+        file_stream() = default;
+        file_stream(file_stream&&) = default;
+        file_stream& operator = (file_stream&&) = default;
+        ~file_stream() override;
+
+        explicit file_stream(const path_char* path, flags<file_open_flags> flags = default_flags);
+        file_stream(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
+
+    public:
+        ::std::error_code open(const path_char* path, flags<file_open_flags> flags = default_flags);
+        ::std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
     };
 }
 

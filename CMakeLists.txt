@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
 set(STDEXT_SRC
+    src/file.cpp
     src/stream.cpp
     src/unicode.cpp)
 set(STDEXT_INC
@@ -13,6 +14,7 @@ set(STDEXT_INC
     include/stdext/generator.h
     include/stdext/iterator.h
     include/stdext/meta.h
+    include/stdext/multi.h
     include/stdext/optional.h
     include/stdext/range.h
     include/stdext/stream.h
@@ -29,6 +31,9 @@ if(WIN32)
         src/windows/file.cpp)
     list(APPEND STDEXT_INC
         src/windows/platform.h)
+elseif(UNIX)
+    list(APPEND STDEXT_SRC
+        src/posix/file.cpp)
 endif()
 
 foreach(file ${STDEXT_SRC} ${STDEXT_INC})

@@ -39,8 +39,8 @@ namespace stdext
     class stream_consumer;
 
     template <class Pointer> class memory_stream_base;
-    template <class Pointer> class memory_input_stream_base;
-    class memory_output_stream_base;
+    template <class Stream> class memory_input_stream_base;
+    template <class Stream> class memory_output_stream_base;
     class memory_input_stream;
     class memory_output_stream;
     class memory_stream;
@@ -50,21 +50,7 @@ namespace stdext
         using ::std::runtime_error::runtime_error;
     };
 
-    // Streams are not copyable or movable.
-    class stream_base
-    {
-    public:
-        stream_base() = default;
-        stream_base(const stream_base&) = delete;
-        stream_base& operator = (const stream_base&) = delete;
-        stream_base(stream_base&&) = delete;
-        stream_base& operator = (stream_base&&) = delete;
-    protected:
-        ~stream_base() = default;
-    };
-
-
-    class input_stream : public stream_base
+    class input_stream
     {
     public:
         virtual ~input_stream();
@@ -109,7 +95,7 @@ namespace stdext
     };
 
 
-    class output_stream : public stream_base
+    class output_stream
     {
     public:
         virtual ~output_stream();
@@ -143,7 +129,12 @@ namespace stdext
 
     class stream : public input_stream, public output_stream
     {
+    public:
+        ~stream() override;
     };
+
+    using stream_position = uintmax_t;
+    using stream_offset = intmax_t;
 
     enum class seek_from
     {
@@ -156,7 +147,12 @@ namespace stdext
     {
     public:
         virtual ~seekable();
-        virtual void seek(seek_from from, ptrdiff_t offset) = 0;
+
+    public:
+        virtual stream_position seek(seek_from from, stream_offset offset) = 0;
+
+        stream_position position() { return seek(seek_from::current, 0); }
+        virtual void set_position(stream_position position) = 0;
     };
 
 
@@ -388,94 +384,113 @@ namespace stdext
         }
 
     public:
-        void seek(seek_from from, ptrdiff_t offset) override
+        stream_position seek(seek_from from, stream_offset offset) override
         {
+            Pointer location;
+
             switch (from)
             {
-                case seek_from::begin:
-                    if (offset < 0)
-                        throw ::std::invalid_argument("negative offset for seek_from::begin");
-                    if (offset > last - first)
-                        throw ::std::invalid_argument("offset out of range");
-                    current = first + offset;
-                    break;
+            case seek_from::begin:
+                if (offset < 0)
+                    throw ::std::invalid_argument("negative offset for seek_from::begin");
+                location = first + offset;
+                break;
 
-                case seek_from::current:
-                    if (offset < first - current || offset > last - current)
-                        throw ::std::invalid_argument("offset out of range");
-                    current += offset;
-                    break;
+            case seek_from::current:
+                location = current + offset;
+                break;
 
-                case seek_from::end:
-                    if (offset > 0)
-                        throw ::std::invalid_argument("positive offset for seek_from::end");
-                    if (offset < first - last)
-                        throw ::std::invalid_argument("offset out of range");
-                    current = last + offset;
-                    break;
+            case seek_from::end:
+                if (offset > 0)
+                    throw ::std::invalid_argument("positive offset for seek_from::end");
+                location = last + offset;
+                break;
+
+            default:
+                throw ::std::invalid_argument("invalid from value");
             }
+
+            if (location < first || location > last)
+                throw ::std::invalid_argument("offset out of range");
+
+            current = location;
+            return current - first;
+        }
+
+        void set_position(stream_position position) override
+        {
+            if (position > size_t(last - first))
+                throw ::std::invalid_argument("position out of range");
+
+            current = first + position;
         }
 
     private:
-        friend class memory_input_stream_base<Pointer>;
-        friend class memory_output_stream_base;
+        template <class Stream> friend class memory_input_stream_base;
+        template <class Stream> friend class memory_output_stream_base;
         Pointer current;
         Pointer first;
         Pointer last;
     };
 
+    template <> memory_stream_base<const uint8_t*>::~memory_stream_base();
+    template <> memory_stream_base<uint8_t*>::~memory_stream_base();
 
-    template <class Pointer>
-    class memory_input_stream_base : public peekable, public virtual memory_stream_base<Pointer>
+
+    template <class Stream>
+    class memory_input_stream_base : public peekable
     {
     protected:
         memory_input_stream_base() = default;
-        ~memory_input_stream_base() override;
+        ~memory_input_stream_base() override = default;
 
     protected:
         size_t read_impl(void* buffer, size_t size)
         {
-            size = ::std::min(size, size_t(last - current));
-            ::std::copy(current, current + size, static_cast<uint8_t*>(buffer));
-            current += size;
+            size = ::std::min(size, size_t(self().last - self().current));
+            ::std::copy(self().current, self().current + size, static_cast<uint8_t*>(buffer));
+            self().current += size;
             return size;
         }
 
         size_t skip_impl(size_t size)
         {
-            size = ::std::min(size, size_t(last - current));
-            current += size;
+            size = ::std::min(size, size_t(self().last - self().current));
+            self().current += size;
             return size;
         }
 
     private:
         size_t do_peek(void* buffer, size_t size) override
         {
-            size = ::std::min(size, size_t(last - current));
-            ::std::copy(current, current + size, static_cast<uint8_t*>(buffer));
+            size = ::std::min(size, size_t(self().last - self().current));
+            ::std::copy(self().current, self().current + size, static_cast<uint8_t*>(buffer));
             return size;
         }
+
+    private:
+        Stream& self() noexcept { return static_cast<Stream&>(*this); }
     };
 
 
-    class memory_output_stream_base : public virtual memory_stream_base<uint8_t*>
+    template <class Stream>
+    class memory_output_stream_base
     {
-    protected:
-        memory_output_stream_base() = default;
-        ~memory_output_stream_base() override;
-
     protected:
         size_t write_impl(const void* buffer, size_t size)
         {
-            size = ::std::min(size, size_t(last - current));
+            size = ::std::min(size, size_t(self().last - self().current));
             auto p = static_cast<const uint8_t*>(buffer);
-            current = ::std::copy(p, p + size, current);
+            self().current = ::std::copy(p, p + size, self().current);
             return size;
         }
+
+    private:
+        Stream& self() noexcept { return static_cast<Stream&>(*this); }
     };
 
 
-    class memory_input_stream : public memory_input_stream_base<const uint8_t*>, public input_stream
+    class memory_input_stream : public memory_stream_base<const uint8_t*>, public memory_input_stream_base<memory_input_stream>, public input_stream
     {
     public:
         memory_input_stream(const void* buffer, size_t size) noexcept
@@ -498,7 +513,7 @@ namespace stdext
     };
 
 
-    class memory_output_stream : public memory_output_stream_base, public output_stream
+    class memory_output_stream : public memory_stream_base<uint8_t*>, public memory_output_stream_base<memory_output_stream>, public output_stream
     {
     public:
         memory_output_stream(void* buffer, size_t size) noexcept
@@ -515,7 +530,7 @@ namespace stdext
         }
     };
 
-    class memory_stream : public memory_input_stream_base<uint8_t*>, public memory_output_stream_base, public stream
+    class memory_stream : public memory_stream_base<uint8_t*>, public memory_input_stream_base<memory_stream>, public memory_output_stream_base<memory_stream>, public stream
     {
     public:
         memory_stream(void* buffer, size_t size) noexcept
