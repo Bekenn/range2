@@ -19,7 +19,7 @@ namespace stdext
                 return { utf_result::error, char32_t() };
 
             if (state.remaining == 0)
-                return { utf_result::ok, state.code };
+                return { utf_result::ok, char32_t(state.code) };
 
             state.consumed = 1;
             return { utf_result::partial_read, char32_t() };
@@ -44,7 +44,7 @@ namespace stdext
         state.consumed = 0;
         if (is_noncharacter(state.code))
             return { utf_result::error, char32_t() };
-        return { utf_result::ok, state.code };
+        return { utf_result::ok, char32_t(state.code) };
     }
 
     std::pair<utf_result, char32_t> to_utf32(char16_t in, utfstate_t& state)
