@@ -8,6 +8,7 @@ set(STDEXT_INC
     include/stdext/algorithm.h
     include/stdext/array_view.h
     include/stdext/consumer.h
+    include/stdext/endian.h
     include/stdext/file.h
     include/stdext/generator.h
     include/stdext/iterator.h
