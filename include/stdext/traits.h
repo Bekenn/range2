@@ -1,19 +1,29 @@
 //
-//  concept.h
+//  traits.h
 //  stdext
 //
 //  Created by James Touton on 10/18/15.
 //  Copyright © 2015 James Touton. All rights reserved.
 //
 
-#ifndef STDEXT_CONCEPT_INCLUDED
-#define STDEXT_CONCEPT_INCLUDED
+#ifndef STDEXT_TRAITS_INCLUDED
+#define STDEXT_TRAITS_INCLUDED
 #pragma once
 
 #include "types.h"
 #include "utility.h"
 
 #include <type_traits>
+
+#if defined _LIBCPP_VERSION && _LIBCPP_VERSION < 3800
+#include <experimental/type_traits>
+namespace std
+{
+    using ::std::experimental::is_integral_v;
+    using ::std::experimental::is_same_v;
+    using ::std::experimental::is_signed_v;
+}
+#endif
 
 
 #define REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), nullptr_t>
@@ -49,7 +59,10 @@ namespace stdext
     template <class T> struct error_type;
     template <class T, T v> struct error_value;
 
+    // Test whether an instance of class F is callable with a return type convertible to R
     template <class, class R = void> struct is_callable;
+    template <class F, class R = void> constexpr bool is_callable_v = is_callable<F, R>::value;
+
     template <class Function, class... ArgTypes>
     struct is_callable<Function(ArgTypes...), void>
     {
@@ -65,8 +78,10 @@ namespace stdext
         template <class T> static false_type test(...);
         static constexpr bool value = decltype(test<Function>(nullptr))::value;
     };
-    template <class F, class R = void>
-    constexpr bool is_callable_v = is_callable<F, R>::value;
+
+    // Test whether T1() == T2() is well-formed
+    template <class T1, class T2> struct is_equality_comparable;
+    template <class T1, class T2> constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
 
     template <class T1, class T2>
     struct is_equality_comparable
@@ -78,8 +93,10 @@ namespace stdext
         static false_type test(...);
         static constexpr bool value = decltype(test<T1, T2>(nullptr))::value;
     };
-    template <class T1, class T2>
-    constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
+
+    // Conversion from type From to type possibly-const To, where To is const-qualified if From is const-qualified.
+    template <class From, class To> struct preserve_const;
+    template <class From, class To> using preserve_const_t = typename preserve_const<From, To>::type;
 
     template <class From, class To>
     struct preserve_const
@@ -91,8 +108,59 @@ namespace stdext
     {
         using type = const To;
     };
-    template <class From, class To>
-    using preserve_const_t = typename preserve_const<From, To>::type;
+
+    // Type trait returning one of [u]intN_t based on the size and signedness of T
+    template <class T> struct equivalent_sized_type;
+    template <class T> using equivalent_sized_type_t = typename equivalent_sized_type<T>::type;
+
+    namespace detail
+    {
+        template <class T, bool is_integral = ::std::is_integral_v<T>> struct equivalent_sized_type_base;
+        template <size_t size, bool is_signed> struct make_sized_integral_type;
+        template <size_t size, bool is_signed> using make_sized_integral_type_t = typename make_sized_integral_type<size, is_signed>::type;
+
+        template <class T>
+        struct equivalent_sized_type_base<T, false>
+        {
+        };
+
+        template <class T>
+        struct equivalent_sized_type_base<T, true>
+        {
+            using type = make_sized_integral_type_t<sizeof(T), ::std::is_signed_v<T>>;
+        };
+
+        template <size_t size, bool is_signed>
+        struct make_sized_integral_type
+        {
+        };
+
+        template <bool is_signed>
+        struct make_sized_integral_type<1, is_signed>
+        {
+            using type = ::std::conditional_t<is_signed, int8_t, uint8_t>;
+        };
+        template <bool is_signed>
+        struct make_sized_integral_type<2, is_signed>
+        {
+            using type = ::std::conditional_t<is_signed, int16_t, uint16_t>;
+        };
+        template <bool is_signed>
+        struct make_sized_integral_type<4, is_signed>
+        {
+            using type = ::std::conditional_t<is_signed, int32_t, uint32_t>;
+        };
+        template <bool is_signed>
+        struct make_sized_integral_type<8, is_signed>
+        {
+            using type = ::std::conditional_t<is_signed, int64_t, uint64_t>;
+        };
+    }
+
+    template <class T>
+    struct equivalent_sized_type : detail::equivalent_sized_type_base<T>
+    {
+    };
 
     namespace detail
     {

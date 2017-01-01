@@ -10,7 +10,6 @@
 #define STDEXT_GENERATOR_INCLUDED
 #pragma once
 
-#include "concept.h"
 #include "consumer.h"
 
 #include <cassert>
@@ -37,6 +36,7 @@ namespace stdext
     template <class T> struct is_generator
         : ::std::conditional_t<detail::is_generator_helper<T>::value, true_type, false_type>
     { };
+    template <class T> constexpr auto is_generator_v = is_generator<T>::value;
 
     template <class T> struct is_generator_adaptable
     {
@@ -44,12 +44,14 @@ namespace stdext
         template <class U> static false_type test(...);
         static constexpr bool value = decltype(test<T>(nullptr))::value;
     };
+    template <class T> constexpr auto is_generator_adaptable_v = is_generator_adaptable<T>::value;
 
     template <class T> struct can_generate
         : ::std::conditional_t<is_generator<T>::value || is_generator_adaptable<T>::value,
             true_type,
             false_type>
     { };
+    template <class T> constexpr auto can_generate_v = can_generate<T>::value;
 
     template <class T, REQUIRES(is_generator<::std::decay_t<T>>::value)>
     decltype(auto) as_generator(T&& g)

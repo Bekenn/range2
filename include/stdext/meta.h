@@ -71,6 +71,15 @@ namespace stdext
         using type = type_list<Ts...>;
     };
 
+    // Retrieve the length of a list.
+    template <class List> struct list_length;
+    template <class List> constexpr auto list_length_v = list_length<List>::value;
+    template <class... Ts>
+    struct list_length<type_list<Ts...>>
+    {
+        static constexpr size_t value = sizeof...(Ts);
+    };
+
     // Retrieve the nth element from a list.
     template <class List, size_t n> struct list_element;
     template <class List, size_t n> using list_element_t = typename list_element<List, n>::type;
@@ -83,6 +92,20 @@ namespace stdext
     struct list_element<type_list<T, Ts...>, n>
     {
         using type = list_element_t<type_list<Ts...>, n - 1>;
+    };
+
+    // Find the index of an element in the list; returns list_length<List> if the element can't be found.
+    template <class List, class T> struct list_index_of;
+    template <class List, class T> constexpr auto list_index_of_v = list_index_of<List, T>::value;
+    template <class... L, class T, class... R>
+    struct list_index_of<type_list<L..., T, R...>, T>
+    {
+        static constexpr auto value = sizeof...(L);
+    };
+    template <class... Ts, class T>
+    struct list_index_of<type_list<Ts...>, T>
+    {
+        static constexpr auto value = sizeof...(Ts);
     };
 
     // Add a new element to the front of a list.
@@ -179,6 +202,43 @@ namespace stdext
     struct list_apply<Templ, type_list<Ts...>>
     {
         using type = Templ<Ts...>;
+    };
+
+    // Given a list of types and a boolean type trait, returns whether the trait is true for all types.
+    template <class List, template <class> class Trait> struct list_all_of;
+    template <class List, template <class> class Trait> constexpr auto list_all_of_v = list_all_of<List, Trait>::value;
+    template <class T0, class... Ts, template <class> class Trait>
+    struct list_all_of<type_list<T0, Ts...>, Trait>
+    {
+        static constexpr auto value = Trait<T0>::value && list_all_of<type_list<Ts...>, Trait>::value;
+    };
+    template <template <class> class Trait>
+    struct list_all_of<type_list<>, Trait>
+    {
+        static constexpr auto value = true;
+    };
+
+    // Given a list of types and a boolean type trait, returns whether the trait is true for any type.
+    template <class List, template <class> class Trait> struct list_any_of;
+    template <class List, template <class> class Trait> constexpr auto list_any_of_v = list_any_of<List, Trait>::value;
+    template <class T0, class... Ts, template <class> class Trait>
+    struct list_any_of<type_list<T0, Ts...>, Trait>
+    {
+        static constexpr auto value = Trait<T0>::value || list_any_of<type_list<Ts...>, Trait>::value;
+    };
+    template <template <class> class Trait>
+    struct list_any_of<type_list<>, Trait>
+    {
+        static constexpr auto value = false;
+    };
+
+    // Given a list of types and a boolean type trait, returns whether the trait is true for no type.
+    template <class List, template <class> class Trait> struct list_none_of;
+    template <class List, template <class> class Trait> constexpr auto list_none_of_v = list_none_of<List, trait>::value;
+    template <class List, template <class> class Trait>
+    struct list_none_of
+    {
+        static constexpr auto value = !list_any_of<List, Trait>::value;
     };
 
     // Construct a list of monotonically increasing constants with a given length and starting value.

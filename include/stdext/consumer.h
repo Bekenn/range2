@@ -16,6 +16,7 @@
 namespace stdext
 {
     template <class T> struct is_consumer : false_type { };
+    template <class T> constexpr auto is_consumer_v = is_consumer<T>::value;
     template <class T, class Elem>
     struct is_consumer<T(Elem)> : is_callable<T(Elem), bool> { };
 
