@@ -97,10 +97,15 @@ namespace stdext
     // Find the index of an element in the list; returns list_length<List> if the element can't be found.
     template <class List, class T> struct list_index_of;
     template <class List, class T> constexpr auto list_index_of_v = list_index_of<List, T>::value;
-    template <class... L, class T, class... R>
-    struct list_index_of<type_list<L..., T, R...>, T>
+    template <class T0, class... Ts, class T>
+    struct list_index_of<type_list<T0, Ts...>, T>
     {
-        static constexpr auto value = sizeof...(L);
+        static constexpr auto value = list_index_of<type_list<Ts...>, T>::value + 1;
+    };
+    template <class T, class... Ts>
+    struct list_index_of<type_list<T, Ts...>, T>
+    {
+        static constexpr auto value = 0;
     };
     template <class... Ts, class T>
     struct list_index_of<type_list<Ts...>, T>
@@ -234,7 +239,7 @@ namespace stdext
 
     // Given a list of types and a boolean type trait, returns whether the trait is true for no type.
     template <class List, template <class> class Trait> struct list_none_of;
-    template <class List, template <class> class Trait> constexpr auto list_none_of_v = list_none_of<List, trait>::value;
+    template <class List, template <class> class Trait> constexpr auto list_none_of_v = list_none_of<List, Trait>::value;
     template <class List, template <class> class Trait>
     struct list_none_of
     {
