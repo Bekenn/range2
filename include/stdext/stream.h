@@ -10,7 +10,8 @@
 #define STDEXT_STREAM_INCLUDED
 #pragma once
 
-#include "range.h"
+#include "generator.h"
+#include "string_view.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -38,12 +39,32 @@ namespace stdext
     template <class POD, REQUIRES(::std::is_pod<POD>::value)>
     class stream_consumer;
 
+    template <class CharT, class Traits = std::char_traits<CharT>>
+    class basic_string_stream_consumer;
+    using string_stream_consumer = basic_string_stream_consumer<char>;
+    using wstring_stream_consumer = basic_string_stream_consumer<wchar_t>;
+    using u16string_stream_consumer = basic_string_stream_consumer<char16_t>;
+    using u32string_stream_consumer = basic_string_stream_consumer<char32_t>;
+
     template <class Pointer> class memory_stream_base;
     template <class Stream> class memory_input_stream_base;
     template <class Stream> class memory_output_stream_base;
     class memory_input_stream;
     class memory_output_stream;
     class memory_stream;
+
+    extern input_stream& in();
+    extern output_stream& out();
+    extern output_stream& err();
+
+    extern string_stream_consumer& strout();
+    extern string_stream_consumer& strerr();
+    extern wstring_stream_consumer& wstrout();
+    extern wstring_stream_consumer& wstrerr();
+    extern u16string_stream_consumer& u16strout();
+    extern u16string_stream_consumer& u16strerr();
+    extern u32string_stream_consumer& u32strout();
+    extern u32string_stream_consumer& u32strerr();
 
     class stream_error : public ::std::runtime_error
     {
@@ -354,6 +375,44 @@ namespace stdext
         bool operator () (const value_type& value)
         {
             return stream->write(&value, 1) != 0;
+        }
+
+    private:
+        output_stream* stream;
+    };
+
+
+    template <class CharT, class Traits>
+    class basic_string_stream_consumer
+    {
+    public:
+        basic_string_stream_consumer() noexcept : stream() { }
+        explicit basic_string_stream_consumer(output_stream& stream) noexcept : stream(&stream) { }
+
+    public:
+        friend bool operator == (const basic_string_stream_consumer& a, const basic_string_stream_consumer& b) noexcept
+        {
+            return a.stream = b.stream;
+        }
+        friend bool operator != (const basic_string_stream_consumer& a, const basic_string_stream_consumer& b) noexcept
+        {
+            return !(a == b);
+        }
+
+    public:
+        bool operator () (CharT value)
+        {
+            return stream->write(&value, 1) != 0;
+        }
+
+        bool operator () (basic_string_view<CharT, Traits> value)
+        {
+            auto count = stream->write(value.data(), value.size());
+            if (count == 0)
+                return false;
+            if (count != value.size())
+                throw stream_error("premature end of stream");
+            return true;
         }
 
     private:

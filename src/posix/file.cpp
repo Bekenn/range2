@@ -13,6 +13,32 @@ namespace stdext
 {
     namespace
     {
+        class std_input_stream : public detail::file_input_stream_base<std_input_stream>
+        {
+        public:
+            explicit std_input_stream(int fd) : handle(fd) { }
+
+        public:
+            bool is_open() const noexcept { return true; }
+
+        private:
+            template <class Stream> friend class detail::file_input_stream_base;
+            file_handle_t handle;
+        };
+
+        class std_output_stream : public detail::file_output_stream_base<std_output_stream>
+        {
+        public:
+            explicit std_output_stream(int fd) : handle(fd) { }
+
+        public:
+            bool is_open() const noexcept { return true; }
+
+        private:
+            template <class Stream> friend class detail::file_output_stream_base;
+            file_handle_t handle;
+        };
+
         int creation_disposition(flags<file_open_flags> flags);
     }
 
@@ -224,6 +250,24 @@ namespace stdext
     std::error_code file_stream::open(const char* path, utf8_path_encoding, flags<file_open_flags> flags)
     {
         return open(path, flags);
+    }
+
+    input_stream& in()
+    {
+        static std_input_stream in(STDIN_FILENO);
+        return in;
+    }
+
+    output_stream& out()
+    {
+        static std_output_stream out(STDOUT_FILENO);
+        return out;
+    }
+
+    output_stream& err()
+    {
+        static std_output_stream err(STDERR_FILENO);
+        return err;
     }
 
     namespace
