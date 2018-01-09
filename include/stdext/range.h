@@ -460,7 +460,7 @@ namespace stdext
     template <class Iterator, class TerminationPredicate> using iterator_range =
         ::std::conditional_t<is_random_access_iterator<Iterator>::value, detail::random_access_iterator_range<Iterator, TerminationPredicate>,
             ::std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::bidirectional_iterator_range<Iterator, TerminationPredicate>,
-                ::std::enable_if_t<is_forward_iterator<Iterator>::value, detail::forward_iterator_range<Iterator,TerminationPredicate>>
+                ::std::enable_if_t<is_forward_iterator<Iterator>::value, detail::forward_iterator_range<Iterator, TerminationPredicate>>
             >
         >;
 
@@ -490,7 +490,7 @@ namespace stdext
     template <class Range, REQUIRES(is_range<Range>::value)>
     auto subrange_from(const Range& range, range_position_type_t<Range> first)
     {
-        return make_range(range, first, [&](const auto& pos) { return range.is_end_pos(pos); });
+        return make_range(range, first, [](const auto& r, const auto& p) { return r.is_end_pos(p); });
     }
 
     template <class Range, REQUIRES(is_range<Range>::value)>
@@ -563,7 +563,7 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return term(*pos); }
+            bool is_end_pos(position pos) const noexcept { return term(pos); }
 
             position& inc_pos(position& pos) const { return ++pos; }
             reference at_pos(position pos) const { return *pos; }
@@ -1015,7 +1015,7 @@ namespace stdext
         public:
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) { first = pos; }
-            bool is_end_pos(position pos) const noexcept { return r != nullptr && term(r->at_pos(pos)); }
+            bool is_end_pos(position pos) const noexcept { return r != nullptr && term(*r, pos); }
             position& inc_pos(position& pos) const { return r->inc_pos(pos); }
             reference at_pos(position pos) const { return r->at_pos(pos); }
             const range& base() const noexcept { return *r; }
@@ -1329,7 +1329,7 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return r != nullptr && term(r->at_pos(pos)); }
+            bool is_end_pos(position pos) const noexcept { return r != nullptr && term(*r, pos); }
 
             position& inc_pos(position& pos) const { return r->dec_pos(pos); }
             position& dec_pos(position& pos) const { return r->inc_pos(pos); }

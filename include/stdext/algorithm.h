@@ -268,10 +268,10 @@ namespace stdext
 
             for (auto pos1 = pos.first; !range1.is_end_pos(pos1); range1.inc_pos(pos1))
             {
-                if (any_of(make_range(range1, pos.first, pos1), [&](const auto& value) { return pred(value, range1.at_pos(pos1)); }))
+                if (any_of(make_range(range1, pos.first, pos1), [&](const auto& r, const auto& p) { return pred(r.at_pos(p), range1.at_pos(pos1)); }))
                     continue;
 
-                auto count1 = count_if(make_range(range1, next_pos(range1, pos1), [&](const auto& r, const auto& p) { return range1.is_end_pos(p); }),
+                auto count1 = count_if(make_range(range1, next_pos(range1, pos1), [](const auto& r, const auto& p) { return r.is_end_pos(p); }),
                     [&](const auto& value) { return pred(value, range1.at_pos(pos1)); });
                 auto count2 = count_if(range2, [&](const auto& value) { return pred(value, range1.at_pos(pos1)); });
                 if (count1 != count2)
@@ -335,7 +335,7 @@ namespace stdext
     {
         auto const_gen = make_constant_generator(value);
         auto const_rng = make_counted_range(const_gen, count);
-        auto subrange = make_range(range, range.begin_pos(), [&](const auto& r, const auto& p) { return range.is_end_pos(p); });
+        auto subrange = make_range(range, range.begin_pos(), [](const auto& r, const auto& p) { return r.is_end_pos(p); });
         while (true)
         {
             auto pos = mismatch(subrange, const_rng, pred);
@@ -486,7 +486,7 @@ namespace stdext
     range_position_type_t<Range> remove_if(const Range& range, Predicate&& pred)
     {
         auto pos = find_if(range, pred);
-        auto rng = make_range(range, pos, [&](const auto& pos) { return range.is_end_pos(pos); });
+        auto rng = make_range(range, pos, [](const auto& r, const auto& p) { return r.is_end_pos(p); });
         for_each([&](auto& value)
         {
             if (!pred(value))
@@ -1481,7 +1481,7 @@ namespace stdext
             auto l = range.begin_pos();
             while (!range.is_end_pos(middle))
             {
-                l = lower_bound(make_range(range, l, middle), [&](const auto& value) { return comp(range.at_pos(middle), value); });
+                l = lower_bound(make_range(range, l, middle), [&](const auto& r, const auto& p) { return comp(range.at_pos(middle), r.at_pos(p)); });
                 if (l == middle)
                     return;
 
@@ -1501,7 +1501,7 @@ namespace stdext
             auto l = range.begin_pos();
             while (!range.is_end_pos(middle))
             {
-                l = lower_bound(make_range(range, l, middle), [&](const auto& value) { return comp(range.at_pos(middle), value); });
+                l = lower_bound(make_range(range, l, middle), [&](const auto& r, const auto& p) { return comp(range.at_pos(middle), r.at_pos(p)); });
                 if (l == middle)
                     return;
 
