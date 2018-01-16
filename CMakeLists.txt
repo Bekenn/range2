@@ -11,8 +11,12 @@ target_include_directories(stdext PUBLIC include)
 target_compile_features(stdext PUBLIC cxx_std_17)
 set_target_properties(stdext PROPERTIES CXX_EXTENSIONS OFF)
 
+if(WIN32)
+    target_compile_definitions(stdext PRIVATE _UNICODE UNICODE)
+endif()
+
 if(MSVC)
-    target_compile_definitions(stdext PUBLIC  _SCL_SECURE_NO_WARNINGS)
+    target_compile_definitions(stdext PUBLIC _SCL_SECURE_NO_WARNINGS)
 else()
     target_compile_options(stdext PRIVATE -Wno-switch)
 endif()

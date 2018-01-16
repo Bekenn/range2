@@ -81,6 +81,9 @@ namespace stdext
         {
         }
 
+        scope_error_guard(scope_error_guard&&) = default;
+        scope_error_guard& operator = (scope_error_guard&&) = default;
+
         ~scope_error_guard() noexcept(noexcept(std::declval<Callback>()()))
         {
             bool error = std::uncaught_exceptions() != _exception_count;

@@ -136,7 +136,10 @@ namespace stdext
     template <class Consumer, class Arg, REQUIRED(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
     void format_arg(Consumer& out, string_view fmt, Arg arg)
     {
-        return detail::format_integer(out, fmt, arg < 0 ? -arg : arg, arg < 0);
+        if constexpr (std::is_signed_v<Arg>)
+            return detail::format_integer(out, fmt, arg < 0 ? -arg : arg, arg < 0);
+        else
+            return detail::format_integer(out, fmt, arg, false);
     }
 
     template <class Consumer, class Arg, REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>

@@ -64,6 +64,8 @@ namespace stdext
     public:
         using const_array_view<charT>::const_array_view;
 
+        basic_string_view() noexcept = default;
+
         basic_string_view(const basic_string_view& str, size_type pos, size_type n = npos) noexcept
             : const_array_view<charT>(str.data() + pos, ::std::min(n, str.length()) - pos) { }
 

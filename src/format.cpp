@@ -60,7 +60,7 @@ done:
             if (!fmt.empty())
                 throw format_error("Invalid format string");
 
-            uint base;
+            unsigned base;
             bool upper = false;
             switch (specifier)
             {
@@ -134,7 +134,7 @@ done:
 
             for (; precision != 0; --precision)
             {
-                unsigned digit = uval / test;
+                auto digit = unsigned(uval / test);
                 uval %= test;
                 put(digit < 10 ? '0' + digit : upper ? 'A' - 10 + digit : 'a' - 10 + digit);
                 test /= base;

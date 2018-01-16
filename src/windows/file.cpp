@@ -11,6 +11,32 @@ namespace stdext
 {
     namespace
     {
+        class std_input_stream : public detail::file_input_stream_base<std_input_stream>
+        {
+        public:
+            explicit std_input_stream(HANDLE handle) : handle(handle) { }
+
+        public:
+            bool is_open() const noexcept { return true; }
+
+        private:
+            template <class Stream> friend class detail::file_input_stream_base;
+            file_handle_t handle;
+        };
+
+        class std_output_stream : public detail::file_output_stream_base<std_output_stream>
+        {
+        public:
+            explicit std_output_stream(HANDLE handle) : handle(handle) { }
+
+        public:
+            bool is_open() const noexcept { return true; }
+
+        private:
+            template <class Stream> friend class detail::file_output_stream_base;
+            file_handle_t handle;
+        };
+
         DWORD creation_disposition(flags<file_open_flags> flags);
     }
 
@@ -270,6 +296,24 @@ namespace stdext
             return { ERROR_NO_UNICODE_TRANSLATION, std::system_category() };
 
         return open(reinterpret_cast<const path_char*>(path_str.second.c_str()), flags);
+    }
+
+    input_stream& in()
+    {
+        static std_input_stream in(::GetStdHandle(STD_INPUT_HANDLE));
+        return in;
+    }
+
+    output_stream& out()
+    {
+        static std_output_stream out(::GetStdHandle(STD_OUTPUT_HANDLE));
+        return out;
+    }
+
+    output_stream& err()
+    {
+        static std_output_stream err(::GetStdHandle(STD_ERROR_HANDLE));
+        return err;
     }
 
     namespace
