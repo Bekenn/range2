@@ -18,7 +18,6 @@
 #include <cstdint>
 
 
-#if 0 // Use the flags template instead.
 // Handy-dandy macro for adding flag operations for enums
 #define FLAGS_ENUM(T)                                                   \
 constexpr T operator ~ (T v) noexcept                                   \
@@ -56,7 +55,6 @@ constexpr T& operator ^= (T& a, T b) noexcept                           \
     using U = ::std::underlying_type_t<T>;                              \
     return a = static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));   \
 }
-#endif
 
 namespace stdext
 {

@@ -21,6 +21,7 @@ namespace stdext
     class array_view : public delimited_iterator_range<T*>
     {
     public:
+        using reference = typename delimited_iterator_range<T*>::reference;
         using const_iterator = const T*;
         using reverse_iterator = ::std::reverse_iterator<T*>;
         using const_reverse_iterator = ::std::reverse_iterator<const T*>;
@@ -34,6 +35,12 @@ namespace stdext
 
     public:
         auto data() const noexcept { return this->begin(); }
+        bool empty() const noexcept { return this->begin() == this->end(); }
+
+        reference front() noexcept { return *this->begin(); }
+        const_reference front() const noexcept { return *this->begin(); }
+        reference back() noexcept { return *std::prev(this->end()); }
+        const_reference back() const noexcept { return *std::prev(this->end()); }
     };
 
     template <class T>
@@ -43,6 +50,7 @@ namespace stdext
         using const_iterator = const T*;
         using reverse_iterator = ::std::reverse_iterator<const T*>;
         using const_reverse_iterator = ::std::reverse_iterator<const T*>;
+        using const_reference = const T&;
         using pointer = const T*;
         using size_type = size_t;
 
@@ -52,6 +60,10 @@ namespace stdext
 
     public:
         auto data() const noexcept { return this->begin(); }
+        bool empty() const noexcept { return this->begin() == this->end(); }
+
+        const_reference front() const noexcept { return *this->begin(); }
+        const_reference back() const noexcept { return *std::prev(this->end()); }
     };
 }
 

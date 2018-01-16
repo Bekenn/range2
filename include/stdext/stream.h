@@ -53,18 +53,18 @@ namespace stdext
     class memory_output_stream;
     class memory_stream;
 
-    extern input_stream& in();
-    extern output_stream& out();
-    extern output_stream& err();
+    input_stream& in();
+    output_stream& out();
+    output_stream& err();
 
-    extern string_stream_consumer& strout();
-    extern string_stream_consumer& strerr();
-    extern wstring_stream_consumer& wstrout();
-    extern wstring_stream_consumer& wstrerr();
-    extern u16string_stream_consumer& u16strout();
-    extern u16string_stream_consumer& u16strerr();
-    extern u32string_stream_consumer& u32strout();
-    extern u32string_stream_consumer& u32strerr();
+    string_stream_consumer& strout();
+    string_stream_consumer& strerr();
+    wstring_stream_consumer& wstrout();
+    wstring_stream_consumer& wstrerr();
+    u16string_stream_consumer& u16strout();
+    u16string_stream_consumer& u16strerr();
+    u32string_stream_consumer& u32strout();
+    u32string_stream_consumer& u32strerr();
 
     class stream_error : public ::std::runtime_error
     {

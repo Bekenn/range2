@@ -37,6 +37,15 @@ namespace stdext
     using u32string_view = basic_string_view<char32_t>;
     using const_u32string_view = basic_string_view<const char32_t>;
 
+    int stoi(string_view str, size_t* idx = nullptr, int base = 10);
+    long stol(string_view str, size_t* idx = nullptr, int base = 10);
+    unsigned long stoul(string_view str, size_t* idx = nullptr, int base = 10);
+    long long stoll(string_view str, size_t* idx = nullptr, int base = 10);
+    unsigned long long stoull(string_view str, size_t* idx = nullptr, int base = 10);
+    float stof(string_view str, size_t* idx = nullptr);
+    double stod(string_view str, size_t* idx = nullptr);
+    long double stold(string_view str, size_t* idx = nullptr);
+
     template <class charT, class traits>
     class basic_string_view : public const_array_view<charT>
     {
@@ -89,6 +98,16 @@ namespace stdext
 
     public:
         auto length() const noexcept { return this->size(); }
+
+        void remove_prefix(size_t n)
+        {
+            drop_first(*this, n);
+        }
+
+        void remove_suffix(size_t n)
+        {
+            drop_last(*this, n);
+        }
 
         auto find(basic_string_view str, size_type pos = 0)
         {
