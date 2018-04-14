@@ -1,5 +1,5 @@
 //
-//  multi.h
+//  multi_ref.h
 //  stdext
 //
 //  Created by James Touton on 9/05/16.
@@ -19,7 +19,7 @@
 namespace stdext
 {
     template <class... Interfaces>
-    class multi
+    class multi_ref
     {
     private:
         template <template <class...> class Trait, class... Args>
@@ -28,24 +28,24 @@ namespace stdext
             template <class... Ts>
             struct templ
             {
-                static constexpr auto value = Trait<Args..., Ts...>::value;
+                static constexpr auto value = Trait<Ts..., Args...>::value;
             };
         };
 
     public:
-        template <class T, REQUIRES(list_all_of_v<type_list<Interfaces...>, value_trait_binder<::std::is_base_of, T>::templ>)>
-        multi(T& obj) : interfaces(static_cast<Interfaces&>(obj)...)
+        template <class T, REQUIRES(list_all_of_v<type_list<Interfaces...>, value_trait_binder<::std::is_base_of, T>::template templ>)>
+        multi_ref(T& obj) : interfaces(static_cast<Interfaces&>(obj)...)
         {
         }
 
     public:
-        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, value_trait_binder<::std::is_same, Interface>::templ>)>
+        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, value_trait_binder<::std::is_same, Interface>::template templ>)>
         Interface& as() noexcept
         {
             return ::std::get<Interface&>(interfaces);
         }
 
-        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, value_trait_binder<::std::is_same, Interface>::templ>)>
+        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, value_trait_binder<::std::is_same, Interface>::template templ>)>
         const Interface& as() const noexcept
         {
             return ::std::get<Interface&>(interfaces);
