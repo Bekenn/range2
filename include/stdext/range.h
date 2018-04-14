@@ -12,6 +12,7 @@
 
 #include "consumer.h"
 #include "generator.h"
+#include "meta.h"
 
 #include <stdexcept>
 
@@ -159,18 +160,12 @@ namespace stdext
     template <class Range> using range_size_type_t = size_type_t<Range, is_range>;
 
     // range concepts
-    template <class Range> struct is_multi_pass_range
-    {
-        static constexpr auto value = ::std::is_base_of<multi_pass_range_tag, range_category<Range>>::value;
-    };
-    template <class Range> struct is_bidirectional_range
-    {
-        static constexpr auto value = ::std::is_base_of<bidirectional_range_tag, range_category<Range>>::value;
-    };
-    template <class Range> struct is_random_access_range
-    {
-        static constexpr auto value = ::std::is_base_of<random_access_range_tag, range_category<Range>>::value;
-    };
+    template <class Range> struct is_multi_pass_range :
+        ::std::is_base_of<multi_pass_range_tag, list_conditional_apply_t<is_range<Range>::value, range_category, type_list<Range>, ::std::void_t, type_list<>>> { };
+    template <class Range> struct is_bidirectional_range :
+        ::std::is_base_of<bidirectional_range_tag, list_conditional_apply_t<is_range<Range>::value, range_category, type_list<Range>, ::std::void_t, type_list<>>> { };
+    template <class Range> struct is_random_access_range :
+        ::std::is_base_of<random_access_range_tag, list_conditional_apply_t<is_range<Range>::value, range_category, type_list<Range>, ::std::void_t, type_list<>>> { };
 
     // generic range utilities
     template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
@@ -1597,10 +1592,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = const stdext::range_value_type_t<Range>;
+        using value_type = stdext::range_value_type_t<Range>;
         using difference_type = stdext::range_difference_type_t<Range>;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = const value_type*;
+        using reference = const value_type&;
         using range = Range;
 
     public:

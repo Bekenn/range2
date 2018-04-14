@@ -213,14 +213,14 @@ namespace stdext
 
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
-    class input_stream_iterator : public ::std::iterator<::std::input_iterator_tag, const POD>
+    class input_stream_iterator
     {
     public:
-        using typename ::std::iterator<::std::input_iterator_tag, const POD>::value_type;
-        using typename ::std::iterator<::std::input_iterator_tag, const POD>::difference_type;
-        using typename ::std::iterator<::std::input_iterator_tag, const POD>::pointer;
-        using typename ::std::iterator<::std::input_iterator_tag, const POD>::reference;
-        using typename ::std::iterator<::std::input_iterator_tag, const POD>::iterator_category;
+        using value_type = POD;
+        using difference_type = ::std::ptrdiff_t;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+        using iterator_category = ::std::input_iterator_tag;
 
     public:
         input_stream_iterator() : stream(nullptr) { }
@@ -265,10 +265,14 @@ namespace stdext
 
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
-    class output_stream_iterator : ::std::iterator<::std::output_iterator_tag, void, void, void, void>
+    class output_stream_iterator
     {
     public:
-        using typename ::std::iterator<::std::output_iterator_tag, void, void, void, void>::iterator_category;
+        using value_type = void;
+        using difference_type = void;
+        using pointer = void;
+        using reference = void;
+        using iterator_category = ::std::output_iterator_tag;
 
     public:
         explicit output_stream_iterator(output_stream& stream) : stream(&stream) { }
@@ -294,10 +298,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = const POD;
+        using value_type = POD;
         using difference_type = ptrdiff_t;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = const value_type*;
+        using reference = const value_type&;
 
     public:
         stream_generator() noexcept : stream(), value() { }

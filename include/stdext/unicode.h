@@ -342,10 +342,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = const Char;
+        using value_type = Char;
         using difference_type = generator_difference_type_t<Generator>;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = const value_type*;
+        using reference = const value_type&;
         using generator = Generator;
 
     public:

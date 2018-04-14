@@ -191,10 +191,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = const ::std::remove_cv_t<decltype(::std::declval<Function>()())>;
+        using value_type = ::std::remove_cv_t<decltype(::std::declval<Function>()())>;
         using difference_type = ptrdiff_t;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = const value_type*;
+        using reference = const value_type&;
 
     public:
         function_generator() : f(), value() { }
@@ -240,10 +240,10 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = const T;
+        using value_type = T;
         using difference_type = ptrdiff_t;
-        using pointer = value_type*;
-        using reference = value_type&;
+        using pointer = const value_type*;
+        using reference = const value_type&;
 
     public:
         constant_generator() : v() { }
