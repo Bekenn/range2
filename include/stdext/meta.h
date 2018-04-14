@@ -209,6 +209,20 @@ namespace stdext
         using type = Templ<Ts...>;
     };
 
+    // Given a template taking variadic type arguments and a list of types, conditionally invoke list_apply.
+    template <bool condition, template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList> struct list_conditional_apply;
+    template <bool condition, template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList> using list_conditional_apply_t = typename list_conditional_apply<condition, TrueTempl, TrueList, FalseTempl, FalseList>::type;
+    template <bool condition, template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList>
+    struct list_conditional_apply
+    {
+        using type = list_apply_t<FalseTempl, FalseList>;
+    };
+    template <template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList>
+    struct list_conditional_apply<true, TrueTempl, TrueList, FalseTempl, FalseList>
+    {
+        using type = list_apply_t<TrueTempl, TrueList>;
+    };
+
     // Given a list of types and a boolean type trait, returns whether the trait is true for all types.
     template <class List, template <class> class Trait> struct list_all_of;
     template <class List, template <class> class Trait> constexpr auto list_all_of_v = list_all_of<List, Trait>::value;
