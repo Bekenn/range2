@@ -16,6 +16,8 @@
 #include <type_traits>
 #include <utility>
 
+#include <cstddef>
+
 
 #define STDEXT_CONCAT_(a, b) a ## b
 #define STDEXT_CONCAT(a, b) STDEXT_CONCAT_(a, b)
@@ -28,6 +30,12 @@ namespace stdext
     using ::std::forward;
     using ::std::exchange;
     using ::std::declval;
+
+    template <class T, size_t size>
+    constexpr size_t lengthof(T (&)[size]) noexcept
+    {
+        return size;
+    }
 
     template <class Callback>
     class scope_guard
