@@ -222,6 +222,12 @@ namespace stdext
         using reference = const value_type&;
         using iterator_category = ::std::input_iterator_tag;
 
+    private:
+        static constexpr bool noexcept_swappable()
+        {
+            return noexcept(swap(declval<value_type&>(), declval<value_type&>()));
+        }
+
     public:
         input_stream_iterator() : stream(nullptr) { }
         explicit input_stream_iterator(input_stream& stream) : stream(&stream) { ++*this; }
@@ -251,12 +257,6 @@ namespace stdext
         pointer operator -> () const { return &value; }
         input_stream_iterator& operator ++ () { if (stream->read(&value, 1) == 0) stream = nullptr; return *this; }
         iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(value)); ++*this; return proxy; }
-
-    private:
-        static constexpr bool noexcept_swappable()
-        {
-            return noexcept(swap(declval<value_type&>(), declval<value_type&>()));
-        }
 
     private:
         input_stream* stream;
