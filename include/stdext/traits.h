@@ -59,6 +59,15 @@ namespace stdext
     template <class T> struct error_type;
     template <class T, T v> struct error_value;
 
+    // Identity metafunction
+    template <class T> struct identity_type;
+    template <class T> using identity_type_t = typename identity_type<T>::type;
+    template <class T>
+    struct identity_type
+    {
+        using type = T;
+    };
+
     // Test whether an instance of class F is callable with a return type convertible to R
     template <class, class R = void> struct is_callable;
     template <class F, class R = void> constexpr bool is_callable_v = is_callable<F, R>::value;

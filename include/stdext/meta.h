@@ -19,6 +19,7 @@ namespace stdext
 {
     // Compile-time variadic boolean comparisons.
     template <bool... vs> struct const_and;
+    template <bool... vs> constexpr auto const_and_v = const_and<vs...>::value;
     template <>
     struct const_and<>
     {
@@ -31,6 +32,7 @@ namespace stdext
     };
 
     template <bool... vs> struct const_or;
+    template <bool... vs> constexpr auto const_or_v = const_or<vs...>::value;
     template <>
     struct const_or<>
     {
@@ -143,6 +145,58 @@ namespace stdext
     struct list_concat<type_list<Ts...>, type_list<Us...>, Lists...>
     {
         using type = typename list_concat<type_list<Ts..., Us...>, Lists...>::type;
+    };
+
+    // Retrieve the list of the first n elements in a list.
+    template <class List, size_t n> struct list_take;
+    template <class List, size_t n> using list_take_t = typename list_take<List, n>::type;
+    template <class T0, class... Ts, size_t n>
+    struct list_take<type_list<T0, Ts...>, n>
+    {
+        using type = list_prepend_t<list_take_t<type_list<Ts...>, n - 1>, T0>;
+    };
+    template <class... Ts>
+    struct list_take<type_list<Ts...>, 0>
+    {
+        using type = type_list<>;
+    };
+
+    // Retrieve the list of all elements after the first n elements in a list.
+    template <class List, size_t n> struct list_drop;
+    template <class List, size_t n> using list_drop_t = typename list_drop<List, n>::type;
+    template <class T0, class... Ts, size_t n>
+    struct list_drop<type_list<T0, Ts...>, n>
+    {
+        using type = list_drop_t<type_list<Ts...>, n - 1>;
+    };
+    template <class... Ts>
+    struct list_drop<type_list<Ts...>, 0>
+    {
+        using type = type_list<Ts...>;
+    };
+
+    // Insert the given element into a list at the given location.
+    template <class List, size_t n, class T> struct list_insert_element;
+    template <class List, size_t n, class T> using list_insert_element_t = typename list_insert_element<List, n, T>::type;
+    template <class List, size_t n, class T>
+    struct list_insert_element
+    {
+        using type = list_concat_t<list_take_t<List, n>, type_list<T>, list_drop_t<List, n>>;
+    };
+
+    // Insert the given elements into a list at the given locations.
+    template <size_t n, class T> struct list_insert_elements_arg { };
+    template <class List, class... Args> struct list_insert_elements;
+    template <class List, class... Args> using list_insert_elements_t = typename list_insert_elements<List, Args...>::type;
+    template <class List, size_t n0, class T0, size_t... ns, class... Ts>
+    struct list_insert_elements<List, list_insert_elements_arg<n0, T0>, list_insert_elements_arg<ns, Ts>...>
+    {
+        using type = list_insert_elements_t<list_insert_element_t<List, n0, T0>, list_insert_elements_arg<ns < n0 ? ns : ns + 1, Ts>...>;
+    };
+    template <class List>
+    struct list_insert_elements<List>
+    {
+        using type = List;
     };
 
     // Given a list of lists and a list of values, construct a list of lists, each constructed by prepending a value onto its corresponding list.
@@ -258,6 +312,34 @@ namespace stdext
     struct list_none_of
     {
         static constexpr auto value = !list_any_of<List, Trait>::value;
+    };
+
+    // Given a list of types and a boolean type trait, returns the number of types for which the trait is true.
+    template <class List, template <class> class Trait> struct list_count_fulfilling;
+    template <class List, template <class> class Trait> constexpr auto list_count_fulfilling_v = list_count_fulfilling<List, Trait>::value;
+    template <class T0, class... Ts, template <class> class Trait>
+    struct list_count_fulfilling<type_list<T0, Ts...>, Trait>
+    {
+        static constexpr auto value = list_count_fulfilling<type_list<Ts...>, Trait>::value + (Trait<T0>::value ? 1 : 0);
+    };
+    template <template <class> class Trait>
+    struct list_count_fulfilling<type_list<>, Trait>
+    {
+        static constexpr size_t value = 0;
+    };
+
+    // Given a list of types and a boolean type trait, returns the first type for which the trait is true.
+    template <class List, template <class> class Trait> struct list_find_first_fulfilling;
+    template <class List, template <class> class Trait> using list_find_first_fulfilling_t = typename list_find_first_fulfilling<List, Trait>::type;
+    template <class T0, class... Ts, template <class> class Trait>
+    struct list_find_first_fulfilling<type_list<T0, Ts...>, Trait>
+        : std::conditional_t<Trait<T0>::value, identity_type<T0>, list_find_first_fulfilling<type_list<Ts...>, Trait>>
+    {
+    };
+    template <template <class> class Trait>
+    struct list_find_first_fulfilling<type_list<>, Trait>
+    {
+        // empty
     };
 
     // Construct a list of monotonically increasing constants with a given length and starting value.
