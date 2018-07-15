@@ -10,8 +10,8 @@
 #define STDEXT_ALGORITHM_INCLUDED
 #pragma once
 
-#include "range.h"
-#include "tuple.h"
+#include <stdext/range.h>
+#include <stdext/tuple.h>
 
 #include <functional>
 #include <random>

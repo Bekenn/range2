@@ -10,7 +10,7 @@
 #define STDEXT_OPTIONAL_INCLUDED
 #pragma once
 
-#include "traits.h"
+#include <stdext/traits.h>
 
 #include <initializer_list>
 #include <new>

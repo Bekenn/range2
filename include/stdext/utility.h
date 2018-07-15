@@ -10,7 +10,7 @@
 #define STDEXT_UTILITY_INCLUDED
 #pragma once
 
-#include "detail/config.h"
+#include <stdext/detail/config.h>
 
 #include <exception>
 #include <type_traits>

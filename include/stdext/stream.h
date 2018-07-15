@@ -10,8 +10,8 @@
 #define STDEXT_STREAM_INCLUDED
 #pragma once
 
-#include "generator.h"
-#include "string_view.h"
+#include <stdext/generator.h>
+#include <stdext/string_view.h>
 
 #include <algorithm>
 #include <stdexcept>

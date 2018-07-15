@@ -10,7 +10,7 @@
 #define STDEXT_CONSUMER_INCLUDED
 #pragma once
 
-#include "iterator.h"
+#include <stdext/iterator.h>
 
 
 namespace stdext

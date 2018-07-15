@@ -10,7 +10,7 @@
 #define STDEXT_GENERATOR_INCLUDED
 #pragma once
 
-#include "consumer.h"
+#include <stdext/consumer.h>
 
 #include <cassert>
 

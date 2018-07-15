@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stream.h"
+#include <stdext/stream.h>
 
 #if STDEXT_ARCH_X86 && !STDEXT_COMPILER_GCC
 #include <immintrin.h>

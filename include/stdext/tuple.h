@@ -10,7 +10,7 @@
 #define STDEXT_TUPLE_INCLUDED
 #pragma once
 
-#include "meta.h"
+#include <stdext/meta.h>
 
 #include <tuple>
 

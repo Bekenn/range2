@@ -10,9 +10,9 @@
 #define STDEXT_RANGE_INCLUDED
 #pragma once
 
-#include "consumer.h"
-#include "generator.h"
-#include "meta.h"
+#include <stdext/consumer.h>
+#include <stdext/generator.h>
+#include <stdext/meta.h>
 
 #include <stdexcept>
 

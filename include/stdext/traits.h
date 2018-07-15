@@ -10,8 +10,8 @@
 #define STDEXT_TRAITS_INCLUDED
 #pragma once
 
-#include "types.h"
-#include "utility.h"
+#include <stdext/types.h>
+#include <stdext/utility.h>
 
 #include <type_traits>
 

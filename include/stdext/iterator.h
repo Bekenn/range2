@@ -10,7 +10,7 @@
 #define STDEXT_ITERATOR_INCLUDED
 #pragma once
 
-#include "traits.h"
+#include <stdext/traits.h>
 
 #include <iterator>
 

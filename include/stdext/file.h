@@ -10,8 +10,8 @@
 #define STDEXT_FILE_INCLUDED
 #pragma once
 
-#include "stream.h"
-#include "types.h"
+#include <stdext/stream.h>
+#include <stdext/types.h>
 
 #include <system_error>
 

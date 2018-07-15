@@ -10,8 +10,8 @@
 #define STDEXT_STRING_VIEW_INCLUDED
 #pragma once
 
-#include "algorithm.h"
-#include "array_view.h"
+#include <stdext/algorithm.h>
+#include <stdext/array_view.h>
 
 #include <algorithm>
 #include <string>
