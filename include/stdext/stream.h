@@ -81,7 +81,7 @@ namespace stdext
         POD read()
         {
             POD value;
-            if (do_read(&value, sizeof(POD)) != sizeof(POD))
+            if (do_read(reinterpret_cast<uint8_t*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
             return value;
         }
@@ -89,7 +89,7 @@ namespace stdext
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
         size_t read(POD* buffer, size_t count)
         {
-            auto size = do_read(buffer, count * sizeof(POD));
+            auto size = do_read(reinterpret_cast<uint8_t*>(buffer), count * sizeof(POD));
             if (size % sizeof(POD) != 0)
                 throw stream_error("premature end of stream");
             return size / sizeof(POD);
@@ -111,7 +111,7 @@ namespace stdext
         }
 
     private:
-        virtual size_t do_read(void* buffer, size_t size) = 0;
+        virtual size_t do_read(uint8_t* buffer, size_t size) = 0;
         virtual size_t do_skip(size_t size) = 0;
     };
 
@@ -125,14 +125,14 @@ namespace stdext
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
         void write(const POD& value)
         {
-            if (do_write(&value, sizeof(POD)) != sizeof(POD))
+            if (do_write(reinterpret_cast<const uint8_t*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
         }
 
         template <class POD, REQUIRES(::std::is_pod<POD>::value)>
         size_t write(const POD* buffer, size_t count)
         {
-            auto size = do_write(buffer, count * sizeof(POD));
+            auto size = do_write(reinterpret_cast<const uint8_t*>(buffer), count * sizeof(POD));
             if (size % sizeof(POD) != 0)
                 throw stream_error("premature end of stream");
             return size / sizeof(POD);
@@ -145,7 +145,7 @@ namespace stdext
         }
 
     private:
-        virtual size_t do_write(const void* buffer, size_t size) = 0;
+        virtual size_t do_write(const uint8_t* buffer, size_t size) = 0;
     };
 
     class stream : public input_stream, public output_stream
@@ -508,10 +508,10 @@ namespace stdext
         ~memory_input_stream_base() override = default;
 
     protected:
-        size_t read_impl(void* buffer, size_t size)
+        size_t read_impl(uint8_t* buffer, size_t size)
         {
             size = ::std::min(size, size_t(self().last - self().current));
-            ::std::copy(self().current, self().current + size, static_cast<uint8_t*>(buffer));
+            ::std::copy_n(self().current, size, buffer);
             self().current += size;
             return size;
         }
@@ -540,11 +540,10 @@ namespace stdext
     class memory_output_stream_base
     {
     protected:
-        size_t write_impl(const void* buffer, size_t size)
+        size_t write_impl(const uint8_t* buffer, size_t size)
         {
             size = ::std::min(size, size_t(self().last - self().current));
-            auto p = static_cast<const uint8_t*>(buffer);
-            self().current = ::std::copy(p, p + size, self().current);
+            self().current = ::std::copy_n(buffer, size, self().current);
             return size;
         }
 
@@ -564,7 +563,7 @@ namespace stdext
         ~memory_input_stream() override;
 
     private:
-        size_t do_read(void* buffer, size_t size) override
+        size_t do_read(uint8_t* buffer, size_t size) override
         {
             return read_impl(buffer, size);
         }
@@ -587,7 +586,7 @@ namespace stdext
         ~memory_output_stream() override;
 
     private:
-        size_t do_write(const void* buffer, size_t size) override
+        size_t do_write(const uint8_t* buffer, size_t size) override
         {
             return write_impl(buffer, size);
         }
@@ -604,12 +603,12 @@ namespace stdext
         ~memory_stream() override;
 
     private:
-        size_t do_read(void* buffer, size_t size) override
+        size_t do_read(uint8_t* buffer, size_t size) override
         {
             return read_impl(buffer, size);
         }
 
-        size_t do_write(const void* buffer, size_t size) override
+        size_t do_write(const uint8_t* buffer, size_t size) override
         {
             return write_impl(buffer, size);
         }
