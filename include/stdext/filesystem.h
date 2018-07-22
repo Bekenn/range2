@@ -10,6 +10,7 @@
 #define STDEXT_FILESYSTEM_INCLUDED
 #pragma once
 
+#include <stdext/platform.h>
 #include <stdext/string_view.h>
 
 #include <locale>
@@ -19,21 +20,6 @@
 // This file defines types and functions based on a subset of C++17's filesystem library
 // dealing with file system paths.  These definitions are provided here so that they may
 // be used on systems predating C++17's standard library.
-
-namespace stdext
-{
-    // From file.h; should probably only exist in this file.
-#ifdef _WIN32
-    using path_char = wchar_t;
-    constexpr path_char directory_separator = L'\\';
-#define _PATH_STR(s) L ## s
-#define PATH_STR(s) _PATH_STR(s)
-#else
-    using path_char = char;
-    constexpr path_char directory_separator = '/';
-#define PATH_STR(s) s
-#endif
-}
 
 namespace stdext { namespace filesystem
 {

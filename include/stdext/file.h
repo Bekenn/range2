@@ -10,6 +10,7 @@
 #define STDEXT_FILE_INCLUDED
 #pragma once
 
+#include <stdext/platform.h>
 #include <stdext/stream.h>
 #include <stdext/types.h>
 
@@ -19,13 +20,9 @@
 namespace stdext
 {
 #ifdef _WIN32
-    using path_char = wchar_t;
     using file_handle_t = void*;
-#define PATH_STR(s) L ## s
 #else
-    using path_char = char;
     using file_handle_t = int;
-#define PATH_STR(s) s
 #endif
 
     enum class file_open_flags

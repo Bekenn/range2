@@ -90,7 +90,7 @@ namespace stdext
         constexpr flags(T value) noexcept : value(value) { }
         template <typename... TT>
         constexpr flags(T value, TT... values) noexcept : value(static_cast<T>(static_cast<U>(value) | static_cast<U>(flags(values...)))) { }
-        CONSTEXPR14 flags& operator = (T value) noexcept { this->value = value; return *this; }
+        constexpr flags& operator = (T value) noexcept { this->value = value; return *this; }
 
     public:
         friend constexpr bool operator == (flags a, flags b) noexcept { return a.value == b.value; }
@@ -100,30 +100,30 @@ namespace stdext
         constexpr operator T () const noexcept { return value; }
         explicit constexpr operator U () const noexcept { return static_cast<U>(value); }
 
-        CONSTEXPR14 flags& clear() noexcept
+        constexpr flags& clear() noexcept
         {
             value = static_cast<T>(0);
         }
 
-        CONSTEXPR14 flags& set(flags mask) noexcept
+        constexpr flags& set(flags mask) noexcept
         {
             value = static_cast<T>(static_cast<U>(value) | static_cast<U>(mask));
             return *this;
         }
 
-        CONSTEXPR14 flags& reset(flags mask) noexcept
+        constexpr flags& reset(flags mask) noexcept
         {
             value = static_cast<T>(static_cast<U>(value) & ~static_cast<U>(mask));
             return *this;
         }
 
-        CONSTEXPR14 flags& flip(flags mask) noexcept
+        constexpr flags& flip(flags mask) noexcept
         {
             value = static_cast<T>(static_cast<U>(value) ^ static_cast<U>(mask));
             return *this;
         }
 
-        CONSTEXPR14 flags& keep(flags mask) noexcept
+        constexpr flags& keep(flags mask) noexcept
         {
             value = static_cast<T>(static_cast<U>(value) & static_cast<U>(mask));
             return *this;
