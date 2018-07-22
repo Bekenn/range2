@@ -29,35 +29,6 @@ namespace stdext
 
     namespace detail
     {
-        template <typename T> struct show_type;
-        template <class Function, class... Ts, size_t... indices>
-        decltype(auto) apply(Function&& func, const ::std::tuple<Ts...>& args, type_list<constant<size_t, indices>...>)
-        {
-            return func(::std::get<indices>(args)...);
-        }
-
-        template <typename T> struct show_type;
-        template <class Function, class... Ts, size_t... indices>
-        decltype(auto) apply(Function&& func, ::std::tuple<Ts...>&& args, type_list<constant<size_t, indices>...>)
-        {
-            return func(move(::std::get<indices>(args))...);
-        }
-    }
-
-    template <class Function, class... Ts>
-    decltype(auto) apply(Function&& func, const ::std::tuple<Ts...>& args)
-    {
-        return detail::apply(forward<Function>(func), args, iota_list_t<sizeof...(Ts), size_t>());
-    }
-
-    template <class Function, class... Ts>
-    decltype(auto) apply(Function&& func, ::std::tuple<Ts...>&& args)
-    {
-        return detail::apply(forward<Function>(func), move(args), iota_list_t<sizeof...(Ts), size_t>());
-    }
-
-    namespace detail
-    {
         template <class... Tuples> struct tuples_size;
         template <class Tuple>
         struct tuples_size<Tuple>
@@ -79,14 +50,14 @@ namespace stdext
         }
 
         template <size_t n, class... Tuples, size_t... tuple_indices>
-        auto zip_element(const ::std::tuple<Tuples&...>& tuples, type_list<constant<size_t, tuple_indices>...>)
+        auto zip_element(const ::std::tuple<Tuples&...>& tuples, value_list<tuple_indices...>)
         {
             using element_type_list = type_list<::std::tuple_element_t<n, Tuples>...>;
             return ::std::make_tuple(wrap<list_element_t<element_type_list, tuple_indices>>(::std::get<n>(::std::get<tuple_indices>(tuples)))...);
         }
 
         template <class Tuples, size_t... element_indices>
-        auto zip(const Tuples& tuples, type_list<constant<size_t, element_indices>...>)
+        auto zip(const Tuples& tuples, value_list<element_indices...>)
         {
             return ::std::make_tuple(zip_element<element_indices>(tuples, iota_list_t<::std::tuple_size<Tuples>::value, size_t>())...);
         }

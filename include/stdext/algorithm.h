@@ -169,7 +169,7 @@ namespace stdext
     {
         template <class... Ranges, size_t... indices>
         ::std::tuple<::std::tuple<const Ranges&, range_position_type_t<Ranges>&>...>
-            make_range_pos_pairs(::std::tuple<const Ranges&...> ranges, ::std::tuple<range_position_type_t<Ranges>...>& positions, type_list<constant<size_t, indices>...>)
+            make_range_pos_pairs(::std::tuple<const Ranges&...> ranges, ::std::tuple<range_position_type_t<Ranges>...>& positions, value_list<indices...>)
         {
             return ::std::make_tuple(::std::make_tuple(::std::ref(::std::get<indices>(ranges)), ::std::ref(::std::get<indices>(positions)))...);
         }
@@ -180,7 +180,7 @@ namespace stdext
     {
         ::std::tuple<range_position_type_t<Ranges>...> positions(ranges.begin_pos()...);
         auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list_t<sizeof...(Ranges), size_t>());
-        apply([&](auto&... rp)
+        ::std::apply([&](auto&... rp)
         {
             for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))...); for_each_argument([](auto& rp) { ::std::get<0>(rp).inc_pos(::std::get<1>(rp)); }, rp...))
                 for_each_argument([&](const auto& rp) { f(::std::get<0>(rp).at_pos(::std::get<1>(rp))); });
