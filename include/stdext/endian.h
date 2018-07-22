@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdext/stream.h>
+#include <stdext/traits.h>
 
 #if STDEXT_ARCH_X86 && !STDEXT_COMPILER_GCC
 #include <immintrin.h>
@@ -35,7 +36,7 @@ namespace stdext
     }
 
     template <byte_order order, class T, REQUIRES(::std::is_integral_v<T>)>
-    T swap(T v)
+    constexpr T swap(T v) noexcept
     {
         if constexpr (order == byte_order::native_endian)
             return v;
@@ -96,6 +97,47 @@ namespace stdext
     size_t write(output_stream& s, const T (&buffer)[length])
     {
         return write(s, buffer, length);
+    }
+
+    inline namespace literals
+    {
+        inline namespace endian
+        {
+            // Given an input of 'ABCD', returns the integer value corresponding to the bytes
+            // 'A', 'B', 'C', and 'D', in that order.
+            constexpr uint32_t operator ""_4cc(const char* str, size_t size)
+            {
+                static_assert(byte_order::native_endian == byte_order::little_endian
+                              || byte_order::native_endian == byte_order::big_endian
+                              || byte_order::native_endian == byte_order::pdp_endian,
+                              "Unknown edianness.");
+
+                if (size != 4)
+                    throw "_4cc literal must have four characters";
+
+                if constexpr (byte_order::native_endian == byte_order::little_endian)
+                {
+                    return uint32_t(str[3]) << 24
+                        | uint32_t(str[2]) << 16
+                        | uint32_t(str[1]) << 8
+                        | uint32_t(str[0]);
+                }
+                if constexpr (byte_order::native_endian == byte_order::big_endian)
+                {
+                    return uint32_t(str[0]) << 24
+                        | uint32_t(str[1]) << 16
+                        | uint32_t(str[2]) << 8
+                        | uint32_t(str[0]);
+                }
+                if constexpr (byte_order::native_endian == byte_order::pdp_endian)
+                {
+                    return uint32_t(str[1]) << 24
+                        | uint32_t(str[0]) << 16
+                        | uint32_t(str[3]) << 8
+                        | uint32_t(str[2]);
+                }
+            }
+        }
     }
 
     namespace detail
