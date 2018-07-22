@@ -14,6 +14,7 @@
 #include <stdext/string_view.h>
 
 #include <algorithm>
+#include <functional>
 #include <stdexcept>
 
 #include <cstddef>
@@ -211,6 +212,24 @@ namespace stdext
         virtual size_t do_peek(void* buffer, size_t size) = 0;
     };
 
+
+    class direct_readable
+    {
+    public:
+        virtual ~direct_readable();
+
+    public:
+        virtual size_t direct_read(std::function<size_t (const uint8_t* buffer, size_t size)> read) = 0;
+    };
+
+    class direct_writable
+    {
+    public:
+        virtual ~direct_writable();
+
+    public:
+        virtual size_t direct_write(std::function<size_t (uint8_t* buffer, size_t size)> write) = 0;
+    };
 
     template <class POD, REQUIRED(::std::is_pod<POD>::value)>
     class input_stream_iterator
@@ -501,11 +520,19 @@ namespace stdext
 
 
     template <class Stream>
-    class memory_input_stream_base : public peekable
+    class memory_input_stream_base : public peekable, public direct_readable
     {
     protected:
         memory_input_stream_base() = default;
         ~memory_input_stream_base() override = default;
+
+    public:
+        size_t direct_read(std::function<size_t(const uint8_t* buffer, size_t size)> read) override
+        {
+            auto size = read(self().current, size_t(self().last - self().current));
+            self().current += size;
+            return size;
+        }
 
     protected:
         size_t read_impl(uint8_t* buffer, size_t size)
@@ -537,8 +564,20 @@ namespace stdext
 
 
     template <class Stream>
-    class memory_output_stream_base
+    class memory_output_stream_base : public direct_writable
     {
+    protected:
+        memory_output_stream_base() = default;
+        ~memory_output_stream_base() override = default;
+
+    public:
+        size_t direct_write(std::function<size_t(uint8_t* buffer, size_t size)> write) override
+        {
+            auto size = write(self().current, size_t(self().last - self().current));
+            self().current += size;
+            return size;
+        }
+
     protected:
         size_t write_impl(const uint8_t* buffer, size_t size)
         {

@@ -15,6 +15,8 @@ namespace stdext
     stream::~stream() = default;
     seekable::~seekable() = default;
     peekable::~peekable() = default;
+    direct_readable::~direct_readable() = default;
+    direct_writable::~direct_writable() = default;
     template <> memory_stream_base<const uint8_t*>::~memory_stream_base() = default;
     template <> memory_stream_base<uint8_t*>::~memory_stream_base() = default;
     memory_input_stream::~memory_input_stream() = default;
