@@ -45,11 +45,11 @@ namespace stdext
     };
 
     // A constant value.
-    template <class T, T v>
+    template <auto v>
     struct constant
     {
-        using type = T;
-        static constexpr T value = v;
+        using type = decltype(v);
+        static constexpr auto value = v;
     };
 
     // Identity metafunction.
@@ -64,13 +64,22 @@ namespace stdext
     // A list of types.
     template <class...> struct type_list { };
 
+    // A list of values.
+    template <auto...> struct value_list { };
+
     // Retrieve the first element from a list.
     template <class List> struct list_head;
     template <class List> using list_head_t = typename list_head<List>::type;
+    template <class List> constexpr auto list_head_v = list_head<List>::value;
     template <class T, class... Ts>
     struct list_head<type_list<T, Ts...>>
     {
         using type = T;
+    };
+    template <auto v, auto... vs>
+    struct list_head<value_list<v, vs...>>
+    {
+        static constexpr auto value = v;
     };
 
     // Retrieve the list of all elements except the first from a list.
@@ -81,6 +90,11 @@ namespace stdext
     {
         using type = type_list<Ts...>;
     };
+    template <auto v, auto... vs>
+    struct list_tail<value_list<v, vs...>>
+    {
+        using type = value_list<vs...>;
+    };
 
     // Retrieve the length of a list.
     template <class List> struct list_length;
@@ -90,19 +104,35 @@ namespace stdext
     {
         static constexpr size_t value = sizeof...(Ts);
     };
+    template <auto... vs>
+    struct list_length<value_list<vs...>>
+    {
+        static constexpr size_t value = sizeof...(vs);
+    };
 
     // Retrieve the nth element from a list.
     template <class List, size_t n> struct list_element;
     template <class List, size_t n> using list_element_t = typename list_element<List, n>::type;
+    template <class List, size_t n> constexpr auto list_element_v = list_element<List, n>::value;
+    template <class T, class... Ts, size_t n>
+    struct list_element<type_list<T, Ts...>, n>
+    {
+        using type = list_element_t<type_list<Ts...>, n - 1>;
+    };
     template <class T, class... Ts>
     struct list_element<type_list<T, Ts...>, 0>
     {
         using type = T;
     };
-    template <class T, class... Ts, size_t n>
-    struct list_element<type_list<T, Ts...>, n>
+    template <auto v, auto... vs, size_t n>
+    struct list_element<value_list<v, vs...>, n>
     {
-        using type = list_element_t<type_list<Ts...>, n - 1>;
+        static constexpr auto value = list_element_v<value_list<vs...>, n - 1>;
+    };
+    template <auto v, auto... vs>
+    struct list_element<value_list<v, vs...>, 0>
+    {
+        static constexpr auto value = v;
     };
 
     // Find the index of an element in the list; returns list_length<List> if the element can't be found.
@@ -111,17 +141,32 @@ namespace stdext
     template <class T0, class... Ts, class T>
     struct list_index_of<type_list<T0, Ts...>, T>
     {
-        static constexpr auto value = list_index_of<type_list<Ts...>, T>::value + 1;
+        static constexpr auto value = list_index_of_v<type_list<Ts...>, T> + 1;
     };
     template <class T, class... Ts>
     struct list_index_of<type_list<T, Ts...>, T>
     {
-        static constexpr auto value = 0;
+        static constexpr size_t value = 0;
     };
     template <class... Ts, class T>
     struct list_index_of<type_list<Ts...>, T>
     {
         static constexpr auto value = sizeof...(Ts);
+    };
+    template <auto v0, auto... vs, auto v>
+    struct list_index_of<value_list<v0, vs...>, constant<v>>
+    {
+        static constexpr auto value = list_index_of_v<value_list<vs...>, constant<v>> + 1;
+    };
+    template <auto v, auto... vs>
+    struct list_index_of<value_list<v, vs...>, constant<v>>
+    {
+        static constexpr size_t value = 0;
+    };
+    template <auto... vs, auto v>
+    struct list_index_of<value_list<vs...>, constant<v>>
+    {
+        static constexpr auto value = sizeof...(vs);
     };
 
     // Add a new element to the front of a list.
@@ -132,6 +177,11 @@ namespace stdext
     {
         using type = type_list<T, Ts...>;
     };
+    template <auto... vs, auto v>
+    struct list_prepend<value_list<vs...>, constant<v>>
+    {
+        using type = value_list<v, vs...>;
+    };
 
     // Add a new element to the back of alist.
     template <class T, class List> struct list_append;
@@ -141,19 +191,34 @@ namespace stdext
     {
         using type = type_list<Ts..., T>;
     };
+    template <auto... vs, auto v>
+    struct list_append<value_list<vs...>, constant<v>>
+    {
+        using type = value_list<vs..., v>;
+    };
 
     // Construct a list containing all of the elements of several other lists.
     template <class... Lists> struct list_concat;
     template <class... Lists> using list_concat_t = typename list_concat<Lists...>::type;
+    template <class... Ts, class... Us, class... Lists>
+    struct list_concat<type_list<Ts...>, type_list<Us...>, Lists...>
+    {
+        using type = typename list_concat<type_list<Ts..., Us...>, Lists...>::type;
+    };
     template <class... Ts>
     struct list_concat<type_list<Ts...>>
     {
         using type = type_list<Ts...>;
     };
-    template <class... Ts, class... Us, class... Lists>
-    struct list_concat<type_list<Ts...>, type_list<Us...>, Lists...>
+    template <auto... vs, auto... ws, class... Lists>
+    struct list_concat<value_list<vs...>, value_list<ws...>, Lists...>
     {
-        using type = typename list_concat<type_list<Ts..., Us...>, Lists...>::type;
+        using type = typename list_concat<value_list<vs..., ws...>, Lists...>::type;
+    };
+    template <auto... vs>
+    struct list_concat<value_list<vs...>>
+    {
+        using type = value_list<vs...>;
     };
 
     // Retrieve the list of the first n elements in a list.
@@ -169,6 +234,16 @@ namespace stdext
     {
         using type = type_list<>;
     };
+    template <auto v0, auto... vs, size_t n>
+    struct list_take<value_list<v0, vs...>, n>
+    {
+        using type = list_prepend_t<list_take_t<value_list<vs...>, n - 1>, constant<v0>>;
+    };
+    template <auto... vs>
+    struct list_take<value_list<vs...>, 0>
+    {
+        using type = value_list<>;
+    };
 
     // Retrieve the list of all elements after the first n elements in a list.
     template <class List, size_t n> struct list_drop;
@@ -183,14 +258,29 @@ namespace stdext
     {
         using type = type_list<Ts...>;
     };
+    template <auto v0, auto... vs, size_t n>
+    struct list_drop<value_list<v0, vs...>, n>
+    {
+        using type = list_drop_t<value_list<vs...>, n - 1>;
+    };
+    template <auto... vs>
+    struct list_drop<value_list<vs...>, 0>
+    {
+        using type = value_list<vs...>;
+    };
 
     // Insert the given element into a list at the given location.
     template <class List, size_t n, class T> struct list_insert_element;
     template <class List, size_t n, class T> using list_insert_element_t = typename list_insert_element<List, n, T>::type;
-    template <class List, size_t n, class T>
-    struct list_insert_element
+    template <class... Ts, size_t n, class T>
+    struct list_insert_element<type_list<Ts...>, n, T>
     {
-        using type = list_concat_t<list_take_t<List, n>, type_list<T>, list_drop_t<List, n>>;
+        using type = list_concat_t<list_take_t<type_list<Ts...>, n>, type_list<T>, list_drop_t<type_list<Ts...>, n>>;
+    };
+    template <auto... vs, size_t n, auto v>
+    struct list_insert_element<value_list<vs...>, n, constant<v>>
+    {
+        using type = list_concat_t<list_take_t<value_list<vs...>, n>, value_list<v>, list_drop_t<value_list<vs...>, n>>;
     };
 
     // Insert the given elements into a list at the given locations.
@@ -216,6 +306,11 @@ namespace stdext
     {
         using type = type_list<list_prepend_t<Lists, Ts>...>;
     };
+    template <class... Lists, auto... vs>
+    struct list_prepend_lists<type_list<Lists...>, value_list<vs...>>
+    {
+        using type = type_list<list_prepend_t<Lists, constant<vs>>...>;
+    };
 
     // Given a list of lists and a list of values, construct a list of lists, each constructed by appending a value onto its corresponding list.
     template <class Lists, class List> struct list_append_lists;
@@ -224,6 +319,11 @@ namespace stdext
     struct list_append_lists<type_list<Lists...>, type_list<Ts...>>
     {
         using type = type_list<list_append_t<Lists, Ts>...>;
+    };
+    template <class... Lists, auto... vs>
+    struct list_append_lists<type_list<Lists...>, value_list<vs...>>
+    {
+        using type = type_list<list_append_t<Lists, constant<vs>>...>;
     };
 
     // Given several lists of lists, construct a list of lists, each constructed by concatenating corresponding lists.
@@ -357,12 +457,12 @@ namespace stdext
     template <class T, T start>
     struct iota_list<0, T, start>
     {
-        using type = type_list<>;
+        using type = value_list<>;
     };
     template <size_t length, class T, T start>
     struct iota_list
     {
-        using type = list_prepend_t<iota_list_t<length - 1, T, start + 1>, constant<T, start>>;
+        using type = list_prepend_t<iota_list_t<length - 1, T, start + 1>, constant<start>>;
     };
 }
 
