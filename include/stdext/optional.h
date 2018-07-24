@@ -18,7 +18,7 @@
 
 #include <cstddef>
 
-#ifdef _MSC_VER
+#if STDEXT_COMPILER_MSVC
 #pragma warning(push)
 #pragma warning(disable:4814)   // constexpr does not imply const in C++14
 #endif
@@ -409,7 +409,7 @@ namespace std
     };
 }
 
-#ifdef _MSC_VER
+#if STDEXT_COMPILER_MSVC
 #pragma warning(pop)
 #endif
 

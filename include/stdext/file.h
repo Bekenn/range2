@@ -19,7 +19,7 @@
 
 namespace stdext
 {
-#ifdef _WIN32
+#if STDEXT_PLATFORM_WINDOWS
     using file_handle_t = void*;
 #else
     using file_handle_t = int;
