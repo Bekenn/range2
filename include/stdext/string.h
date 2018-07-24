@@ -13,6 +13,8 @@
 #include <stdext/generator.h>
 #include <stdext/string_view.h>
 
+#include <string>
+
 
 namespace stdext
 {
@@ -69,6 +71,10 @@ namespace stdext
         return make_terminated_generator(forward<Iterator>(i),
             cstring_termination_predicate<iterator_value_type_t<::std::decay_t<Iterator>>>);
     }
+
+    // Conversion between narrow and wide execution character sets
+    std::string to_mbstring(const wchar_t* str);
+    std::wstring to_wstring(const char* str);
 }
 
 #endif

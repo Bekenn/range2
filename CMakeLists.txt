@@ -12,7 +12,7 @@ target_compile_features(stdext PUBLIC cxx_std_17)
 set_target_properties(stdext PROPERTIES CXX_EXTENSIONS OFF)
 
 if(WIN32)
-    target_compile_definitions(stdext PRIVATE _UNICODE UNICODE)
+    target_compile_definitions(stdext PRIVATE _UNICODE UNICODE _CRT_SECURE_NO_WARNINGS)
 endif()
 
 if(MSVC)
