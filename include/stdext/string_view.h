@@ -222,8 +222,8 @@ namespace stdext
         {
             if (pos > length())
                 throw ::std::out_of_range("string index out of range");
-            n = ::std::min(n, length());
-            return basic_string_view(this->data() + pos, n - pos);
+            n = ::std::min(n, length() - pos);
+            return basic_string_view(this->data() + pos, n);
         }
 
         auto compare(basic_string_view str)
