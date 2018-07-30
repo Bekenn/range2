@@ -132,4 +132,16 @@
 #define STDEXT_PLATFORM_LINUX 1
 #endif
 
+// Feature detection
+#ifndef __has_include
+#define __has_include(x) 0
+#endif
+
+#define STDEXT_HAS_C_UNICODE 0
+
+#if __has_include(<cuchar>)
+#undef STDEXT_HAS_C_UNICODE
+#define STDEXT_HAS_C_UNICODE 1
+#endif
+
 #endif
