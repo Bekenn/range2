@@ -109,17 +109,15 @@ namespace stdext
     template <class Generator> using generator_reference_type_t = generator_type_t<Generator, is_generator>;
 
     template <class Generator, class Consumer, REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
-    size_t operator >> (Generator&& g, Consumer&& c)
+    bool operator >> (Generator&& g, Consumer&& c)
     {
-        size_t count = 0;
         for (decltype(auto) gen = as_generator(forward<Generator>(g)); gen; ++gen)
         {
             if (!c(*gen))
-                break;
-            ++count;
+                return false;
         }
 
-        return count;
+        return true;
     }
 
     template <class Iterator>
