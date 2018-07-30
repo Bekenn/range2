@@ -447,19 +447,19 @@ namespace stdext
     class memory_stream_base : public seekable
     {
     private:
-        using _void = preserve_const_t<::std::remove_pointer_t<Pointer>, void>;
+        using _uint8_t = preserve_const_t<::std::remove_pointer_t<Pointer>, uint8_t>;
 
     private:
         memory_stream_base() = default; // not used
     protected:
-        memory_stream_base(_void* buffer, size_t size) noexcept
+        memory_stream_base(_uint8_t* buffer, size_t size) noexcept
             : current(static_cast<Pointer>(buffer)), first(current), last(first + size)
         {
         }
         ~memory_stream_base() override;
 
     public:
-        void reset(_void* buffer, size_t size) noexcept
+        void reset(_uint8_t* buffer, size_t size) noexcept
         {
             first = current = static_cast<Pointer>(buffer);
             last = first + size;
@@ -594,7 +594,7 @@ namespace stdext
     class memory_input_stream : public memory_stream_base<const uint8_t*>, public memory_input_stream_base<memory_input_stream>, public input_stream
     {
     public:
-        memory_input_stream(const void* buffer, size_t size) noexcept
+        memory_input_stream(const uint8_t* buffer, size_t size) noexcept
             : memory_stream_base<const uint8_t*>(buffer, size)
         {
         }
@@ -617,7 +617,7 @@ namespace stdext
     class memory_output_stream : public memory_stream_base<uint8_t*>, public memory_output_stream_base<memory_output_stream>, public output_stream
     {
     public:
-        memory_output_stream(void* buffer, size_t size) noexcept
+        memory_output_stream(uint8_t* buffer, size_t size) noexcept
             : memory_stream_base<uint8_t*>(buffer, size)
         {
         }
@@ -634,7 +634,7 @@ namespace stdext
     class memory_stream : public memory_stream_base<uint8_t*>, public memory_input_stream_base<memory_stream>, public memory_output_stream_base<memory_stream>, public stream
     {
     public:
-        memory_stream(void* buffer, size_t size) noexcept
+        memory_stream(uint8_t* buffer, size_t size) noexcept
             : memory_stream_base<uint8_t*>(buffer, size)
         {
         }
