@@ -99,53 +99,12 @@ namespace stdext
         return write(s, buffer, length);
     }
 
-    inline namespace literals
-    {
-        inline namespace endian
-        {
-            // Given an input of 'ABCD', returns the integer value corresponding to the bytes
-            // 'A', 'B', 'C', and 'D', in that order.
-            constexpr uint32_t operator ""_4cc(const char* str, size_t size)
-            {
-                static_assert(byte_order::native_endian == byte_order::little_endian
-                              || byte_order::native_endian == byte_order::big_endian
-                              || byte_order::native_endian == byte_order::pdp_endian,
-                              "Unknown edianness.");
-
-                if (size != 4)
-                    throw "_4cc literal must have four characters";
-
-                if constexpr (byte_order::native_endian == byte_order::little_endian)
-                {
-                    return uint32_t(str[3]) << 24
-                        | uint32_t(str[2]) << 16
-                        | uint32_t(str[1]) << 8
-                        | uint32_t(str[0]);
-                }
-                if constexpr (byte_order::native_endian == byte_order::big_endian)
-                {
-                    return uint32_t(str[0]) << 24
-                        | uint32_t(str[1]) << 16
-                        | uint32_t(str[2]) << 8
-                        | uint32_t(str[0]);
-                }
-                if constexpr (byte_order::native_endian == byte_order::pdp_endian)
-                {
-                    return uint32_t(str[1]) << 24
-                        | uint32_t(str[0]) << 16
-                        | uint32_t(str[3]) << 8
-                        | uint32_t(str[2]);
-                }
-            }
-        }
-    }
-
     namespace detail
     {
         template <byte_order order, class T>
         struct endian
         {
-            static T swap(T v)
+            static constexpr T swap(T v)
             {
                 return endian<order, ::std::make_unsigned_t<T>>::swap(v);
             }
@@ -154,7 +113,7 @@ namespace stdext
         template <class T>
         struct endian<byte_order::native_endian, T>
         {
-            static T swap(T v)
+            static constexpr T swap(T v)
             {
                 return v;
             }
@@ -163,7 +122,7 @@ namespace stdext
         template <byte_order order>
         struct endian<order, uint8_t>
         {
-            static uint8_t swap(uint8_t v)
+            static constexpr uint8_t swap(uint8_t v)
             {
                 return v;
             }
@@ -172,7 +131,7 @@ namespace stdext
         template <>
         struct endian<byte_order::native_endian, uint8_t>
         {
-            static uint8_t swap(uint8_t v)
+            static constexpr uint8_t swap(uint8_t v)
             {
                 return v;
             }
@@ -182,7 +141,7 @@ namespace stdext
         template <>
         struct endian<byte_order::little_endian, uint16_t>
         {
-            static uint16_t swap(uint16_t v)
+            static constexpr uint16_t swap(uint16_t v)
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap16(v);
@@ -195,7 +154,7 @@ namespace stdext
         template <>
         struct endian<byte_order::little_endian, uint32_t>
         {
-            static uint32_t swap(uint32_t v)
+            static constexpr uint32_t swap(uint32_t v)
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap32(v);
@@ -208,7 +167,7 @@ namespace stdext
         template <>
         struct endian<byte_order::little_endian, uint64_t>
         {
-            static uint64_t swap(uint64_t v)
+            static constexpr uint64_t swap(uint64_t v)
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap64(v);
@@ -223,7 +182,7 @@ namespace stdext
         template <>
         struct endian<byte_order::big_endian, uint16_t>
         {
-            static uint16_t swap(uint16_t v)
+            static constexpr uint16_t swap(uint16_t v)
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap16(v);
@@ -238,7 +197,7 @@ namespace stdext
         template <>
         struct endian<byte_order::big_endian, uint32_t>
         {
-            static uint32_t swap(uint32_t v)
+            static constexpr uint32_t swap(uint32_t v)
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap32(v);
@@ -253,7 +212,7 @@ namespace stdext
         template <>
         struct endian<byte_order::big_endian, uint64_t>
         {
-            static uint64_t swap(uint64_t v)
+            static constexpr uint64_t swap(uint64_t v)
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap64(v);
@@ -270,7 +229,7 @@ namespace stdext
         template <>
         struct endian<byte_order::pdp_endian, uint16_t>
         {
-            static uint16_t swap(uint16_t v)
+            static constexpr uint16_t swap(uint16_t v)
             {
                 return endian<byte_order::little_endian, uint16_t>::swap(v);
             }
@@ -279,7 +238,7 @@ namespace stdext
         template <>
         struct endian<byte_order::pdp_endian, uint32_t>
         {
-            static uint32_t swap(uint32_t v)
+            static constexpr uint32_t swap(uint32_t v)
             {
 #if STDEXT_LITTLE_ENDIAN
                 return (uint32_t(endian<byte_order::little_endian, uint16_t>::swap(uint16_t(v))) << 16)
@@ -296,7 +255,7 @@ namespace stdext
         template <>
         struct endian<byte_order::pdp_endian, uint64_t>
         {
-            static uint64_t swap(uint64_t v)
+            static constexpr uint64_t swap(uint64_t v)
             {
 #if STDEXT_LITTLE_ENDIAN
                 return (uint64_t(endian<byte_order::pdp_endian, uint32_t>::swap(uint32_t(v))) << 32)
@@ -310,6 +269,76 @@ namespace stdext
             }
         };
 #endif
+    }
+
+    inline namespace literals
+    {
+        inline namespace endian
+        {
+            // Given an input of 'ABCD', returns the integer value corresponding to the bytes
+            // 'A', 'B', 'C', and 'D', in that order.
+            constexpr uint32_t operator ""_4cc(const char* str, size_t size)
+            {
+                static_assert(byte_order::native_endian == byte_order::little_endian
+                              || byte_order::native_endian == byte_order::big_endian
+                              || byte_order::native_endian == byte_order::pdp_endian,
+                              "Unknown edianness.");
+
+                if (size != 4)
+                    throw "_4cc literal must have four characters";
+
+                return swap<byte_order::big_endian>(
+                    uint32_t(str[0]) << 24
+                    | uint32_t(str[1]) << 16
+                    | uint32_t(str[2]) << 8
+                    | uint32_t(str[0]));
+            }
+
+            constexpr uint16_t operator ""_le16(unsigned long long v)
+            {
+                return swap<byte_order::little_endian>(uint16_t(v));
+            }
+
+            constexpr uint16_t operator ""_be16(unsigned long long v)
+            {
+                return swap<byte_order::big_endian>(uint16_t(v));
+            }
+
+            constexpr uint16_t operator ""_pdp16(unsigned long long v)
+            {
+                return swap<byte_order::pdp_endian>(uint16_t(v));
+            }
+
+            constexpr uint32_t operator ""_le32(unsigned long long v)
+            {
+                return swap<byte_order::little_endian>(uint32_t(v));
+            }
+
+            constexpr uint32_t operator ""_be32(unsigned long long v)
+            {
+                return swap<byte_order::big_endian>(uint32_t(v));
+            }
+
+            constexpr uint32_t operator ""_pdp32(unsigned long long v)
+            {
+                return swap<byte_order::pdp_endian>(uint32_t(v));
+            }
+
+            constexpr uint64_t operator ""_le64(unsigned long long v)
+            {
+                return swap<byte_order::little_endian>(uint64_t(v));
+            }
+
+            constexpr uint64_t operator ""_be64(unsigned long long v)
+            {
+                return swap<byte_order::big_endian>(uint64_t(v));
+            }
+
+            constexpr uint64_t operator ""_pdp64(unsigned long long v)
+            {
+                return swap<byte_order::pdp_endian>(uint64_t(v));
+            }
+        }
     }
 }
 
