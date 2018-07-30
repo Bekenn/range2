@@ -1922,7 +1922,7 @@ namespace stdext
         return range_generator<Range>(range);
     }
 
-    template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value)>
+    template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value && !is_range<RangeProvider>::value)>
     auto make_generator(RangeProvider& range)
     {
         using I = ::std::decay_t<decltype(begin(range))>;
