@@ -74,7 +74,7 @@ namespace stdext
         template <class U, size_t size,
             REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
             && std::is_convertible_v<U*, const T*>)>
-        const_array_view& operator = (U(&a)[size]) { begin_pos(a); end_pos(a + size); return *this; }
+        const_array_view& operator = (U(&a)[size]) { this->begin_pos(a); this->end_pos(a + size); return *this; }
         auto data() const noexcept { return this->begin(); }
         bool empty() const noexcept { return this->begin() == this->end(); }
 

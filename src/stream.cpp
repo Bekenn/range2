@@ -23,6 +23,27 @@ namespace stdext
     memory_output_stream::~memory_output_stream() = default;
     memory_stream::~memory_stream() = default;
 
+    stream_position seekable::seek(seek_from from, stream_offset offset)
+    {
+        stream_position p;
+
+        switch (from)
+        {
+        case seek_from::begin:
+            p = offset;
+            break;
+        case seek_from::current:
+            p = position() + offset;
+            break;
+        case seek_from::end:
+            p = end_position() + offset;
+            break;
+        }
+
+        set_position(p);
+        return p;
+    }
+
     extern string_stream_consumer& strout()
     {
         static string_stream_consumer strout(out());

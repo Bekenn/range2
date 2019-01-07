@@ -18,8 +18,12 @@
 #include <system_error>
 
 #include <cerrno>
+#include <climits>
 #include <cwchar>
 
+#if STDEXT_HAS_C_UNICODE
+#include <cuchar>
+#endif
 
 namespace stdext
 {
@@ -81,6 +85,26 @@ namespace stdext
     std::string to_mbstring(const wchar_t* str);
     std::wstring to_wstring(const char* str);
 
+    namespace detail
+    {
+#if STDEXT_HAS_C_UNICODE
+        inline size_t to_mb(char* s, char16_t c16, std::mbstate_t* ps)
+        {
+            return std::c16rtomb(s, c16, ps);
+        }
+
+        inline size_t to_mb(char* s, char32_t c32, std::mbstate_t* ps)
+        {
+            return std::c32rtomb(s, c32, ps);
+        }
+#endif
+
+        inline size_t to_mb(char* s, wchar_t wc, std::mbstate_t* ps)
+        {
+            return std::wcrtomb(s, wc, ps);
+        }
+    }
+
     template <class Generator>
     class to_multibyte_generator
     {
@@ -93,16 +117,17 @@ namespace stdext
         using generator = Generator;
 
     public:
-        to_multibyte_generator() noexcept : _g(), _state(), _value() { }
-        to_multibyte_generator(const generator& g) : _g(g), _state(), _value() { next(); }
-        to_multibyte_generator(generator&& g) : _g(move(g)), _state(), _value() { next(); }
+        to_multibyte_generator() = default;
+        to_multibyte_generator(const generator& g) : _g(g) { next(); }
+        to_multibyte_generator(generator&& g) : _g(move(g)) { next(); }
 
     public:
         friend bool operator == (const to_multibyte_generator& a, const to_multibyte_generator& b) noexcept
         {
             return a._g == b._g
                 && a._state == b._state
-                && a._value == b._value;
+                && a._current == b._current
+                && std::equal(a._value + a._current, a._value + lengthof(a._value), b._value);
         }
 
         friend bool operator != (const to_multibyte_generator& a, const to_multibyte_generator& b) noexcept
@@ -114,18 +139,19 @@ namespace stdext
         {
             swap(a._g, b._g);
             swap(a._state, b._state);
+            swap(a._current, b._current);
             swap(a._value, b._value);
         }
 
     public:
         reference operator * () const noexcept
         {
-            return _value;
+            return _value[_current];
         }
 
         pointer operator -> () const noexcept
         {
-            return &_value;
+            return &_value[_current];
         }
 
         to_multibyte_generator& operator ++ ()
@@ -143,23 +169,33 @@ namespace stdext
 
         explicit operator bool() const noexcept
         {
-            return _g || !mbsinit(&_state);
+            return _g || _current == lengthof(_value);
         }
 
     private:
         void next()
         {
-            const wchar_t* src = &*_g;
-            if (wcsrtombs(&_value, &src, 1, &_state) == size_t(-1))
-                throw std::system_error(errno, std::generic_category());
-            if (src != &*_g)
+            if (_current == lengthof(_value))
+            {
+                assert(bool(_g));
+                auto length = detail::to_mb(_value, *_g, &_state);
                 ++_g;
+                if (length == size_t(-1))
+                    throw std::system_error(errno, std::generic_category());
+
+                _current = lengthof(_value) - length;
+                std::move(_value, _value + length, _value + _current);
+                return;
+            }
+
+            ++_current;
         }
 
     private:
-        generator _g;
-        mbstate_t _state;
-        value_type _value;
+        generator _g = { };
+        std::mbstate_t _state = { };
+        size_t _current = lengthof(_value);
+        value_type _value[MB_LEN_MAX] = { };
     };
 
     template <class Generator>
@@ -230,11 +266,15 @@ namespace stdext
     private:
         void next()
         {
-            const char* src = &*_g;
-            if (mbsrtowcs(&_value, &src, 1, &_state) == size_t(-1))
-                throw std::system_error(errno, std::generic_category());
-            if (src != &*_g)
+            size_t result;
+            do
+            {
+                assert(bool(_g));
+                result = std::mbrtowc(&_value, &*_g, 1, &_state);
                 ++_g;
+                if (result == size_t(-1))
+                    throw std::system_error(errno, std::generic_category());
+            } while (result == size_t(-2));
         }
 
     private:

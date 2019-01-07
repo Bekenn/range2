@@ -171,10 +171,12 @@ namespace stdext
         virtual ~seekable();
 
     public:
-        virtual stream_position seek(seek_from from, stream_offset offset) = 0;
+        virtual stream_position position() const = 0;
+        virtual stream_position end_position() const = 0;
 
-        stream_position position() { return seek(seek_from::current, 0); }
         virtual void set_position(stream_position position) = 0;
+
+        stream_position seek(seek_from from, stream_offset offset);
     };
 
 
@@ -466,37 +468,14 @@ namespace stdext
         }
 
     public:
-        stream_position seek(seek_from from, stream_offset offset) override
+        stream_position position() const override
         {
-            Pointer location;
-
-            switch (from)
-            {
-            case seek_from::begin:
-                if (offset < 0)
-                    throw ::std::invalid_argument("negative offset for seek_from::begin");
-                location = first + offset;
-                break;
-
-            case seek_from::current:
-                location = current + offset;
-                break;
-
-            case seek_from::end:
-                if (offset > 0)
-                    throw ::std::invalid_argument("positive offset for seek_from::end");
-                location = last + offset;
-                break;
-
-            default:
-                throw ::std::invalid_argument("invalid from value");
-            }
-
-            if (location < first || location > last)
-                throw ::std::invalid_argument("offset out of range");
-
-            current = location;
             return current - first;
+        }
+
+        stream_position end_position() const override
+        {
+            return last - first;
         }
 
         void set_position(stream_position position) override

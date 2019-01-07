@@ -85,34 +85,26 @@ namespace stdext
             handle = INVALID_HANDLE_VALUE;
         }
 
-        stream_position file_stream_base::seek(seek_from from, stream_offset offset)
+        stream_position file_stream_base::position() const
         {
             assert(is_open());
 
-            LARGE_INTEGER distance;
-            distance.QuadPart = offset;
-
-            DWORD method;
-            switch (from)
-            {
-            case seek_from::begin:
-                method = FILE_BEGIN;
-                break;
-
-            case seek_from::current:
-                method = FILE_CURRENT;
-                break;
-
-            case seek_from::end:
-                method = FILE_END;
-                break;
-            }
-
-            LARGE_INTEGER position;
-            if (!::SetFilePointerEx(handle, distance, &position, method))
+            LARGE_INTEGER pos;
+            if (!::SetFilePointerEx(handle, {}, &pos, FILE_CURRENT))
                 throw std::system_error(::GetLastError(), std::system_category());
 
-            return position.QuadPart;
+            return pos.QuadPart;
+        }
+
+        stream_position file_stream_base::end_position() const
+        {
+            assert(is_open());
+
+            LARGE_INTEGER size;
+            if (!::GetFileSizeEx(handle, &size))
+                throw std::system_error(::GetLastError(), std::system_category());
+
+            return size.QuadPart;
         }
 
         void file_stream_base::set_position(stream_position position)

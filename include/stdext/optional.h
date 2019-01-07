@@ -40,6 +40,7 @@ namespace stdext
     // 5.6, Class bad_optional_access
     class bad_optional_access : public ::std::logic_error
     {
+    public:
         bad_optional_access() : logic_error("attempted to access empty optional") { }
     };
 
@@ -134,7 +135,7 @@ namespace stdext
             }
             return *this;
         }
-        optional& operator=(optional&&) noexcept(::std::is_nothrow_move_assignable<T>::value)
+        optional& operator=(optional&& rhs) noexcept(::std::is_nothrow_move_assignable<T>::value)
         {
             if (initialized)
             {
@@ -207,41 +208,41 @@ namespace stdext
         constexpr bool has_value() const { return initialized; }
         constexpr T const& value() const &
         {
-            return initialized ? *reinterpret_cast<T&>(storage) : throw bad_optional_access();
+            return initialized ? reinterpret_cast<const T&>(this->storage) : throw bad_optional_access();
         }
         constexpr T& value() &
         {
-            return initialized ? *reinterpret_cast<T&>(storage) : throw bad_optional_access();
+            return initialized ? reinterpret_cast<T&>(this->storage) : throw bad_optional_access();
         }
         constexpr T&& value() &&
         {
-            return initialized ? *reinterpret_cast<T&>(storage) : throw bad_optional_access();
+            return initialized ? reinterpret_cast<T&&>(this->storage) : throw bad_optional_access();
         }
         constexpr const T&& value() const &&
         {
-            return initialized ? *reinterpret_cast<T&>(storage) : throw bad_optional_access();
+            return initialized ? reinterpret_cast<const T&&>(this->storage) : throw bad_optional_access();
         }
         template <class U, REQUIRES(::std::is_copy_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) const &
         {
-            return initialized ? *reinterpret_cast<T&>(storage) : static_cast<T>(forward<U>(v));
+            return initialized ? reinterpret_cast<T&>(this->storage) : static_cast<T>(forward<U>(v));
         }
         template <class U, REQUIRES(::std::is_move_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) &&
         {
-            return initialized ? move(*reinterpret_cast<T&>(storage)) : static_cast<T>(forward<U>(v));
+            return initialized ? reinterpret_cast<T&&>(this->storage) : static_cast<T>(forward<U>(v));
         }
 
     private:
         template <class... Args>
-        void construct()
+        void construct(Args&&... args)
         {
-            new(&storage) T(forward<Args>(args)...);
+            new(&this->storage) T(forward<Args>(args)...);
         }
 
         void destroy()
         {
-            reinterpret_cast<T&>(storage).~T();
+            reinterpret_cast<T&>(this->storage).~T();
         }
     };
 
@@ -348,7 +349,7 @@ namespace stdext
     }
     template <class T> constexpr bool operator!=(const T& v, const optional<T>& x)
     {
-        return !(x == v)
+        return !(x == v);
     }
     template <class T> constexpr bool operator<(const optional<T>& x, const T& v)
     {

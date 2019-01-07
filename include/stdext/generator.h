@@ -11,6 +11,7 @@
 #pragma once
 
 #include <stdext/consumer.h>
+#include <stdext/optional.h>
 
 #include <cassert>
 
@@ -120,6 +121,28 @@ namespace stdext
         return true;
     }
 
+    template <class Generator, class ValueType>
+    class basic_generator
+    {
+    public:
+        using iterator_category = generator_tag;
+        using value_type = ValueType;
+        using difference_type = ptrdiff_t;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+
+    public:
+        reference operator * () const { return self().get(); }
+        pointer operator -> () const { return &self().get(); }
+        Generator& operator ++ () { self().next(); return self(); }
+        auto operator ++ (int) { iterator_proxy<Generator> temp(self().get()); self().next(); return temp; }
+        explicit operator bool() const { return !self().done(); }
+
+    private:
+        const Generator& self() const noexcept { return static_cast<const Generator&>(*this); }
+        Generator& self() noexcept { return static_cast<Generator&>(*this); }
+    };
+
     template <class Iterator>
     class iterator_generator
     {
@@ -184,12 +207,12 @@ namespace stdext
         sentinel j;
     };
 
-    template <class Function>
+    template <class Function, class R = decltype(std::declval<Function&>()())>
     class function_generator
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = ::std::remove_cv_t<decltype(::std::declval<Function>()())>;
+        using value_type = ::std::remove_cv_t<R>;
         using difference_type = ptrdiff_t;
         using pointer = const value_type*;
         using reference = const value_type&;
@@ -230,7 +253,56 @@ namespace stdext
 
     private:
         Function f;
-        ::std::remove_const_t<value_type> value;
+        value_type value;
+    };
+
+    template <class Function, class R>
+    class function_generator<Function, optional<R>>
+    {
+    public:
+        using iterator_category = generator_tag;
+        using value_type = ::std::remove_cv_t<R>;
+        using difference_type = ptrdiff_t;
+        using pointer = const value_type*;
+        using reference = const value_type&;
+
+    public:
+        function_generator() : f(), opt() { }
+        explicit function_generator(const Function& f) : f(f), opt(this->f()) { }
+        explicit function_generator(Function&& f) : f(move(f)), opt(this->f()) { }
+
+    public:
+        friend bool operator == (const function_generator& a, const function_generator& b) noexcept
+        {
+            return a.f == b.f
+                && a.opt == b.opt;
+        }
+        friend bool operator != (const function_generator& a, const function_generator& b) noexcept
+        {
+            return !(a == b);
+        }
+
+        friend void swap(function_generator&& a, function_generator&& b)
+        {
+            swap(a.f, b.f);
+            swap(a.opt, b.opt);
+        }
+
+    public:
+        reference operator * () const { return opt.value(); }
+        pointer operator -> () const { return &opt.value(); }
+        function_generator& operator ++ () { opt = f(); return *this; }
+        iterator_proxy<function_generator> operator ++ (int)
+        {
+            iterator_proxy<function_generator> proxy(opt.value());
+            ++*this;
+            return proxy;
+        }
+        explicit operator bool() const { return opt.has_value(); }
+
+    private:
+        Function f;
+        optional<value_type> opt;
     };
 
     template <class T>
@@ -333,7 +405,7 @@ namespace stdext
         return delimited_iterator_generator<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
     }
 
-    template <class Function, REQUIRES(is_callable<::std::decay_t<Function>>::value)>
+    template <class Function, REQUIRES(is_callable<::std::decay_t<Function>()>::value)>
     auto make_generator(Function&& function)
     {
         return function_generator<::std::decay_t<Function>>(forward<Function>(function));

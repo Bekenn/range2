@@ -58,7 +58,8 @@ namespace stdext
             void close() noexcept;
 
         public:
-            stream_position seek(seek_from from, stream_offset offset) override;
+            stream_position position() const override;
+            stream_position end_position() const override;
             void set_position(stream_position position) override;
 
         protected:

@@ -262,6 +262,8 @@ done:
                 case format_type::_unsigned:
                     return write_formatted_integer(out, fmt, uval, type);
             }
+
+            unreachable();
         }
     }
 }

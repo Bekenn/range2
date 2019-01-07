@@ -196,7 +196,7 @@ namespace stdext
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (fmt.length() != 0)
-            throw format_error("Unrecognized format for wstring_view");
+            throw format_error("Unrecognized format for u16string_view");
 
         auto sv = u16string_view(std::forward<Arg>(arg));
         auto generator = make_generator(sv);
@@ -207,7 +207,7 @@ namespace stdext
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (fmt.length() != 0)
-            throw format_error("Unrecognized format for wstring_view");
+            throw format_error("Unrecognized format for u32string_view");
 
         auto sv = u32string_view(std::forward<Arg>(arg));
         auto generator = make_generator(sv);

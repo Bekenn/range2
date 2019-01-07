@@ -87,31 +87,26 @@ namespace stdext
             handle = -1;
         }
 
-        stream_position file_stream_base::seek(seek_from from, stream_offset offset)
+        stream_position file_stream_base::position() const
         {
             assert(is_open());
 
-            int method;
-            switch (from)
-            {
-            case seek_from::begin:
-                method = SEEK_SET;
-                break;
-
-            case seek_from::current:
-                method = SEEK_CUR;
-                break;
-
-            case seek_from::end:
-                method = SEEK_END;
-                break;
-            }
-
-            auto position = ::lseek(handle, offset, method);
-            if (position == -1)
+            auto pos = ::lseek(handle, 0, SEEK_CUR);
+            if (pos == -1)
                 throw std::system_error(errno, std::generic_category());
 
-            return position;
+            return pos;
+        }
+
+        stream_position file_stream_base::end_position() const
+        {
+            assert(is_open());
+
+            struct stat st;
+            if (::fstat(handle, &st) == -1)
+                throw std::system_error(errno, std::generic_category());
+
+            return st.st_size;
         }
 
         void file_stream_base::set_position(stream_position position)

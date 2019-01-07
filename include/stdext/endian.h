@@ -137,7 +137,94 @@ namespace stdext
             }
         };
 
-#if !STDEXT_LITTLE_ENDIAN
+#if STDEXT_LITTLE_ENDIAN
+        template <>
+        struct endian<byte_order::big_endian, uint16_t>
+        {
+            static constexpr uint16_t swap(uint16_t v)
+            {
+#if STDEXT_COMPILER_GCC
+                return __builtin_bswap16(v);
+#else
+                return uint16_t(v << 8 | v >> 8);
+#endif
+            }
+        };
+
+        template <>
+        struct endian<byte_order::big_endian, uint32_t>
+        {
+            static constexpr uint32_t swap(uint32_t v)
+            {
+#if STDEXT_COMPILER_GCC
+                return __builtin_bswap32(v);
+#else
+                return uint32_t(
+                    (v & 0x000000FF) << 24
+                    | (v & 0x0000FF00) << 8
+                    | (v & 0x00FF0000) >> 8
+                    | (v & 0xFF000000) >> 24
+                );
+#endif
+            }
+        };
+
+        template <>
+        struct endian<byte_order::big_endian, uint64_t>
+        {
+            static constexpr uint64_t swap(uint64_t v)
+            {
+#if STDEXT_COMPILER_GCC
+                return __builtin_bswap64(v);
+#else
+                return uint64_t(
+                    (v & 0x00000000'000000FF) << 56
+                    | (v & 0x00000000'0000FF00) << 40
+                    | (v & 0x00000000'00FF0000) << 24
+                    | (v & 0x00000000'FF000000) << 8
+                    | (v & 0x000000FF'00000000) >> 8
+                    | (v & 0x0000FF00'00000000) >> 24
+                    | (v & 0x00FF0000'00000000) >> 40
+                    | (v & 0xFF000000'00000000) >> 56
+                );
+#endif
+            }
+        };
+
+        template <>
+        struct endian<byte_order::pdp_endian, uint16_t>
+        {
+            static constexpr uint16_t swap(uint16_t v)
+            {
+                return v;
+            }
+        };
+
+        template <>
+        struct endian<byte_order::pdp_endian, uint32_t>
+        {
+            static constexpr uint32_t swap(uint32_t v)
+            {
+                return uint32_t(v << 16 | v >> 16);
+            }
+        };
+
+        template <>
+        struct endian<byte_order::pdp_endian, uint64_t>
+        {
+            static constexpr uint64_t swap(uint64_t v)
+            {
+                return uint64_t(
+                    (v & 0x00000000'0000FFFF) << 48
+                    | (v & 0x00000000'FFFF0000) << 16
+                    | (v & 0x0000FFFF'00000000) >> 16
+                    | (v & 0xFFFF0000'00000000) >> 48
+                );
+            }
+        };
+#endif
+
+#if STDEXT_BIG_ENDIAN
         template <>
         struct endian<byte_order::little_endian, uint16_t>
         {
@@ -146,7 +233,7 @@ namespace stdext
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap16(v);
 #else
-#error Implement me
+                return uint16_t(v << 8 | v >> 8);
 #endif
             }
         };
@@ -159,7 +246,12 @@ namespace stdext
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap32(v);
 #else
-#error Implement me
+                return uint32_t(
+                    (v & 0x000000FF) << 24
+                    | (v & 0x0000FF00) << 8
+                    | (v & 0x00FF0000) >> 8
+                    | (v & 0xFF000000) >> 24
+                );
 #endif
             }
         };
@@ -172,13 +264,91 @@ namespace stdext
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap64(v);
 #else
-#error Implement me
+                return uint64_t(
+                    (v & 0x00000000'000000FF) << 56
+                    | (v & 0x00000000'0000FF00) << 40
+                    | (v & 0x00000000'00FF0000) << 24
+                    | (v & 0x00000000'FF000000) << 8
+                    | (v & 0x000000FF'00000000) >> 8
+                    | (v & 0x0000FF00'00000000) >> 24
+                    | (v & 0x00FF0000'00000000) >> 40
+                    | (v & 0xFF000000'00000000) >> 56
+                );
 #endif
+            }
+        };
+
+        template <>
+        struct endian<byte_order::pdp_endian, uint16_t>
+        {
+            static constexpr uint16_t swap(uint16_t v)
+            {
+#if STDEXT_COMPILER_GCC
+                return __builtin_bswap16(v);
+#else
+                return uint16_t(v << 8 | v >> 8);
+#endif
+            }
+        };
+
+        template <>
+        struct endian<byte_order::pdp_endian, uint32_t>
+        {
+            static constexpr uint32_t swap(uint32_t v)
+            {
+                return uint32_t(
+                    (v & 0x00FF00FF) << 8
+                    | (v & 0xFF00FF00) >> 8
+                );
+            }
+        };
+
+        template <>
+        struct endian<byte_order::pdp_endian, uint64_t>
+        {
+            static constexpr uint64_t swap(uint64_t v)
+            {
+                return uint64_t(
+                    (v & 0x00FF00FF'00FF00FF) << 8
+                    | (v & 0xFF00FF00'FF00FF00) >> 8
+                );
             }
         };
 #endif
 
-#if !STDEXT_BIG_ENDIAN
+#if STDEXT_PDP_ENDIAN
+        template <>
+        struct endian<byte_order::little_endian, uint16_t>
+        {
+            static constexpr uint16_t swap(uint16_t v)
+            {
+                return v;
+            }
+        };
+
+        template <>
+        struct endian<byte_order::little_endian, uint32_t>
+        {
+            static constexpr uint32_t swap(uint32_t v)
+            {
+                return uint32_t(v << 16 | v >> 16);
+            }
+        };
+
+        template <>
+        struct endian<byte_order::little_endian, uint64_t>
+        {
+            static constexpr uint64_t swap(uint64_t v)
+            {
+                return uint64_t(
+                    (v & 0x00000000'0000FFFF) << 48
+                    | (v & 0x00000000'FFFF0000) << 16
+                    | (v & 0x0000FFFF'00000000) >> 16
+                    | (v & 0xFFFF0000'00000000) >> 48
+                );
+            }
+        };
+
         template <>
         struct endian<byte_order::big_endian, uint16_t>
         {
@@ -186,10 +356,8 @@ namespace stdext
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap16(v);
-#elif STDEXT_ARCH_X86
-                return _load_be_u16(&v);
 #else
-#error Implement me
+                return uint16_t(v << 8 | v >> 8);
 #endif
             }
         };
@@ -199,13 +367,10 @@ namespace stdext
         {
             static constexpr uint32_t swap(uint32_t v)
             {
-#if STDEXT_COMPILER_GCC
-                return __builtin_bswap32(v);
-#elif STDEXT_ARCH_X86
-                return _load_be_u32(&v);
-#else
-#error Implement me
-#endif
+                return uint32_t(
+                    (v & 0x00FF00FF) << 8
+                    | (v & 0xFF00FF00) >> 8
+                );
             }
         };
 
@@ -216,55 +381,11 @@ namespace stdext
             {
 #if STDEXT_COMPILER_GCC
                 return __builtin_bswap64(v);
-#elif STDEXT_ARCH_X86
-                return _load_be_u64(&v);
 #else
-#error Implement me
-#endif
-            }
-        };
-#endif
-
-#if !STDEXT_PDP_ENDIAN
-        template <>
-        struct endian<byte_order::pdp_endian, uint16_t>
-        {
-            static constexpr uint16_t swap(uint16_t v)
-            {
-                return endian<byte_order::little_endian, uint16_t>::swap(v);
-            }
-        };
-
-        template <>
-        struct endian<byte_order::pdp_endian, uint32_t>
-        {
-            static constexpr uint32_t swap(uint32_t v)
-            {
-#if STDEXT_LITTLE_ENDIAN
-                return (uint32_t(endian<byte_order::little_endian, uint16_t>::swap(uint16_t(v))) << 16)
-                    | endian<byte_order::little_endian, uint16_t>::swap(uint16_t(v >> 16));
-#elif STDEXT_BIG_ENDIAN
-                return (uint32_t(endian<byte_order::little_endian, uint16_t>::swap(uint16_t(v >> 16))) << 16)
-                    | endian<byte_order::little_endian, uint16_t>::swap(uint16_t(v));
-#else
-#error Implement me
-#endif
-            }
-        };
-
-        template <>
-        struct endian<byte_order::pdp_endian, uint64_t>
-        {
-            static constexpr uint64_t swap(uint64_t v)
-            {
-#if STDEXT_LITTLE_ENDIAN
-                return (uint64_t(endian<byte_order::pdp_endian, uint32_t>::swap(uint32_t(v))) << 32)
-                    | endian<byte_order::pdp_endian, uint32_t>::swap(uint32_t(v >> 32));
-#elif STDEXT_BIG_ENDIAN
-                return (uint64_t(endian<byte_order::pdp_endian, uint32_t>::swap(uint32_t(v >> 32))) << 32)
-                    | endian<byte_order::pdp_endian, uint32_t>::swap(uint32_t(v));
-#else
-#error Implement me
+                return uint64_t(
+                    (v & 0x00FF00FF'00FF00FF) << 8
+                    | (v & 0xFF00FF00'FF00FF00) >> 8
+                );
 #endif
             }
         };

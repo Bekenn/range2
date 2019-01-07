@@ -17,6 +17,7 @@ endif()
 
 if(MSVC)
     target_compile_definitions(stdext PUBLIC _SCL_SECURE_NO_WARNINGS)
+    target_compile_options(stdext PRIVATE /permissive-)
 else()
     target_compile_options(stdext PRIVATE -Wno-switch)
 endif()

@@ -37,6 +37,14 @@ namespace stdext
         return size;
     }
 
+    // Run-time invocation of unreachable results in undefined behavior.
+    [[noreturn]] inline void unreachable()
+    {
+#if STDEXT_COMPILER_GCC
+        __builtin_unreachable();
+#endif
+    }
+
     template <class Callback>
     class scope_guard
     {
