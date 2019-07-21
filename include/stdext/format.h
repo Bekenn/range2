@@ -175,7 +175,7 @@ namespace stdext
             : std::is_same_v<Arg, wchar_t> ? detail::format_type::_wchar
             : std::is_signed_v<Arg> ? detail::format_type::_signed
             : detail::format_type::_unsigned;
-        return detail::format_integer(out, fmt, arg, type);
+        return detail::format_integer(std::ref(out), fmt, arg, type);
     }
 
     template <class Consumer, class Arg, REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
