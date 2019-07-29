@@ -21,7 +21,7 @@
 // iterators, all generators should have an iterator_category of generator_tag.
 namespace stdext
 {
-    struct generator_tag : ::std::forward_iterator_tag { };
+    struct generator_tag : std::forward_iterator_tag { };
 
     namespace detail
     {
@@ -30,12 +30,12 @@ namespace stdext
         template <class T>
         struct is_generator_helper<T, true>
         {
-            static constexpr bool value = ::std::is_base_of<iterator_category<T>, generator_tag>::value;
+            static constexpr bool value = std::is_base_of<iterator_category<T>, generator_tag>::value;
         };
     }
 
     template <class T> struct is_generator
-        : ::std::conditional_t<detail::is_generator_helper<T>::value, true_type, false_type>
+        : std::conditional_t<detail::is_generator_helper<T>::value, true_type, false_type>
     { };
     template <class T> constexpr auto is_generator_v = is_generator<T>::value;
 
@@ -48,19 +48,19 @@ namespace stdext
     template <class T> constexpr auto is_generator_adaptable_v = is_generator_adaptable<T>::value;
 
     template <class T> struct can_generate
-        : ::std::conditional_t<is_generator<T>::value || is_generator_adaptable<T>::value,
+        : std::conditional_t<is_generator<T>::value || is_generator_adaptable<T>::value,
             true_type,
             false_type>
     { };
     template <class T> constexpr auto can_generate_v = can_generate<T>::value;
 
-    template <class T, REQUIRES(is_generator<::std::decay_t<T>>::value)>
+    template <class T, STDEXT_REQUIRES(is_generator<std::decay_t<T>>::value)>
     decltype(auto) as_generator(T&& g)
     {
         return forward<T>(g);
     }
 
-    template <class T, REQUIRES(is_generator_adaptable<::std::decay_t<T>>::value)>
+    template <class T, STDEXT_REQUIRES(is_generator_adaptable<std::decay_t<T>>::value)>
     auto as_generator(T&& g)
     {
         return make_generator(forward<T>(g));
@@ -97,7 +97,7 @@ namespace stdext
         template <class Generator>
         struct reference_type_of<Generator, can_generate, true> : reference_type_of<Generator, is_generator>, reference_type_of<Generator, is_generator_adaptable> { };
         template <class Generator>
-        struct generator_type_of<Generator, can_generate, true> { using type = ::std::decay_t<decltype(as_generator(declval<Generator&>()))>; };
+        struct generator_type_of<Generator, can_generate, true> { using type = std::decay_t<decltype(as_generator(declval<Generator&>()))>; };
     }
 
     template <class Generator> using generator_value_type = value_type<Generator, is_generator>;
@@ -109,7 +109,7 @@ namespace stdext
     template <class Generator> using generator_reference_type = generator_type<Generator, is_generator>;
     template <class Generator> using generator_reference_type_t = generator_type_t<Generator, is_generator>;
 
-    template <class Generator, class Consumer, REQUIRES(is_consumer<::std::decay_t<Consumer>(value_type_t<::std::decay_t<Generator>, can_generate>)>::value)>
+    template <class Generator, class Consumer, STDEXT_REQUIRES(is_consumer<std::decay_t<Consumer>(value_type_t<std::decay_t<Generator>, can_generate>)>::value)>
     bool operator >> (Generator&& g, Consumer&& c)
     {
         for (decltype(auto) gen = as_generator(forward<Generator>(g)); gen; ++gen)
@@ -212,7 +212,7 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = ::std::remove_cv_t<R>;
+        using value_type = std::remove_cv_t<R>;
         using difference_type = ptrdiff_t;
         using pointer = const value_type*;
         using reference = const value_type&;
@@ -261,7 +261,7 @@ namespace stdext
     {
     public:
         using iterator_category = generator_tag;
-        using value_type = ::std::remove_cv_t<R>;
+        using value_type = std::remove_cv_t<R>;
         using difference_type = ptrdiff_t;
         using pointer = const value_type*;
         using reference = const value_type&;
@@ -318,10 +318,10 @@ namespace stdext
     public:
         constant_generator() : v() { }
         explicit constant_generator(const value_type& v)
-            noexcept(::std::is_nothrow_copy_constructible<value_type>::value)
+            noexcept(std::is_nothrow_copy_constructible<value_type>::value)
             : v(v) { }
         explicit constant_generator(value_type&& v)
-            noexcept(::std::is_nothrow_move_constructible<value_type>::value)
+            noexcept(std::is_nothrow_move_constructible<value_type>::value)
             : v(move(v)) { }
 
     public:
@@ -370,7 +370,7 @@ namespace stdext
         terminated_generator(iterator&& g, const TerminationPredicate& term)
             : i(move(g)), term(term) { }
         terminated_generator(iterator&& g, TerminationPredicate&& term)
-            : i(::std::move(g)), term(move(term)) { }
+            : i(std::move(g)), term(move(term)) { }
 
     public:
         friend void swap(terminated_generator& a, terminated_generator& b)
@@ -392,36 +392,36 @@ namespace stdext
         TerminationPredicate term;
     };
 
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && !is_generator<::std::decay_t<Iterator>>::value)>
+    template <class Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && !is_generator<std::decay_t<Iterator>>::value)>
     auto make_generator(Iterator&& i)
     {
-        return iterator_generator<::std::decay_t<Iterator>>(forward<Iterator>(i));
+        return iterator_generator<std::decay_t<Iterator>>(forward<Iterator>(i));
     }
 
     template <class Iterator, class Sentinel,
-        REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
+        STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && is_equality_comparable<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
     auto make_generator(Iterator&& i, Sentinel&& j)
     {
-        return delimited_iterator_generator<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
+        return delimited_iterator_generator<std::decay_t<Iterator>, std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
     }
 
-    template <class Function, REQUIRES(is_callable<::std::decay_t<Function>()>::value)>
+    template <class Function, STDEXT_REQUIRES(std::is_invocable_v<std::decay_t<Function>>)>
     auto make_generator(Function&& function)
     {
-        return function_generator<::std::decay_t<Function>>(forward<Function>(function));
+        return function_generator<std::decay_t<Function>>(forward<Function>(function));
     }
 
     template <class T>
     auto make_constant_generator(T&& v)
     {
-        return constant_generator<::std::decay_t<T>>(forward<T>(v));
+        return constant_generator<std::decay_t<T>>(forward<T>(v));
     }
 
     template <class Iterator, class TerminationPredicate,
-    REQUIRES(is_iterator<::std::decay_t<Iterator>>::value && is_callable<::std::decay_t<TerminationPredicate>(iterator_value_type_t<::std::decay_t<Iterator>>), bool>::value)>
+    STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && std::is_invocable_r_v<bool, std::decay_t<TerminationPredicate>, iterator_value_type_t<std::decay_t<Iterator>>>)>
     auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
     {
-        return terminated_generator<::std::decay_t<Iterator>, ::std::decay_t<TerminationPredicate>>
+        return terminated_generator<std::decay_t<Iterator>, std::decay_t<TerminationPredicate>>
             (forward<Iterator>(i), forward<TerminationPredicate>(term));
     }
 }

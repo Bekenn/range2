@@ -18,11 +18,11 @@ namespace stdext
     template <class T> struct is_consumer : false_type { };
     template <class T> constexpr auto is_consumer_v = is_consumer<T>::value;
     template <class T, class Elem>
-    struct is_consumer<T(Elem)> : is_callable<T(Elem), bool> { };
+    struct is_consumer<T(Elem)> : std::is_invocable_r<bool, T, Elem> { };
 
     // I would love to add is_consumer_adaptable, as_consumer, and can_consume, but I can't
     // because there's no way to force is_consumer_adaptable to see make_consumer<Elem> as
-    // a dependent function template.
+    // a dependent function template.  C++20 will do this by default!
 
     template <class Iterator>
     class iterator_consumer
@@ -77,14 +77,14 @@ namespace stdext
     };
 
     template <class Elem, class Iterator,
-        REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value)>
+        STDEXT_REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value)>
     auto make_consumer(Iterator&& i)
     {
         return iterator_consumer<::std::decay_t<Iterator>>(forward<Iterator>(i));
     }
 
     template <class Elem, class Iterator, class Sentinel,
-        REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value
+        STDEXT_REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value
             && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)
     {

@@ -75,31 +75,31 @@ namespace stdext
         constexpr multi_ref(multi_ref&&) = default;
         multi_ref& operator = (multi_ref&&) = delete;
 
-        template <class T, REQUIRES(list_all_of_v<type_list<Interfaces&...>, detail::is_convertible_from<T&>::template templ>)>
+        template <class T, STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces&...>, detail::is_convertible_from<T&>::template templ>)>
         constexpr multi_ref(T& obj) noexcept : interfaces(static_cast<Interfaces&>(obj)...)
         {
         }
 
         template <class... OtherInterfaces,
-            REQUIRES(list_all_of_v<type_list<Interfaces&...>, detail::is_convertible_from_one_of<OtherInterfaces&...>::template templ>)>
+            STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces&...>, detail::is_convertible_from_one_of<OtherInterfaces&...>::template templ>)>
         constexpr multi_ref(const multi_ref<OtherInterfaces...>& ref) noexcept
             : interfaces(ref.template as<std::remove_reference_t<list_find_first_fulfilling_t<type_list<OtherInterfaces&...>, detail::is_convertible_to<Interfaces&>::template templ>>>()...)
         {
         }
 
-        template <size_t count = sizeof...(Interfaces), REQUIRES(count > 1)>
+        template <size_t count = sizeof...(Interfaces), STDEXT_REQUIRES(count > 1)>
         explicit constexpr multi_ref(Interfaces&... refs) noexcept : interfaces(refs...)
         {
         }
 
     public:
-        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
+        template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr Interface& as() const noexcept
         {
             return ::std::get<Interface&>(interfaces);
         }
 
-        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
+        template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr const Interface& as_const() const noexcept
         {
             return ::std::get<Interface&>(interfaces);
@@ -115,7 +115,7 @@ namespace stdext
     public:
         constexpr multi_ptr() = default;
 
-        template <class T, REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from<T*>::template templ>)>
+        template <class T, STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from<T*>::template templ>)>
         constexpr multi_ptr(T* p) noexcept : interfaces(static_cast<Interfaces*>(p)...)
         {
         }
@@ -125,20 +125,20 @@ namespace stdext
         }
 
         template <class... OtherInterfaces,
-            REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
+            STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
         constexpr multi_ptr(const multi_ptr<OtherInterfaces...>& ptr) noexcept
             : interfaces(ptr.template as<std::remove_pointer_t<list_find_first_fulfilling_t<type_list<OtherInterfaces*...>, detail::is_convertible_to<Interfaces*>::template templ>>>()...)
         {
         }
 
         template <class... OtherInterfaces,
-            REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
+            STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
         constexpr multi_ptr(const multi_ref<OtherInterfaces...>* ref) noexcept
             : interfaces(ref == nullptr ? nullptr : &ref->template as<std::remove_pointer_t<list_find_first_fulfilling_t<type_list<OtherInterfaces*...>, detail::is_convertible_to<Interfaces*>::template templ>>>()...)
         {
         }
 
-        template <size_t count = sizeof...(Interfaces), REQUIRES(count > 1)>
+        template <size_t count = sizeof...(Interfaces), STDEXT_REQUIRES(count > 1)>
         explicit constexpr multi_ptr(Interfaces*... ps) noexcept : interfaces(ps...)
         {
             if ((... || (ps == nullptr)) && !(... && (ps == nullptr)))
@@ -146,7 +146,7 @@ namespace stdext
         }
 
     public:
-        template <class T, REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from<T*>::template templ>)>
+        template <class T, STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from<T*>::template templ>)>
         constexpr multi_ptr& operator = (T* p) noexcept
         {
             interfaces = std::make_tuple(static_cast<Interfaces*>(p)...);
@@ -160,7 +160,7 @@ namespace stdext
         }
 
         template <class... OtherInterfaces,
-            REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
+            STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
         constexpr multi_ptr& operator = (const multi_ptr<OtherInterfaces...>& ptr) noexcept
         {
             interfaces = std::make_tuple(ptr.template as<std::remove_pointer_t<list_find_first_fulfilling_t<type_list<OtherInterfaces*...>, detail::is_convertible_to<Interfaces*>::template templ>>>()...);
@@ -168,7 +168,7 @@ namespace stdext
         }
 
         template <class... OtherInterfaces,
-            REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
+            STDEXT_REQUIRES(list_all_of_v<type_list<Interfaces*...>, detail::is_convertible_from_one_of<OtherInterfaces*...>::template templ>)>
         constexpr multi_ptr& operator = (const multi_ref<OtherInterfaces...>* ref) noexcept
         {
             interfaces = std::make_tuple(ref == nullptr ? nullptr : &ref->template as<std::remove_pointer_t<list_find_first_fulfilling_t<type_list<OtherInterfaces*...>, detail::is_convertible_to<Interfaces*>::template templ>>>()...);
@@ -183,13 +183,13 @@ namespace stdext
             }, interfaces);
         }
 
-        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
+        template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr Interface* as() const noexcept
         {
             return ::std::get<Interface*>(interfaces);
         }
 
-        template <class Interface, REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
+        template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr const Interface* as_const() const noexcept
         {
             return ::std::get<Interface*>(interfaces);

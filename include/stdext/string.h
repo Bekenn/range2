@@ -74,11 +74,11 @@ namespace stdext
         return value == Char();
     }
 
-    template <class Iterator, REQUIRES(is_iterator<::std::decay_t<Iterator>>::value)>
+    template <class Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value)>
     auto make_cstring_generator(Iterator&& i)
     {
         return make_terminated_generator(forward<Iterator>(i),
-            cstring_termination_predicate<iterator_value_type_t<::std::decay_t<Iterator>>>);
+            cstring_termination_predicate<iterator_value_type_t<std::decay_t<Iterator>>>);
     }
 
     // Conversion between narrow and wide execution character sets
@@ -289,13 +289,13 @@ namespace stdext
     inline to_multibyte_tag to_multibyte() { return { }; }
     inline to_wchar_tag to_wchar() { return { }; }
 
-    template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
+    template <class Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_multibyte_tag)
     {
         return to_multibyte_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(forward<Generator>(g)));
     }
 
-    template <class Generator, REQUIRES(can_generate<::std::decay_t<Generator>>::value)>
+    template <class Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_wchar_tag)
     {
         return to_wchar_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(forward<Generator>(g)));

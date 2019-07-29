@@ -30,14 +30,14 @@ namespace stdext
     class seekable;
     class peekable;
 
-    template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
     class input_stream_iterator;
-    template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
     class output_stream_iterator;
 
-    template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
     class stream_generator;
-    template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
     class stream_consumer;
 
     template <class CharT, class Traits = std::char_traits<CharT>>
@@ -78,7 +78,7 @@ namespace stdext
         virtual ~input_stream();
 
     public:
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         POD read()
         {
             POD value;
@@ -87,7 +87,7 @@ namespace stdext
             return value;
         }
 
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t read(POD* buffer, size_t count)
         {
             auto size = do_read(reinterpret_cast<uint8_t*>(buffer), count * sizeof(POD));
@@ -96,13 +96,13 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, size_t length, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t read(POD (&buffer)[length])
         {
             return read(buffer, length);
         }
 
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t skip(size_t count = 1)
         {
             auto size = do_skip(count * sizeof(POD));
@@ -123,14 +123,14 @@ namespace stdext
         virtual ~output_stream();
 
     public:
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         void write(const POD& value)
         {
             if (do_write(reinterpret_cast<const uint8_t*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t write(const POD* buffer, size_t count)
         {
             auto size = do_write(reinterpret_cast<const uint8_t*>(buffer), count * sizeof(POD));
@@ -139,7 +139,7 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, size_t length, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t write(const POD (&buffer)[length])
         {
             return write(buffer, length);
@@ -186,7 +186,7 @@ namespace stdext
         virtual ~peekable();
 
     public:
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         POD peek()
         {
             POD value;
@@ -195,7 +195,7 @@ namespace stdext
             return value;
         }
 
-        template <class POD, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t peek(POD* buffer, size_t count)
         {
             auto size = do_peek(buffer, count * sizeof(POD));
@@ -204,7 +204,7 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, size_t length, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
         size_t peek(POD (&buffer)[length])
         {
             return peek(buffer, length);
@@ -233,7 +233,7 @@ namespace stdext
         virtual size_t direct_write(std::function<size_t (uint8_t* buffer, size_t size)> write) = 0;
     };
 
-    template <class POD, REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
     class input_stream_iterator
     {
     public:
@@ -285,7 +285,7 @@ namespace stdext
     };
 
 
-    template <class POD, REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
     class output_stream_iterator
     {
     public:
@@ -314,7 +314,7 @@ namespace stdext
     };
 
 
-    template <class POD, REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
     class stream_generator
     {
     public:
@@ -376,7 +376,7 @@ namespace stdext
     };
 
 
-    template <class POD, REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
     class stream_consumer
     {
     public:

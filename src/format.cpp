@@ -75,7 +75,7 @@ done:
 
             case format_type::_char32:
                 {
-                    char32_t s[] = { char32_t(uval), u'\0' };
+                    char32_t s[] = { char32_t(uval), U'\0' };
                     if (!format(out, "$0", s))
                         return false;
                 }

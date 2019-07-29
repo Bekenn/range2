@@ -35,7 +35,7 @@ namespace stdext
         template <byte_order order, class T> struct endian;
     }
 
-    template <byte_order order, class T, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     constexpr T swap(T v) noexcept
     {
         if constexpr (order == byte_order::native_endian)
@@ -45,14 +45,14 @@ namespace stdext
         return T(detail::endian<order, sized_t>::swap(sized_t(v)));
     }
 
-    template <byte_order order, class T, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     T read(input_stream& s)
     {
         using sized_t = equivalent_sized_type_t<T>;
         return T(swap<order>(s.read<sized_t>()));
     }
 
-    template <byte_order order, class T, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     size_t read(input_stream& s, T* buffer, size_t count)
     {
         count = s.read(buffer, count);
@@ -64,20 +64,20 @@ namespace stdext
         return count;
     }
 
-    template <byte_order order, class T, size_t length, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, size_t length, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     size_t read(input_stream& s, T (&buffer)[length])
     {
         using sized_t = equivalent_sized_type_t<T>;
         return detail::endian<order, sized_t>::read(s, buffer, length);
     }
 
-    template <byte_order order, class T, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     void write(output_stream& s, T v)
     {
         s.write(swap<order>(v));
     }
 
-    template <byte_order order, class T, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     size_t write(output_stream& s, const T* buffer, size_t count)
     {
         if constexpr (order == byte_order::native_endian)
@@ -93,7 +93,7 @@ namespace stdext
         return n;
     }
 
-    template <byte_order order, class T, size_t length, REQUIRES(::std::is_integral_v<T>)>
+    template <byte_order order, class T, size_t length, STDEXT_REQUIRES(::std::is_integral_v<T>)>
     size_t write(output_stream& s, const T (&buffer)[length])
     {
         return write(s, buffer, length);

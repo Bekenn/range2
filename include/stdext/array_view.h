@@ -30,25 +30,25 @@ namespace stdext
         using size_type = size_t;
 
     public:
-        array_view() noexcept = default;
+        constexpr array_view() noexcept = default;
         template <class U, size_t size,
-            REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
+            STDEXT_REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
             && std::is_convertible_v<U*, T*>)>
-        array_view(U (&a)[size]) noexcept : delimited_iterator_range<T*>(a, a + size) { }
-        array_view(pointer p, size_type size) noexcept : delimited_iterator_range<T*>(p, p + size) { }
+        constexpr array_view(U (&a)[size]) noexcept : delimited_iterator_range<T*>(a, a + size) { }
+        constexpr array_view(pointer p, size_type size) noexcept : delimited_iterator_range<T*>(p, p + size) { }
 
     public:
         template <class U, size_t size,
-            REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
+            STDEXT_REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
             && std::is_convertible_v<U*, T*>)>
-        array_view& operator = (U (&a)[size]) { begin_pos(a); end_pos(a + size); return *this; }
-        auto data() const noexcept { return this->begin(); }
-        bool empty() const noexcept { return this->begin() == this->end(); }
+        constexpr array_view& operator = (U (&a)[size]) { begin_pos(a); end_pos(a + size); return *this; }
+        constexpr auto data() const noexcept { return this->begin(); }
+        constexpr bool empty() const noexcept { return this->begin() == this->end(); }
 
-        reference front() noexcept { return *this->begin(); }
-        const_reference front() const noexcept { return *this->begin(); }
-        reference back() noexcept { return *std::prev(this->end()); }
-        const_reference back() const noexcept { return *std::prev(this->end()); }
+        constexpr reference front() noexcept { return *this->begin(); }
+        constexpr const_reference front() const noexcept { return *this->begin(); }
+        constexpr reference back() noexcept { return *std::prev(this->end()); }
+        constexpr const_reference back() const noexcept { return *std::prev(this->end()); }
     };
 
     template <class T>
@@ -63,23 +63,23 @@ namespace stdext
         using size_type = size_t;
 
     public:
-        const_array_view() noexcept = default;
+        constexpr const_array_view() noexcept = default;
         template <class U, size_t size,
-            REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
+            STDEXT_REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
             && std::is_convertible_v<U*, const T*>)>
-        const_array_view(U(&a)[size]) noexcept : delimited_iterator_range<const T*>(a, a + size) { }
-        const_array_view(pointer p, size_type size) noexcept : delimited_iterator_range<const T*>(p, p + size) { }
+        constexpr const_array_view(U(&a)[size]) noexcept : delimited_iterator_range<const T*>(a, a + size) { }
+        constexpr const_array_view(pointer p, size_type size) noexcept : delimited_iterator_range<const T*>(p, p + size) { }
 
     public:
         template <class U, size_t size,
-            REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
+            STDEXT_REQUIRES(std::is_same_v<std::remove_cv_t<T>, std::remove_cv_t<U>>
             && std::is_convertible_v<U*, const T*>)>
-        const_array_view& operator = (U(&a)[size]) { this->begin_pos(a); this->end_pos(a + size); return *this; }
-        auto data() const noexcept { return this->begin(); }
-        bool empty() const noexcept { return this->begin() == this->end(); }
+        constexpr const_array_view& operator = (U(&a)[size]) { this->begin_pos(a); this->end_pos(a + size); return *this; }
+        constexpr auto data() const noexcept { return this->begin(); }
+        constexpr bool empty() const noexcept { return this->begin() == this->end(); }
 
-        const_reference front() const noexcept { return *this->begin(); }
-        const_reference back() const noexcept { return *std::prev(this->end()); }
+        constexpr const_reference front() const noexcept { return *this->begin(); }
+        constexpr const_reference back() const noexcept { return *std::prev(this->end()); }
     };
 }
 

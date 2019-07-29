@@ -168,13 +168,13 @@ namespace stdext
         ::std::is_base_of<random_access_range_tag, list_conditional_apply_t<is_range<Range>::value, range_category, type_list<Range>, ::std::void_t, type_list<>>> { };
 
     // generic range utilities
-    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> next_pos(const Range& range, range_position_type_t<Range> pos)
     {
         return range.inc_pos(pos);
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     range_position_type_t<Range> prev_pos(const Range& range, range_position_type_t<Range> pos)
     {
         return range.dec_pos(pos);
@@ -209,7 +209,7 @@ namespace stdext
         }
     }
 
-    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n)
     {
         return detail::advance_pos(range, pos, n, range_category<Range>());
@@ -233,19 +233,19 @@ namespace stdext
         }
     }
 
-    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_difference_type_t<Range> distance(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return detail::distance(range, p1, p2, range_category<Range>());
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     bool is_empty(const Range& range) noexcept
     {
         return range.is_end_pos(range.begin_pos());
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     range_value_type_t<Range> read(const Range& range, range_position_type_t<Range>& pos)
     {
         auto value = range.at_pos(pos);
@@ -253,7 +253,7 @@ namespace stdext
         return value;
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     range_value_type_t<Range> consume(const Range& range, range_position_type_t<Range>& pos)
     {
         auto value = move(range.at_pos(pos));
@@ -261,14 +261,14 @@ namespace stdext
         return value;
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     void write(const Range& range, range_position_type_t<Range>& pos, const range_value_type_t<Range>& value)
     {
         range.at_pos(pos) = value;
         range.inc_pos(pos);
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     void write(const Range& range, range_position_type_t<Range>& pos, range_value_type_t<Range>&& value)
     {
         range.at_pos(pos) = move(value);
@@ -301,26 +301,26 @@ namespace stdext
             return size;
         }
 
-        template <class Range, REQUIRES(is_delimited_range<Range>::value)>
+        template <class Range, STDEXT_REQUIRES(is_delimited_range<Range>::value)>
         range_size_type_t<Range> size_after(const Range& range, range_position_type_t<Range> pos, random_access_range_tag)
         {
             return range_size_type_t<Range>(range.distance(pos, range.end_pos()));
         }
     }
 
-    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_size_type_t<Range> size_before(const Range& range, range_position_type_t<Range> pos)
     {
         return detail::size_before(range, pos, range_category<Range>());
     }
 
-    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_size_type_t<Range> size_after(const Range& range, range_position_type_t<Range> pos)
     {
         return detail::size_after(range, pos, range_category<Range>());
     }
 
-    template <class Range, REQUIRES(is_multi_pass_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     Range& drop_first(Range& range, range_size_type_t<Range> n = 1)
     {
         auto pos = range.begin_pos();
@@ -328,7 +328,7 @@ namespace stdext
         return range;
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     Range& drop_last(Range& range, range_size_type_t<Range> n = 1)
     {
         auto pos = range.end_pos();
@@ -336,27 +336,27 @@ namespace stdext
         return range;
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     range_reference_type_t<Range> head(const Range& range)
     {
         return range.at_pos(range.begin_pos());
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     range_reference_type_t<Range> last(const Range& range)
     {
         auto pos = range.end_pos();
         return range.at_pos(range.dec_pos(pos));
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     Range tail(const Range& range)
     {
         Range result = range;
         return drop_first(result);
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     Range init(const Range& range)
     {
         Range result = range;
@@ -482,19 +482,19 @@ namespace stdext
 
     template <class Range> class range_generator;
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto subrange_from(const Range& range, range_position_type_t<Range> first)
     {
         return make_range(range, first, [](const auto& r, const auto& p) { return r.is_end_pos(p); });
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto subrange_to(const Range& range, range_position_type_t<Range> last)
     {
         return make_range(range, range.begin_pos(), last);
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto split_range(const Range& range, range_position_type_t<Range> pos)
     {
         return ::std::make_pair(subrange_to(range, pos), subrange_from(range, pos));
@@ -620,33 +620,33 @@ namespace stdext
             using iterator = Iterator;
 
         public:
-            delimited_forward_iterator_range() noexcept : first(), last() { }
-            delimited_forward_iterator_range(iterator first, iterator last) noexcept(noexcept(iterator(first)))
+            constexpr delimited_forward_iterator_range() noexcept : first(), last() { }
+            constexpr delimited_forward_iterator_range(iterator first, iterator last) noexcept(noexcept(iterator(first)))
                 : first(first), last(last) { }
 
         public:
-            friend bool operator == (const delimited_forward_iterator_range& a, const delimited_forward_iterator_range& b) noexcept
+            friend constexpr bool operator == (const delimited_forward_iterator_range& a, const delimited_forward_iterator_range& b) noexcept
             {
                 return a.first == b.first && a.last == b.last;
             }
-            friend bool operator != (const delimited_forward_iterator_range& a, const delimited_forward_iterator_range& b) noexcept
+            friend constexpr bool operator != (const delimited_forward_iterator_range& a, const delimited_forward_iterator_range& b) noexcept
             {
                 return !(a == b);
             }
 
-            position begin_pos() const { return first; }
-            void begin_pos(position pos) { first = pos; }
+            constexpr position begin_pos() const { return first; }
+            constexpr void begin_pos(position pos) { first = pos; }
 
-            position end_pos() const { return last; }
-            void end_pos(position pos) { last = pos; }
+            constexpr position end_pos() const { return last; }
+            constexpr void end_pos(position pos) { last = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return pos == last; }
+            constexpr bool is_end_pos(position pos) const noexcept { return pos == last; }
 
-            position& inc_pos(position& pos) const { return ++pos; }
-            reference at_pos(position pos) const { return *pos; }
+            constexpr position& inc_pos(position& pos) const { return ++pos; }
+            constexpr reference at_pos(position pos) const { return *pos; }
 
-            iterator begin() const { return first; }
-            iterator end() const { return last; }
+            constexpr iterator begin() const { return first; }
+            constexpr iterator end() const { return last; }
 
         private:
             position first;
@@ -663,7 +663,7 @@ namespace stdext
             using delimited_forward_iterator_range<Iterator>::delimited_forward_iterator_range;
 
         public:
-            position& dec_pos(position& pos) const { return --pos; }
+            constexpr position& dec_pos(position& pos) const { return --pos; }
         };
 
         template <class Iterator>
@@ -679,18 +679,18 @@ namespace stdext
             using delimited_bidirectional_iterator_range<Iterator>::delimited_bidirectional_iterator_range;
 
         public:
-            position& advance_pos(position& pos, difference_type n) const
+            constexpr position& advance_pos(position& pos, difference_type n) const
             {
                 ::std::advance(pos, n);
                 return pos;
             }
 
-            difference_type distance(position p1, position p2) const noexcept { return ::std::distance(p1, p2); }
-            size_type size() const noexcept { return size_type(distance(this->begin_pos(), this->end_pos())); }
-            void resize(size_type n) { this->end_pos(this->begin_pos() + n); }
+            constexpr difference_type distance(position p1, position p2) const noexcept { return ::std::distance(p1, p2); }
+            constexpr size_type size() const noexcept { return size_type(distance(this->begin_pos(), this->end_pos())); }
+            constexpr void resize(size_type n) { this->end_pos(this->begin_pos() + n); }
 
-            reference operator [] (size_type n) const { return this->begin_pos()[n]; }
-            reference at(size_type n) const
+            constexpr reference operator [] (size_type n) const { return this->begin_pos()[n]; }
+            constexpr reference at(size_type n) const
             {
                 if (n >= size())
                     throw ::std::out_of_range("element index out of range");
@@ -1633,7 +1633,7 @@ namespace stdext
         range* r;
     };
 
-    template <class Range, class TerminationPredicate, REQUIRES(is_range<Range>::value)>
+    template <class Range, class TerminationPredicate, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_range(const Range& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return delegated_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
@@ -1675,7 +1675,7 @@ namespace stdext
         return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(pos, forward<TerminationPredicate>(pred));
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_range(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_range<Range>(range, p1, p2);
@@ -1717,13 +1717,13 @@ namespace stdext
         return delimited_iterator_range<Iterator>(p1, p2);
     }
 
-    template <class Iterator, class TerminationPredicate, REQUIRES(is_iterator<Iterator>::value)>
+    template <class Iterator, class TerminationPredicate, STDEXT_REQUIRES(is_iterator<Iterator>::value)>
     auto make_range(Iterator i, TerminationPredicate&& pred)
     {
         return iterator_range<Iterator, ::std::decay_t<TerminationPredicate>>(i, forward<TerminationPredicate>(pred));
     }
 
-    template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
+    template <class Iterator, STDEXT_REQUIRES(is_iterator<Iterator>::value)>
     auto make_range(Iterator i, Iterator j)
     {
         return delimited_iterator_range<Iterator>(i, j);
@@ -1742,7 +1742,7 @@ namespace stdext
         return make_range(i.base_range(), i.base_pos(), j.base_pos());
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_counted_range(const Range& range, range_position_type_t<Range> pos, range_size_type_t<Range> count)
     {
         return counted_range<Range>(range, pos, count);
@@ -1802,7 +1802,7 @@ namespace stdext
         return counted_iterator_range<Iterator>(range.base_pos(pos), count);
     }
 
-    template <class Iterator, REQUIRES(is_iterator<Iterator>::value)>
+    template <class Iterator, STDEXT_REQUIRES(is_iterator<Iterator>::value)>
     auto make_counted_range(Iterator it, iterator_size_type_t<Iterator> count)
     {
         return counted_iterator_range<Iterator>(forward(it), count);
@@ -1814,7 +1814,7 @@ namespace stdext
         return make_counted_range(it.base_range(), it.base_pos(), count);
     }
 
-    template <class Range, class TerminationPredicate, REQUIRES(is_bidirectional_range<Range>::value)>
+    template <class Range, class TerminationPredicate, STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     auto make_reverse_range(const Range& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
         return reverse_range<Range, ::std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
@@ -1850,7 +1850,7 @@ namespace stdext
         return make_range(range.base(), range.base_pos(pos), forward<TerminationPredicate>(pred));
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     auto make_reverse_range(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
         return delimited_reverse_range<Range>(range, p1, p2);
@@ -1886,13 +1886,13 @@ namespace stdext
         return make_range(range.base(), range.base_pos(p2), range.base_pos(p1));
     }
 
-    template <class Range, REQUIRES(is_bidirectional_range<Range>::value), REQUIRES(is_delimited_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     auto make_reverse_range(const Range& range)
     {
         return make_reverse_range(range, range.begin_pos(), range.end_pos());
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_iterator(const Range& range, range_position_type_t<Range> pos)
     {
         return range_iterator<Range>(pos);
@@ -1916,13 +1916,13 @@ namespace stdext
         return range.base_pos(pos);
     }
 
-    template <class Range, REQUIRES(is_range<Range>::value)>
+    template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_generator(Range& range)
     {
         return range_generator<Range>(range);
     }
 
-    template <class RangeProvider, REQUIRES(is_stl_range_provider<RangeProvider>::value && !is_range<RangeProvider>::value)>
+    template <class RangeProvider, STDEXT_REQUIRES(is_stl_range_provider<RangeProvider>::value && !is_range<RangeProvider>::value)>
     auto make_generator(RangeProvider& range)
     {
         using I = ::std::decay_t<decltype(begin(range))>;
@@ -1930,7 +1930,7 @@ namespace stdext
         return delimited_iterator_generator<I, S>(begin(range), end(range));
     };
 
-    template <class Elem, class Range, REQUIRES(::std::is_convertible<Elem, range_value_type_t<Range>>::value)>
+    template <class Elem, class Range, STDEXT_REQUIRES(::std::is_convertible<Elem, range_value_type_t<Range>>::value)>
     auto make_consumer(Range& range)
     {
         using value_type = stdext::range_value_type_t<Range>;
@@ -1944,7 +1944,7 @@ namespace stdext
         };
     }
 
-    template <class Elem, class RangeProvider, REQUIRES(::std::is_convertible<Elem, value_type_t<RangeProvider, is_stl_range_provider>>::value)>
+    template <class Elem, class RangeProvider, STDEXT_REQUIRES(::std::is_convertible<Elem, value_type_t<RangeProvider, is_stl_range_provider>>::value)>
     auto make_consumer(RangeProvider& range)
     {
         using I = iterator_type_t<RangeProvider, is_stl_range_provider>;

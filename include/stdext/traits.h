@@ -26,8 +26,8 @@ namespace std
 #endif
 
 
-#define REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), nullptr_t>
-#define REQUIRES(...) REQUIRED(__VA_ARGS__) = nullptr
+#define STDEXT_REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), ::stdext::nullptr_t>
+#define STDEXT_REQUIRES(...) STDEXT_REQUIRED(__VA_ARGS__) = nullptr
 
 #define DECLARE_HAS_INNER_TYPE(Inner)                                \
 template <class T> struct has_inner_type_##Inner                     \
@@ -58,26 +58,6 @@ namespace stdext
     // Debugging helpers
     template <class T> struct error_type;
     template <class T, T v> struct error_value;
-
-    // Test whether an instance of class F is callable with a return type convertible to R
-    template <class, class R = void> struct is_callable;
-    template <class F, class R = void> constexpr bool is_callable_v = is_callable<F, R>::value;
-
-    template <class Function, class... ArgTypes>
-    struct is_callable<Function(ArgTypes...), void>
-    {
-        template <class T> static true_type test(decltype(declval<T>()(declval<ArgTypes>()...))*);
-        template <class T> static false_type test(...);
-        static constexpr bool value = decltype(test<Function>(nullptr))::value;
-    };
-    template <class Function, class... ArgTypes, class R>
-    struct is_callable<Function(ArgTypes...), R>
-    {
-        template <class T> static void test_ret(R);
-        template <class T> static true_type test(decltype(test_ret<T>(declval<T>()(declval<ArgTypes>()...)))*);
-        template <class T> static false_type test(...);
-        static constexpr bool value = decltype(test<Function>(nullptr))::value;
-    };
 
     // Test whether T1() == T2() is well-formed
     template <class T1, class T2> struct is_equality_comparable;

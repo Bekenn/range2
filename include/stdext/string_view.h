@@ -64,22 +64,22 @@ namespace stdext
     public:
         using const_array_view<charT>::const_array_view;
 
-        basic_string_view() noexcept = default;
+        constexpr basic_string_view() noexcept = default;
 
-        basic_string_view(const basic_string_view& str, size_type pos, size_type n = npos) noexcept
+        constexpr basic_string_view(const basic_string_view& str, size_type pos, size_type n = npos) noexcept
             : const_array_view<charT>(str.data() + pos, ::std::min(n, str.length()) - pos) { }
 
         template <class Allocator>
         basic_string_view(const string_type<Allocator>& str) noexcept
             : const_array_view<charT>(str.data(), str.length()) { }
 
-        basic_string_view(pointer s, size_type n) noexcept
+        constexpr basic_string_view(pointer s, size_type n) noexcept
             : const_array_view<charT>(s, n) { }
 
-        basic_string_view(pointer s) noexcept
+        constexpr basic_string_view(pointer s) noexcept
             : const_array_view<charT>(s, traits_type::length(s)) { }
 
-        basic_string_view(pointer begin, pointer end) noexcept
+        constexpr basic_string_view(pointer begin, pointer end) noexcept
             : const_array_view<charT>(begin, ::std::distance(begin, end)) { }
 
         template <class Allocator>
@@ -91,7 +91,7 @@ namespace stdext
             return *this;
         }
 
-        auto& operator = (pointer s) noexcept
+        constexpr auto& operator = (pointer s) noexcept
         {
             this->begin_pos(s);
             this->end_pos(s + traits_type::length(s));
@@ -99,36 +99,36 @@ namespace stdext
         }
 
     public:
-        auto length() const noexcept { return this->size(); }
+        constexpr auto length() const noexcept { return this->size(); }
 
-        void remove_prefix(size_t n)
+        constexpr void remove_prefix(size_t n)
         {
             drop_first(*this, n);
         }
 
-        void remove_suffix(size_t n)
+        constexpr void remove_suffix(size_t n)
         {
             drop_last(*this, n);
         }
 
-        auto find(basic_string_view str, size_type pos = 0)
+        constexpr auto find(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
             auto i = search(subrange_from(*this, this->begin() + pos), str);
             return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
-        auto find(const_pointer s, size_type pos, size_type n)
+        constexpr auto find(const_pointer s, size_type pos, size_type n)
         {
             return find(basic_string_view(s, n), pos);
         }
 
-        auto find(value_type c, size_type pos = 0)
+        constexpr auto find(value_type c, size_type pos = 0)
         {
             return find(basic_string_view(::std::addressof(c), 1), pos);
         }
 
-        auto rfind(basic_string_view str, size_type pos = npos)
+        constexpr auto rfind(basic_string_view str, size_type pos = npos)
         {
             pos = ::std::min(pos, length());
             pos = ::std::min(pos + str.length(), length());
@@ -136,34 +136,34 @@ namespace stdext
             return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
-        auto rfind(const_pointer s, size_type pos, size_type n)
+        constexpr auto rfind(const_pointer s, size_type pos, size_type n)
         {
             return rfind(basic_string_view(s, n), pos);
         }
 
-        auto rfind(value_type c, size_type pos = npos)
+        constexpr auto rfind(value_type c, size_type pos = npos)
         {
             return rfind(basic_string_view(::std::addressof(c), 1), pos);
         }
 
-        auto find_first_of(basic_string_view str, size_type pos = 0)
+        constexpr auto find_first_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
             auto i = find_first_of(subrange_from(*this, this->begin() + pos), str);
             return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
-        auto find_first_of(const_pointer s, size_type pos, size_type n)
+        constexpr auto find_first_of(const_pointer s, size_type pos, size_type n)
         {
             return find_first_of(basic_string_view(s, n), pos);
         }
 
-        auto find_first_of(value_type c, size_t pos = 0)
+        constexpr auto find_first_of(value_type c, size_t pos = 0)
         {
             return find_first_of(basic_string_view(::std::addressof(c), 1), pos);
         }
 
-        auto find_last_of(basic_string_view str, size_type pos = 0)
+        constexpr auto find_last_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
             auto reverse = make_reverse_range(subrange_to(*this, this->begin() + pos));
@@ -171,17 +171,17 @@ namespace stdext
             return i == this->begin() ? npos : size_type(::std::distance(this->begin(), --i));
         }
 
-        auto find_last_of(const_pointer s, size_type pos, size_type n)
+        constexpr auto find_last_of(const_pointer s, size_type pos, size_type n)
         {
             return find_first_of(basic_string_view(s, n), pos);
         }
 
-        auto find_last_of(value_type c, size_t pos = 0)
+        constexpr auto find_last_of(value_type c, size_t pos = 0)
         {
             return find_first_of(basic_string_view(::std::addressof(c), 1), pos);
         }
 
-        auto find_first_not_of(basic_string_view str, size_type pos = 0)
+        constexpr auto find_first_not_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
             auto i = find_if(subrange_from(*this, this->begin() + pos),
@@ -189,17 +189,17 @@ namespace stdext
             return i == this->end() ? npos : size_type(::std::distance(this->begin(), i));
         }
 
-        auto find_first_not_of(const_pointer s, size_type pos, size_type n)
+        constexpr auto find_first_not_of(const_pointer s, size_type pos, size_type n)
         {
             return find_first_not_of(basic_string_view(s, n), pos);
         }
 
-        auto find_first_not_of(value_type c, size_t pos = 0)
+        constexpr auto find_first_not_of(value_type c, size_t pos = 0)
         {
             return find_first_not_of(basic_string_view(::std::addressof(c), 1), pos);
         }
 
-        auto find_last_not_of(basic_string_view str, size_type pos = 0)
+        constexpr auto find_last_not_of(basic_string_view str, size_type pos = 0)
         {
             pos = ::std::min(pos, length());
             auto reverse = make_reverse_range(subrange_to(*this, this->begin() + pos));
@@ -208,17 +208,17 @@ namespace stdext
             return i == this->begin() ? npos : size_type(::std::distance(this->begin(), --i));
         }
 
-        auto find_last_not_of(const_pointer s, size_type pos, size_type n)
+        constexpr auto find_last_not_of(const_pointer s, size_type pos, size_type n)
         {
             return find_first_of(basic_string_view(s, n), pos);
         }
 
-        auto find_last_not_of(value_type c, size_t pos = 0)
+        constexpr auto find_last_not_of(value_type c, size_t pos = 0)
         {
             return find_first_of(basic_string_view(::std::addressof(c), 1), pos);
         }
 
-        auto substr(size_type pos = 0, size_type n = npos)
+        constexpr auto substr(size_type pos = 0, size_type n = npos)
         {
             if (pos > length())
                 throw ::std::out_of_range("string index out of range");
@@ -226,7 +226,7 @@ namespace stdext
             return basic_string_view(this->data() + pos, n);
         }
 
-        auto compare(basic_string_view str)
+        constexpr auto compare(basic_string_view str)
         {
             auto rlen = ::std::min(length(), str.length());
             auto result = traits_type::compare(this->data(), str.data(), rlen);
@@ -237,23 +237,23 @@ namespace stdext
                 : result;
         }
 
-        auto compare(size_type pos1, size_type n1, basic_string_view str)
+        constexpr auto compare(size_type pos1, size_type n1, basic_string_view str)
         {
             n1 = ::std::min(n1, length() - pos1);
             return basic_string_view(*this, pos1, n1).compare(str);
         }
 
-        auto compare(const_pointer s)
+        constexpr auto compare(const_pointer s)
         {
             return compare(basic_string_view(s));
         }
 
-        auto compare(size_type pos, size_type n1, const_pointer s)
+        constexpr auto compare(size_type pos, size_type n1, const_pointer s)
         {
             return basic_string_view(*this, pos, n1).compare(s);
         }
 
-        auto compare(size_type pos, size_type n1, const_pointer s, size_type n2)
+        constexpr auto compare(size_type pos, size_type n1, const_pointer s, size_type n2)
         {
             return basic_string_view(*this, pos, n1).compare(basic_string_view(s, n2));
         }

@@ -99,7 +99,7 @@ namespace stdext
             initialized = true;
             construct(forward<Args>(args)...);
         }
-        template <class U, class... Args, REQUIRES(::std::is_constructible<T, ::std::initializer_list<U>, Args&&...>::value)>
+        template <class U, class... Args, STDEXT_REQUIRES(::std::is_constructible<T, ::std::initializer_list<U>, Args&&...>::value)>
         constexpr explicit optional(in_place_t, ::std::initializer_list<U> il, Args&&... args)
         {
             initialized = true;
@@ -222,12 +222,12 @@ namespace stdext
         {
             return initialized ? reinterpret_cast<const T&&>(this->storage) : throw bad_optional_access();
         }
-        template <class U, REQUIRES(::std::is_copy_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
+        template <class U, STDEXT_REQUIRES(::std::is_copy_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) const &
         {
             return initialized ? reinterpret_cast<T&>(this->storage) : static_cast<T>(forward<U>(v));
         }
-        template <class U, REQUIRES(::std::is_move_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
+        template <class U, STDEXT_REQUIRES(::std::is_move_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) &&
         {
             return initialized ? reinterpret_cast<T&&>(this->storage) : static_cast<T>(forward<U>(v));
