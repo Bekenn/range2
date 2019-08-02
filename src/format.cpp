@@ -141,6 +141,12 @@ done:
             bool upper = false;
             switch (specifier)
             {
+                case 'B':
+                    upper = true;
+                    [[fallthrough]];
+                case 'b':
+                    base = 2;
+                    break;
                 case 'd':
                     base = 10;
                     break;
@@ -170,7 +176,7 @@ done:
 
             len = precision;
 
-            if (options.test_any(detail::format_options::alternative_form) && base == 16)
+            if (options.test_any(detail::format_options::alternative_form) && (base == 16 || base == 2))
                 len += 2;
 
             if (negative || options.test_any(detail::format_options::show_sign | detail::format_options::pad_sign))
@@ -218,6 +224,14 @@ done:
                 if (!put('0'))
                     return false;
                 if (!put(upper ? 'X' : 'x'))
+                    return false;
+            }
+
+            if (options.test_any(detail::format_options::alternative_form) && base == 2)
+            {
+                if (!put('0'))
+                    return false;
+                if (!put(upper ? 'B' : 'b'))
                     return false;
             }
 
