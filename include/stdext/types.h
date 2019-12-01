@@ -19,11 +19,16 @@
 
 
 // Handy-dandy macro for adding flag operations for enums
-#define FLAGS_ENUM(T)                                                   \
+#define STDEXT_FLAGS_ENUM(T)                                            \
 constexpr T operator ~ (T v) noexcept                                   \
 {                                                                       \
     using U = ::std::underlying_type_t<T>;                              \
     return static_cast<T>(~static_cast<U>(v));                          \
+}                                                                       \
+constexpr auto operator + (T v) noexcept                                \
+{                                                                       \
+    using U = ::std::underlying_type_t<T>;                              \
+    return static_cast<U>(v);                                           \
 }                                                                       \
 constexpr T operator | (T a, T b) noexcept                              \
 {                                                                       \
@@ -95,6 +100,10 @@ namespace stdext
     public:
         friend constexpr bool operator == (flags a, flags b) noexcept { return a.value == b.value; }
         friend constexpr bool operator != (flags a, flags b) noexcept { return !(a == b); }
+        friend constexpr bool operator == (flags a, T b) noexcept { return a.value == b; }
+        friend constexpr bool operator != (flags a, T b) noexcept { return !(a == b); }
+        friend constexpr bool operator == (T a, flags b) noexcept { return a == b.value; }
+        friend constexpr bool operator != (T a, flags b) noexcept { return !(a == b); }
 
     public:
         constexpr operator T () const noexcept { return value; }
@@ -137,6 +146,11 @@ namespace stdext
         constexpr bool test_all(flags mask) const noexcept
         {
             return static_cast<T>(static_cast<U>(value) & static_cast<U>(mask)) == mask;
+        }
+
+        constexpr bool test(flags mask, flags value) const noexcept
+        {
+            return static_cast<T>(static_cast<U>(this->value) & static_cast<U>(mask)) == value;
         }
 
     private:

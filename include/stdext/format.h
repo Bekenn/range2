@@ -164,7 +164,7 @@ namespace stdext
             alternative_form    = 0x08,
             zero_pad            = 0x10,
         };
-        FLAGS_ENUM(format_options)
+        STDEXT_FLAGS_ENUM(format_options)
 
         enum class format_type
         {
