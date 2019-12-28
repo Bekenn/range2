@@ -36,7 +36,7 @@ namespace stdext { namespace filesystem
     {
     public:
         using value_type = path_char;
-        using string_type = ::std::basic_string<value_type>;
+        using string_type = std::basic_string<value_type>;
         using string_view_type = basic_string_view<value_type>; // extension
         static constexpr value_type preferred_separator = directory_separator;
 
@@ -45,8 +45,8 @@ namespace stdext { namespace filesystem
         path(string_type&& source) : pathstring(move(source)) { }
         template <class Source> path(const Source& source);
         template <class InputIterator> path(InputIterator first, InputIterator last);
-        template <class Source> path(const Source& source, const ::std::locale& loc);
-        template <class InputIterator> path(InputIterator first, InputIterator last, const ::std::locale& loc);
+        template <class Source> path(const Source& source, const std::locale& loc);
+        template <class InputIterator> path(InputIterator first, InputIterator last, const std::locale& loc);
 
     public:
         path& operator = (string_type&& source)
@@ -142,21 +142,21 @@ namespace stdext { namespace filesystem
         const value_type* c_str() const noexcept;
         operator string_type () const;
 
-        template <class EcharT, class traits = ::std::char_traits<EcharT>, class Allocator = ::std::allocator<EcharT>>
-        ::std::basic_string<EcharT, traits, Allocator> string(const Allocator& a = Allocator()) const;
-        ::std::string string() const;
-        ::std::wstring wstring() const;
-        ::std::string u8string() const;
-        ::std::u16string u16string() const;
-        ::std::u32string u32string() const;
+        template <class EcharT, class traits = std::char_traits<EcharT>, class Allocator = std::allocator<EcharT>>
+        std::basic_string<EcharT, traits, Allocator> string(const Allocator& a = Allocator()) const;
+        std::string string() const;
+        std::wstring wstring() const;
+        std::string u8string() const;
+        std::u16string u16string() const;
+        std::u32string u32string() const;
 
-        template <class EcharT, class traits = ::std::char_traits<EcharT>, class Allocator = ::std::allocator<EcharT>>
-        ::std::basic_string<EcharT, traits, Allocator> generic_string(const Allocator& a = Allocator()) const;
-        ::std::string generic_string() const;
-        ::std::wstring generic_wstring() const;
-        ::std::string generic_u8string() const;
-        ::std::u16string generic_u16string() const;
-        ::std::u32string generic_u32string() const;
+        template <class EcharT, class traits = std::char_traits<EcharT>, class Allocator = std::allocator<EcharT>>
+        std::basic_string<EcharT, traits, Allocator> generic_string(const Allocator& a = Allocator()) const;
+        std::string generic_string() const;
+        std::wstring generic_wstring() const;
+        std::string generic_u8string() const;
+        std::u16string generic_u16string() const;
+        std::u32string generic_u32string() const;
 
         int compare(const path& p) const noexcept;
         int compare(const string_type& s) const;
@@ -201,7 +201,7 @@ namespace stdext { namespace filesystem
     class path::iterator
     {
     public:
-        using iterator_category = ::std::bidirectional_iterator_tag;
+        using iterator_category = std::bidirectional_iterator_tag;
         using value_type = path;
         using difference_type = ptrdiff_t;
         using pointer = const path*;

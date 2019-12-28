@@ -17,9 +17,6 @@
 #include <functional>
 #include <stdexcept>
 
-#include <cstddef>
-#include <cstdint>
-
 
 namespace stdext
 {
@@ -30,14 +27,14 @@ namespace stdext
     class seekable;
     class peekable;
 
-    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
     class input_stream_iterator;
-    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
     class output_stream_iterator;
 
-    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
     class stream_generator;
-    template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
     class stream_consumer;
 
     template <class CharT, class Traits = std::char_traits<CharT>>
@@ -67,9 +64,9 @@ namespace stdext
     u32string_stream_consumer& u32strout();
     u32string_stream_consumer& u32strerr();
 
-    class stream_error : public ::std::runtime_error
+    class stream_error : public std::runtime_error
     {
-        using ::std::runtime_error::runtime_error;
+        using std::runtime_error::runtime_error;
     };
 
     class input_stream
@@ -78,7 +75,7 @@ namespace stdext
         virtual ~input_stream();
 
     public:
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         POD read()
         {
             POD value;
@@ -87,7 +84,7 @@ namespace stdext
             return value;
         }
 
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t read(POD* buffer, size_t count)
         {
             auto size = do_read(reinterpret_cast<uint8_t*>(buffer), count * sizeof(POD));
@@ -96,13 +93,13 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t read(POD (&buffer)[length])
         {
             return read(buffer, length);
         }
 
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t skip(size_t count = 1)
         {
             auto size = do_skip(count * sizeof(POD));
@@ -123,14 +120,14 @@ namespace stdext
         virtual ~output_stream();
 
     public:
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         void write(const POD& value)
         {
             if (do_write(reinterpret_cast<const uint8_t*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t write(const POD* buffer, size_t count)
         {
             auto size = do_write(reinterpret_cast<const uint8_t*>(buffer), count * sizeof(POD));
@@ -139,7 +136,7 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t write(const POD (&buffer)[length])
         {
             return write(buffer, length);
@@ -186,7 +183,7 @@ namespace stdext
         virtual ~peekable();
 
     public:
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         POD peek()
         {
             POD value;
@@ -195,7 +192,7 @@ namespace stdext
             return value;
         }
 
-        template <class POD, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t peek(POD* buffer, size_t count)
         {
             auto size = do_peek(buffer, count * sizeof(POD));
@@ -204,7 +201,7 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(::std::is_pod<POD>::value)>
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_pod<POD>::value)>
         size_t peek(POD (&buffer)[length])
         {
             return peek(buffer, length);
@@ -233,15 +230,15 @@ namespace stdext
         virtual size_t direct_write(std::function<size_t (uint8_t* buffer, size_t size)> write) = 0;
     };
 
-    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
     class input_stream_iterator
     {
     public:
         using value_type = POD;
-        using difference_type = ::std::ptrdiff_t;
+        using difference_type = ptrdiff_t;
         using pointer = const value_type*;
         using reference = const value_type&;
-        using iterator_category = ::std::input_iterator_tag;
+        using iterator_category = std::input_iterator_tag;
 
     private:
         static constexpr bool noexcept_swappable()
@@ -285,7 +282,7 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
     class output_stream_iterator
     {
     public:
@@ -293,7 +290,7 @@ namespace stdext
         using difference_type = void;
         using pointer = void;
         using reference = void;
-        using iterator_category = ::std::output_iterator_tag;
+        using iterator_category = std::output_iterator_tag;
 
     public:
         explicit output_stream_iterator(output_stream& stream) : stream(&stream) { }
@@ -314,7 +311,7 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
     class stream_generator
     {
     public:
@@ -376,7 +373,7 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(::std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
     class stream_consumer
     {
     public:
@@ -449,7 +446,7 @@ namespace stdext
     class memory_stream_base : public seekable
     {
     private:
-        using _uint8_t = preserve_const_t<::std::remove_pointer_t<Pointer>, uint8_t>;
+        using _uint8_t = preserve_const_t<std::remove_pointer_t<Pointer>, uint8_t>;
 
     private:
         memory_stream_base() = default; // not used
@@ -481,7 +478,7 @@ namespace stdext
         void set_position(stream_position position) override
         {
             if (position > size_t(last - first))
-                throw ::std::invalid_argument("position out of range");
+                throw std::invalid_argument("position out of range");
 
             current = first + position;
         }
@@ -516,15 +513,15 @@ namespace stdext
     protected:
         size_t read_impl(uint8_t* buffer, size_t size)
         {
-            size = ::std::min(size, size_t(self().last - self().current));
-            ::std::copy_n(self().current, size, buffer);
+            size = std::min(size, size_t(self().last - self().current));
+            std::copy_n(self().current, size, buffer);
             self().current += size;
             return size;
         }
 
         size_t skip_impl(size_t size)
         {
-            size = ::std::min(size, size_t(self().last - self().current));
+            size = std::min(size, size_t(self().last - self().current));
             self().current += size;
             return size;
         }
@@ -532,8 +529,8 @@ namespace stdext
     private:
         size_t do_peek(void* buffer, size_t size) override
         {
-            size = ::std::min(size, size_t(self().last - self().current));
-            ::std::copy(self().current, self().current + size, static_cast<uint8_t*>(buffer));
+            size = std::min(size, size_t(self().last - self().current));
+            std::copy(self().current, self().current + size, static_cast<uint8_t*>(buffer));
             return size;
         }
 
@@ -560,8 +557,8 @@ namespace stdext
     protected:
         size_t write_impl(const uint8_t* buffer, size_t size)
         {
-            size = ::std::min(size, size_t(self().last - self().current));
-            self().current = ::std::copy_n(buffer, size, self().current);
+            size = std::min(size, size_t(self().last - self().current));
+            self().current = std::copy_n(buffer, size, self().current);
             return size;
         }
 

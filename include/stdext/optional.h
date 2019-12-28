@@ -38,7 +38,7 @@ namespace stdext
     constexpr nullopt_t nullopt;
 
     // 5.6, Class bad_optional_access
-    class bad_optional_access : public ::std::logic_error
+    class bad_optional_access : public std::logic_error
     {
     public:
         bad_optional_access() : logic_error("attempted to access empty optional") { }
@@ -53,20 +53,20 @@ namespace stdext
                 reinterpret_cast<T&>(storage).~T();
         }
 
-        ::std::aligned_storage_t<sizeof(T), alignof(T)> storage;
+        std::aligned_storage_t<sizeof(T), alignof(T)> storage;
         bool initialized;
     };
     template <class T>
     struct optional_base<T, true>
     {
-        ::std::aligned_storage_t<sizeof(T), alignof(T)> storage;
+        std::aligned_storage_t<sizeof(T), alignof(T)> storage;
         bool initialized;
     };
 
     template <class T>
-    class optional : private optional_base<T, ::std::is_trivially_destructible<T>::value>
+    class optional : private optional_base<T, std::is_trivially_destructible<T>::value>
     {
-        using optional_base<T, ::std::is_trivially_destructible<T>::value>::initialized;
+        using optional_base<T, std::is_trivially_destructible<T>::value>::initialized;
     public:
         typedef T value_type;
 
@@ -78,7 +78,7 @@ namespace stdext
             if ((initialized = rhs.initialized))
                 construct(rhs.value());
         }
-        optional(optional&& rhs) noexcept(::std::is_nothrow_move_constructible<T>::value)
+        optional(optional&& rhs) noexcept(std::is_nothrow_move_constructible<T>::value)
         {
             if ((initialized = move(rhs.initialized)))
                 construct(move(rhs.value()));
@@ -99,8 +99,8 @@ namespace stdext
             initialized = true;
             construct(forward<Args>(args)...);
         }
-        template <class U, class... Args, STDEXT_REQUIRES(::std::is_constructible<T, ::std::initializer_list<U>, Args&&...>::value)>
-        constexpr explicit optional(in_place_t, ::std::initializer_list<U> il, Args&&... args)
+        template <class U, class... Args, STDEXT_REQUIRES(std::is_constructible<T, std::initializer_list<U>, Args&&...>::value)>
+        constexpr explicit optional(in_place_t, std::initializer_list<U> il, Args&&... args)
         {
             initialized = true;
             construct(il, forward<Args>(args)...);
@@ -135,7 +135,7 @@ namespace stdext
             }
             return *this;
         }
-        optional& operator=(optional&& rhs) noexcept(::std::is_nothrow_move_assignable<T>::value)
+        optional& operator=(optional&& rhs) noexcept(std::is_nothrow_move_assignable<T>::value)
         {
             if (initialized)
             {
@@ -175,14 +175,14 @@ namespace stdext
         }
 
         template <class U, class... Args>
-        void emplace(::std::initializer_list<U> il, Args&&... args)
+        void emplace(std::initializer_list<U> il, Args&&... args)
         {
             emplace(il, forward<Args>(args)...);
         }
 
         // 5.3.4, Swap
         void swap(optional& rhs)
-            noexcept(::std::is_nothrow_move_constructible<T>::value
+            noexcept(std::is_nothrow_move_constructible<T>::value
                 && noexcept(swap(declval<T&>(), declval<T&>())))
         {
             if (initialized)
@@ -222,12 +222,12 @@ namespace stdext
         {
             return initialized ? reinterpret_cast<const T&&>(this->storage) : throw bad_optional_access();
         }
-        template <class U, STDEXT_REQUIRES(::std::is_copy_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
+        template <class U, STDEXT_REQUIRES(std::is_copy_constructible<T>::value && std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) const &
         {
             return initialized ? reinterpret_cast<T&>(this->storage) : static_cast<T>(forward<U>(v));
         }
-        template <class U, STDEXT_REQUIRES(::std::is_move_constructible<T>::value && ::std::is_convertible<U&&, T>::value)>
+        template <class U, STDEXT_REQUIRES(std::is_move_constructible<T>::value && std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) &&
         {
             return initialized ? reinterpret_cast<T&&>(this->storage) : static_cast<T>(forward<U>(v));
@@ -391,9 +391,9 @@ namespace stdext
         x.swap(y);
     }
     template <class T>
-    constexpr optional<::std::decay_t<T>> make_optional(T&& v)
+    constexpr optional<std::decay_t<T>> make_optional(T&& v)
     {
-        return optional<::std::decay_t<T>>(forward<T>(v));
+        return optional<std::decay_t<T>>(forward<T>(v));
     }
 }
 

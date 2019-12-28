@@ -18,46 +18,46 @@
 namespace stdext
 {
     // Useful declarations
-    using ::std::begin;
-    using ::std::end;
+    using std::begin;
+    using std::end;
 
     namespace detail
     {
         DECLARE_HAS_INNER_TYPE(iterator_category);
     };
     template <class Iterator> struct is_iterator
-        : ::std::conditional_t<detail::HAS_INNER_TYPE(::std::iterator_traits<Iterator>, iterator_category),
+        : std::conditional_t<detail::HAS_INNER_TYPE(std::iterator_traits<Iterator>, iterator_category),
             true_type,
             false_type>
     { };
 
-    template <class Iterator> using iterator_category = typename ::std::iterator_traits<Iterator>::iterator_category;
+    template <class Iterator> using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
     namespace detail
     {
         template <class Iterator>
         struct value_type_of<Iterator, is_iterator, true>
         {
-            using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::value_type>;
+            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<Iterator>::value_type>;
         };
         template <class Iterator>
         struct difference_type_of<Iterator, is_iterator, true>
         {
-            using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::difference_type>;
+            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<Iterator>::difference_type>;
         };
         template <class Iterator>
         struct pointer_type_of<Iterator, is_iterator, true>
         {
-            using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::pointer>;
+            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<Iterator>::pointer>;
         };
         template <class Iterator>
         struct reference_type_of<Iterator, is_iterator, true>
         {
-            using type = ::std::enable_if_t<is_iterator<Iterator>::value, typename ::std::iterator_traits<Iterator>::reference>;
+            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<Iterator>::reference>;
         };
         template <class Iterator>
         struct size_type_of<Iterator, is_iterator, true>
         {
-            using type = ::std::make_unsigned_t<difference_type_t<Iterator, is_iterator>>;
+            using type = std::make_unsigned_t<difference_type_t<Iterator, is_iterator>>;
         };
     }
 
@@ -74,26 +74,26 @@ namespace stdext
 
     template <class Iterator> struct is_input_iterator
     {
-        static constexpr bool value = ::std::is_base_of<::std::input_iterator_tag, iterator_category<Iterator>>::value;
+        static constexpr bool value = std::is_base_of<std::input_iterator_tag, iterator_category<Iterator>>::value;
     };
     template <class Iterator> struct is_forward_iterator
     {
-        static constexpr bool value = ::std::is_base_of<::std::forward_iterator_tag, iterator_category<Iterator>>::value;
+        static constexpr bool value = std::is_base_of<std::forward_iterator_tag, iterator_category<Iterator>>::value;
     };
     template <class Iterator> struct is_bidirectional_iterator
     {
-        static constexpr bool value = ::std::is_base_of<::std::bidirectional_iterator_tag, iterator_category<Iterator>>::value;
+        static constexpr bool value = std::is_base_of<std::bidirectional_iterator_tag, iterator_category<Iterator>>::value;
     };
     template <class Iterator> struct is_random_access_iterator
     {
-        static constexpr bool value = ::std::is_base_of<::std::random_access_iterator_tag, iterator_category<Iterator>>::value;
+        static constexpr bool value = std::is_base_of<std::random_access_iterator_tag, iterator_category<Iterator>>::value;
     };
 
     template <class Iterator>
     class iterator_proxy
     {
     public:
-        using value_type = typename ::std::iterator_traits<Iterator>::value_type;
+        using value_type = typename std::iterator_traits<Iterator>::value_type;
 
     public:
         explicit iterator_proxy(const value_type& value) : value(value) { }

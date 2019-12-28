@@ -25,11 +25,11 @@
 namespace stdext
 {
     // Useful declarations
-    using ::std::swap;
-    using ::std::move;
-    using ::std::forward;
-    using ::std::exchange;
-    using ::std::declval;
+    using std::swap;
+    using std::move;
+    using std::forward;
+    using std::exchange;
+    using std::declval;
 
     template <class T, size_t size>
     constexpr size_t lengthof(T (&)[size]) noexcept
@@ -128,10 +128,10 @@ namespace stdext
 #define at_scope_success(...) auto STDEXT_CONCAT(scope_success_, __COUNTER__) = ::stdext::make_scope_error_guard(__VA_ARGS__, false)
 #define at_scope_error(...) auto STDEXT_CONCAT(scope_error_, __COUNTER__) = ::stdext::make_scope_error_guard(__VA_ARGS__, true)
 
-    template <class T, bool = ::std::is_empty<T>::value>
+    template <class T, bool = std::is_empty<T>::value>
     class compressed_base;
 
-    template <class T1, class T2, bool = ::std::is_empty<T1>::value, bool = ::std::is_empty<T2>::value>
+    template <class T1, class T2, bool = std::is_empty<T1>::value, bool = std::is_empty<T2>::value>
     class compressed_pair;
 
     template <class T>
@@ -142,8 +142,8 @@ namespace stdext
 
     public:
         compressed_base() = default;
-        explicit compressed_base(const T& v) noexcept(::std::is_nothrow_copy_constructible<T>::value) : value(v) { }
-        explicit compressed_base(T&& v) noexcept(::std::is_nothrow_move_constructible<T>::value) : value(::std::move(v)) { }
+        explicit compressed_base(const T& v) noexcept(std::is_nothrow_copy_constructible<T>::value) : value(v) { }
+        explicit compressed_base(T&& v) noexcept(std::is_nothrow_move_constructible<T>::value) : value(std::move(v)) { }
 
         friend bool operator == (const compressed_base& a, const compressed_base& b) noexcept
         {
@@ -197,9 +197,9 @@ namespace stdext
     public:
         compressed_pair() : v1(), v2() { }
         compressed_pair(const T1& v1, const T2& v2) : v1(v1), v2(v2) { }
-        compressed_pair(const T1& v1, T2&& v2) : v1(v1), v2(::std::move(v2)) { }
-        compressed_pair(T1&& v1, const T2& v2) : v1(::std::move(v1)), v2(v2) { }
-        compressed_pair(T1&& v1, T2&& v2) : v1(::std::move(v1)), v2(::std::move(v2)) { }
+        compressed_pair(const T1& v1, T2&& v2) : v1(v1), v2(std::move(v2)) { }
+        compressed_pair(T1&& v1, const T2& v2) : v1(std::move(v1)), v2(v2) { }
+        compressed_pair(T1&& v1, T2&& v2) : v1(std::move(v1)), v2(std::move(v2)) { }
 
         T1& first() noexcept { return v1; }
         const T1& first() const noexcept { return v1; }
@@ -228,9 +228,9 @@ namespace stdext
     public:
         compressed_pair() : T2(), v1() { }
         compressed_pair(const T1& v1, const T2& v2) : T2(v2), v1(v1) { }
-        compressed_pair(const T1& v1, T2&& v2) : T2(::std::move(v2)), v1(v1) { }
-        compressed_pair(T1&& v1, const T2& v2) : T2(v2), v1(::std::move(v1)) { }
-        compressed_pair(T1&& v1, T2&& v2) : T2(::std::move(v2)), v1(::std::move(v1)) { }
+        compressed_pair(const T1& v1, T2&& v2) : T2(std::move(v2)), v1(v1) { }
+        compressed_pair(T1&& v1, const T2& v2) : T2(v2), v1(std::move(v1)) { }
+        compressed_pair(T1&& v1, T2&& v2) : T2(std::move(v2)), v1(std::move(v1)) { }
 
         T1& first() noexcept { return v1; }
         const T1& first() const noexcept { return v1; }
@@ -257,9 +257,9 @@ namespace stdext
     public:
         compressed_pair() : T1(), v2() { }
         compressed_pair(const T1& v1, const T2& v2) : T1(v1), v2(v2) { }
-        compressed_pair(const T1& v1, T2&& v2) : T1(v1), v2(::std::move(v2)) { }
-        compressed_pair(T1&& v1, const T2& v2) : T1(::std::move(v1)), v2(v2) { }
-        compressed_pair(T1&& v1, T2&& v2) : T1(::std::move(v1)), v2(::std::move(v2)) { }
+        compressed_pair(const T1& v1, T2&& v2) : T1(v1), v2(std::move(v2)) { }
+        compressed_pair(T1&& v1, const T2& v2) : T1(std::move(v1)), v2(v2) { }
+        compressed_pair(T1&& v1, T2&& v2) : T1(std::move(v1)), v2(std::move(v2)) { }
 
         T1& first() noexcept { return static_cast<T1&>(*this); }
         const T1& first() const noexcept { return static_cast<const T1&>(*this); }
@@ -286,9 +286,9 @@ namespace stdext
     public:
         compressed_pair() : T1(), T2() { }
         compressed_pair(const T1& v1, const T2& v2) : T1(v1), T2(v2) { }
-        compressed_pair(const T1& v1, T2&& v2) : T1(v1), T2(::std::move(v2)) { }
-        compressed_pair(T1&& v1, const T2& v2) : T1(::std::move(v1)), T2(v2) { }
-        compressed_pair(T1&& v1, T2&& v2) : T1(::std::move(v1)), T2(::std::move(v2)) { }
+        compressed_pair(const T1& v1, T2&& v2) : T1(v1), T2(std::move(v2)) { }
+        compressed_pair(T1&& v1, const T2& v2) : T1(std::move(v1)), T2(v2) { }
+        compressed_pair(T1&& v1, T2&& v2) : T1(std::move(v1)), T2(std::move(v2)) { }
 
         T1& first() noexcept { return static_cast<T1&>(*this); }
         const T1& first() const noexcept { return static_cast<const T1&>(*this); }
@@ -320,9 +320,9 @@ namespace stdext
     public:
         compressed_pair() : base1(), base2() { }
         compressed_pair(const T& v1, const T& v2) : base1(v1), base2(v2) { }
-        compressed_pair(const T& v1, T&& v2) : base1(v1), base2(::std::move(v2)) { }
-        compressed_pair(T&& v1, const T& v2) : base1(::std::move(v1)), base2(v2) { }
-        compressed_pair(T&& v1, T&& v2) : base1(::std::move(v1)), base2(::std::move(v2)) { }
+        compressed_pair(const T& v1, T&& v2) : base1(v1), base2(std::move(v2)) { }
+        compressed_pair(T&& v1, const T& v2) : base1(std::move(v1)), base2(v2) { }
+        compressed_pair(T&& v1, T&& v2) : base1(std::move(v1)), base2(std::move(v2)) { }
 
         T& first() noexcept { return static_cast<base1&>(*this); }
         const T& first() const noexcept { return static_cast<const base1&>(*this); }

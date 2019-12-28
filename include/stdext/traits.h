@@ -19,9 +19,9 @@
 #include <experimental/type_traits>
 namespace std
 {
-    using ::std::experimental::is_integral_v;
-    using ::std::experimental::is_same_v;
-    using ::std::experimental::is_signed_v;
+    using std::experimental::is_integral_v;
+    using std::experimental::is_same_v;
+    using std::experimental::is_signed_v;
 }
 #endif
 
@@ -52,8 +52,8 @@ template <class T, class... ArgTypes> struct has_method_##MethodName            
 namespace stdext
 {
     // Useful declarations
-    using ::std::true_type;
-    using ::std::false_type;
+    using std::true_type;
+    using std::false_type;
 
     // Debugging helpers
     template <class T> struct error_type;
@@ -95,7 +95,7 @@ namespace stdext
 
     namespace detail
     {
-        template <class T, bool is_integral = ::std::is_integral_v<T>> struct equivalent_sized_type_base;
+        template <class T, bool is_integral = std::is_integral_v<T>> struct equivalent_sized_type_base;
         template <size_t size, bool is_signed> struct make_sized_integral_type;
         template <size_t size, bool is_signed> using make_sized_integral_type_t = typename make_sized_integral_type<size, is_signed>::type;
 
@@ -107,7 +107,7 @@ namespace stdext
         template <class T>
         struct equivalent_sized_type_base<T, true>
         {
-            using type = make_sized_integral_type_t<sizeof(T), ::std::is_signed_v<T>>;
+            using type = make_sized_integral_type_t<sizeof(T), std::is_signed_v<T>>;
         };
 
         template <size_t size, bool is_signed>
@@ -118,22 +118,22 @@ namespace stdext
         template <bool is_signed>
         struct make_sized_integral_type<1, is_signed>
         {
-            using type = ::std::conditional_t<is_signed, int8_t, uint8_t>;
+            using type = std::conditional_t<is_signed, int8_t, uint8_t>;
         };
         template <bool is_signed>
         struct make_sized_integral_type<2, is_signed>
         {
-            using type = ::std::conditional_t<is_signed, int16_t, uint16_t>;
+            using type = std::conditional_t<is_signed, int16_t, uint16_t>;
         };
         template <bool is_signed>
         struct make_sized_integral_type<4, is_signed>
         {
-            using type = ::std::conditional_t<is_signed, int32_t, uint32_t>;
+            using type = std::conditional_t<is_signed, int32_t, uint32_t>;
         };
         template <bool is_signed>
         struct make_sized_integral_type<8, is_signed>
         {
-            using type = ::std::conditional_t<is_signed, int64_t, uint64_t>;
+            using type = std::conditional_t<is_signed, int64_t, uint64_t>;
         };
     }
 

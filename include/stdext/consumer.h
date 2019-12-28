@@ -77,18 +77,18 @@ namespace stdext
     };
 
     template <class Elem, class Iterator,
-        STDEXT_REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value)>
+        STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value)>
     auto make_consumer(Iterator&& i)
     {
-        return iterator_consumer<::std::decay_t<Iterator>>(forward<Iterator>(i));
+        return iterator_consumer<std::decay_t<Iterator>>(forward<Iterator>(i));
     }
 
     template <class Elem, class Iterator, class Sentinel,
-        STDEXT_REQUIRES(::std::is_assignable<decltype(*::std::declval<::std::decay_t<Iterator>>()), Elem>::value
-            && is_equality_comparable<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>::value)>
+        STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value
+            && is_equality_comparable<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)
     {
-        return delimited_iterator_consumer<::std::decay_t<Iterator>, ::std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
+        return delimited_iterator_consumer<std::decay_t<Iterator>, std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
     }
 }
 

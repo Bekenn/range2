@@ -23,8 +23,8 @@ namespace stdext
     public:
         using reference = typename delimited_iterator_range<T*>::reference;
         using const_iterator = const T*;
-        using reverse_iterator = ::std::reverse_iterator<T*>;
-        using const_reverse_iterator = ::std::reverse_iterator<const T*>;
+        using reverse_iterator = std::reverse_iterator<T*>;
+        using const_reverse_iterator = std::reverse_iterator<const T*>;
         using const_reference = const T&;
         using pointer = T*;
         using size_type = size_t;
@@ -56,8 +56,8 @@ namespace stdext
     {
     public:
         using const_iterator = const T*;
-        using reverse_iterator = ::std::reverse_iterator<const T*>;
-        using const_reverse_iterator = ::std::reverse_iterator<const T*>;
+        using reverse_iterator = std::reverse_iterator<const T*>;
+        using const_reverse_iterator = std::reverse_iterator<const T*>;
         using const_reference = const T&;
         using pointer = const T*;
         using size_type = size_t;

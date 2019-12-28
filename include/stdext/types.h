@@ -22,73 +22,73 @@
 #define STDEXT_FLAGS_ENUM(T)                                            \
 constexpr T operator ~ (T v) noexcept                                   \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return static_cast<T>(~static_cast<U>(v));                          \
 }                                                                       \
 constexpr auto operator + (T v) noexcept                                \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return static_cast<U>(v);                                           \
 }                                                                       \
 constexpr T operator | (T a, T b) noexcept                              \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return static_cast<T>(static_cast<U>(a) | static_cast<U>(b));       \
 }                                                                       \
 constexpr T operator & (T a, T b) noexcept                              \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return static_cast<T>(static_cast<U>(a) & static_cast<U>(b));       \
 }                                                                       \
 constexpr T operator ^ (T a, T b) noexcept                              \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));       \
 }                                                                       \
 constexpr T& operator |= (T& a, T b) noexcept                           \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return a = static_cast<T>(static_cast<U>(a) | static_cast<U>(b));   \
 }                                                                       \
 constexpr T& operator &= (T& a, T b) noexcept                           \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return a = static_cast<T>(static_cast<U>(a) & static_cast<U>(b));   \
 }                                                                       \
 constexpr T& operator ^= (T& a, T b) noexcept                           \
 {                                                                       \
-    using U = ::std::underlying_type_t<T>;                              \
+    using U = std::underlying_type_t<T>;                              \
     return a = static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));   \
 }
 
 namespace stdext
 {
     // Types imported from cstddef
-    using ::std::ptrdiff_t;
-    using ::std::size_t;
-    using ::std::max_align_t;
-    using ::std::nullptr_t;
+    using std::ptrdiff_t;
+    using std::size_t;
+    using std::max_align_t;
+    using std::nullptr_t;
 
     // Types imported from cstdint
-    using ::std::int8_t;
-    using ::std::int16_t;
-    using ::std::int32_t;
-    using ::std::int64_t;
-    using ::std::intmax_t;
-    using ::std::intptr_t;
+    using std::int8_t;
+    using std::int16_t;
+    using std::int32_t;
+    using std::int64_t;
+    using std::intmax_t;
+    using std::intptr_t;
 
-    using ::std::uint8_t;
-    using ::std::uint16_t;
-    using ::std::uint32_t;
-    using ::std::uint64_t;
-    using ::std::uintmax_t;
-    using ::std::uintptr_t;
+    using std::uint8_t;
+    using std::uint16_t;
+    using std::uint32_t;
+    using std::uint64_t;
+    using std::uintmax_t;
+    using std::uintptr_t;
 
     template <typename T>
     class flags
     {
     private:
-        using U = ::std::underlying_type_t<T>;
+        using U = std::underlying_type_t<T>;
 
     public:
         constexpr flags() noexcept : value() { }

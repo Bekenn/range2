@@ -105,8 +105,8 @@ namespace stdext
         file_input_stream(const char* path, utf8_path_encoding);
 
     public:
-        ::std::error_code open(const path_char* path);
-        ::std::error_code open(const char* path, utf8_path_encoding);
+        std::error_code open(const path_char* path);
+        std::error_code open(const char* path, utf8_path_encoding);
     };
 
     class file_output_stream : public detail::file_stream_base, public detail::file_output_stream_base<file_output_stream>
@@ -124,8 +124,8 @@ namespace stdext
         file_output_stream(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
 
     public:
-        ::std::error_code open(const path_char* path, flags<file_open_flags> flags = default_flags);
-        ::std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
+        std::error_code open(const path_char* path, flags<file_open_flags> flags = default_flags);
+        std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
     };
 
     class file_stream : public detail::file_stream_base, public detail::file_input_stream_base<file_stream>, public detail::file_output_stream_base<file_stream>, public stream
@@ -143,8 +143,8 @@ namespace stdext
         file_stream(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
 
     public:
-        ::std::error_code open(const path_char* path, flags<file_open_flags> flags = default_flags);
-        ::std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
+        std::error_code open(const path_char* path, flags<file_open_flags> flags = default_flags);
+        std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
     };
 }
 

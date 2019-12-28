@@ -96,17 +96,17 @@ namespace stdext
         template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr Interface& as() const noexcept
         {
-            return ::std::get<Interface&>(interfaces);
+            return std::get<Interface&>(interfaces);
         }
 
         template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr const Interface& as_const() const noexcept
         {
-            return ::std::get<Interface&>(interfaces);
+            return std::get<Interface&>(interfaces);
         }
 
     private:
-        ::std::tuple<Interfaces&...> interfaces;
+        std::tuple<Interfaces&...> interfaces;
     };
 
     template <class... Interfaces>
@@ -186,17 +186,17 @@ namespace stdext
         template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr Interface* as() const noexcept
         {
-            return ::std::get<Interface*>(interfaces);
+            return std::get<Interface*>(interfaces);
         }
 
         template <class Interface, STDEXT_REQUIRES(list_any_of_v<type_list<Interfaces...>, detail::is_same_as<Interface>::template templ>)>
         constexpr const Interface* as_const() const noexcept
         {
-            return ::std::get<Interface*>(interfaces);
+            return std::get<Interface*>(interfaces);
         }
 
     private:
-        ::std::tuple<Interfaces*...> interfaces;
+        std::tuple<Interfaces*...> interfaces;
     };
 }
 

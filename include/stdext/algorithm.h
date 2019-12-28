@@ -126,7 +126,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     range_position_type_t<Range1> find_first_of(const Range1& range1, const Range2& range2)
     {
-        return find_first_of(range1, range2, ::std::equal_to<>());
+        return find_first_of(range1, range2, std::equal_to<>());
     }
 
     template <class Range, class BinaryPredicate,
@@ -155,7 +155,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> adjacent_find(const Range& range)
     {
-        return adjacent_find(range, ::std::equal_to<>());
+        return adjacent_find(range, std::equal_to<>());
     }
 
     template <class Function, class... Args>
@@ -168,22 +168,22 @@ namespace stdext
     namespace detail
     {
         template <class... Ranges, size_t... indices>
-        ::std::tuple<::std::tuple<const Ranges&, range_position_type_t<Ranges>&>...>
-            make_range_pos_pairs(::std::tuple<const Ranges&...> ranges, ::std::tuple<range_position_type_t<Ranges>...>& positions, value_list<indices...>)
+        std::tuple<std::tuple<const Ranges&, range_position_type_t<Ranges>&>...>
+            make_range_pos_pairs(std::tuple<const Ranges&...> ranges, std::tuple<range_position_type_t<Ranges>...>& positions, value_list<indices...>)
         {
-            return ::std::make_tuple(::std::make_tuple(::std::ref(::std::get<indices>(ranges)), ::std::ref(::std::get<indices>(positions)))...);
+            return std::make_tuple(std::make_tuple(std::ref(std::get<indices>(ranges)), std::ref(std::get<indices>(positions)))...);
         }
     }
     template <class Function, class... Ranges,
         STDEXT_REQUIRES(const_and<is_multi_pass_range<Ranges>::value...>::value)>
-    ::std::tuple<range_position_type_t<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
+    std::tuple<range_position_type_t<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
     {
-        ::std::tuple<range_position_type_t<Ranges>...> positions(ranges.begin_pos()...);
-        auto args = detail::make_range_pos_pairs(::std::make_tuple(::std::ref(ranges)...), positions, iota_list_t<sizeof...(Ranges), size_t>());
-        ::std::apply([&](auto&... rp)
+        std::tuple<range_position_type_t<Ranges>...> positions(ranges.begin_pos()...);
+        auto args = detail::make_range_pos_pairs(std::make_tuple(std::ref(ranges)...), positions, iota_list_t<sizeof...(Ranges), size_t>());
+        std::apply([&](auto&... rp)
         {
-            for (; !multi_or(::std::get<0>(rp).is_end_pos(::std::get<1>(rp))...); for_each_argument([](auto& rp) { ::std::get<0>(rp).inc_pos(::std::get<1>(rp)); }, rp...))
-                for_each_argument([&](const auto& rp) { f(::std::get<0>(rp).at_pos(::std::get<1>(rp))); });
+            for (; !multi_or(std::get<0>(rp).is_end_pos(std::get<1>(rp))...); for_each_argument([](auto& rp) { std::get<0>(rp).inc_pos(std::get<1>(rp)); }, rp...))
+                for_each_argument([&](const auto& rp) { f(std::get<0>(rp).at_pos(std::get<1>(rp))); });
         }, args);
         return positions;
     }
@@ -213,10 +213,10 @@ namespace stdext
 
     template <class Range1, class Range2, class BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
-    ::std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
+    std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
         mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
-        auto pos = ::std::make_pair(range1.begin_pos(), range2.begin_pos());
+        auto pos = std::make_pair(range1.begin_pos(), range2.begin_pos());
         for (; !range1.is_end_pos(pos.first) && !range2.is_end_pos(pos.second);
              range1.inc_pos(pos.first), range2.inc_pos(pos.second))
         {
@@ -229,10 +229,10 @@ namespace stdext
 
     template <class Range1, class Range2,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
-    ::std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
+    std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
         mismatch(const Range1& range1, const Range2& range2)
     {
-        return mismatch(range1, range2, ::std::equal_to<>());
+        return mismatch(range1, range2, std::equal_to<>());
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
@@ -247,7 +247,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2)
     {
-        return equal(range1, range2, ::std::equal_to<>());
+        return equal(range1, range2, std::equal_to<>());
     }
 
     namespace detail
@@ -295,7 +295,7 @@ namespace stdext
     bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         return detail::is_permutation(range1, range2, forward<BinaryPredicate>(pred),
-            ::std::conditional_t<is_counted_range<Range1>::value && is_counted_range<Range2>::value,
+            std::conditional_t<is_counted_range<Range1>::value && is_counted_range<Range2>::value,
                 true_type,
                 false_type>());
     }
@@ -304,7 +304,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool is_permutation(const Range1& range1, const Range2& range2)
     {
-        return is_permutation(range1, range2, ::std::equal_to<>());
+        return is_permutation(range1, range2, std::equal_to<>());
     }
 
     template <class Range1, class Range2, class BinaryPredicate,
@@ -326,11 +326,11 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     range_position_type_t<Range1> search(const Range1& range1, const Range2& range2)
     {
-        return search(range1, range2, ::std::equal_to<>());
+        return search(range1, range2, std::equal_to<>());
     }
 
     template <class Range, class Size, class T, class BinaryPredicate,
-        STDEXT_REQUIRES(is_multi_pass_range<Range>::value && ::std::is_integral<Size>::value)>
+        STDEXT_REQUIRES(is_multi_pass_range<Range>::value && std::is_integral<Size>::value)>
     range_position_type_t<Range> search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
     {
         auto const_gen = make_constant_generator(value);
@@ -349,14 +349,14 @@ namespace stdext
     }
 
     template <class Range, class OutputRange>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy(const Range& range, const OutputRange& result)
     {
         return for_each([](const auto& from, auto& to) { to = from; }, range, result);
     }
 
     template <class Range, class Size, class OutputRange>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy_n(const Range& range, Size n, const OutputRange& result)
     {
         auto counted = make_counted_range(range, n);
@@ -365,10 +365,10 @@ namespace stdext
     }
 
     template <class Range, class OutputRange, class Predicate>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
-        auto pos = ::std::make_pair(range.begin_pos(), result.begin_pos());
+        auto pos = std::make_pair(range.begin_pos(), result.begin_pos());
         for (; !range.is_end_pos(pos.first) && !result.is_end_pos(pos.second); range.inc_pos(pos.first), result.inc_pos(pos.second))
         {
             if (pred(range.at_pos(pos.first)))
@@ -379,7 +379,7 @@ namespace stdext
 
     template <class Range, class OutputRange,
         STDEXT_REQUIRES(is_bidirectional_range<OutputRange>::value && is_delimited_range<OutputRange>::value)>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy_backward(const Range& range, const OutputRange& result)
     {
         auto rev = make_reverse_range(result);
@@ -388,7 +388,7 @@ namespace stdext
     }
 
     template <class Range, class OutputRange>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         move(const Range& range, const OutputRange& result)
     {
         return for_each([](auto& from, auto& to) { to = move(from); }, range, result);
@@ -396,7 +396,7 @@ namespace stdext
 
     template <class Range, class OutputRange,
         STDEXT_REQUIRES(is_bidirectional_range<OutputRange>::value && is_delimited_range<OutputRange>::value)>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         move_backward(const Range& range, const OutputRange& result)
     {
         auto rev = make_reverse_range(result);
@@ -405,21 +405,21 @@ namespace stdext
     }
 
     template <class Range1, class Range2>
-    ::std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
+    std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
         swap_ranges(const Range1& range1, const Range2& range2)
     {
         return for_each([](auto& from, auto& to) { swap(from, to); }, range1, range2);
     }
 
     template <class Range, class OutputRange, class UnaryOperation>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         transform(const Range& range, const OutputRange& result, UnaryOperation&& op)
     {
         return for_each([&](const auto& from, auto& to) { to = op(from); }, range, result);
     }
 
     template <class Range1, class Range2, class OutputRange, class BinaryOperation>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         transform(const Range1& range1, const Range2& range2, const OutputRange& result, BinaryOperation&& op)
     {
         return for_each([&](const auto& from1, const auto& from2, auto& to) { to = op(from1, from2); }, range1, range2, result);
@@ -429,7 +429,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> replace_if(const Range& range, Predicate&& pred, const T& new_value)
     {
-        return ::std::get<0>(for_each([&](auto& value) { if (pred(value)) value = new_value; }, range));
+        return std::get<0>(for_each([&](auto& value) { if (pred(value)) value = new_value; }, range));
     }
 
     template <class Range, class T,
@@ -440,14 +440,14 @@ namespace stdext
     }
 
     template <class Range, class OutputRange, class Predicate, class T>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         replace_copy_if(const Range& range, const OutputRange& result, Predicate&& pred, const T& new_value)
     {
         return for_each([&](const auto& from, auto& to) { to = pred(from) ? new_value : from; }, range, result);
     }
 
     template <class Range, class OutputRange, class T>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         replace_copy(const Range& range, const OutputRange& result, const T& old_value, const T& new_value)
     {
         return replace_copy_if(range, result, [&](const auto& value) { return value == old_value; }, new_value);
@@ -456,7 +456,7 @@ namespace stdext
     template <class Range, class T>
     range_position_type_t<Range> fill(const Range& range, const T& value)
     {
-        return ::std::get<0>(for_each([&](auto& v) { v = value; }));
+        return std::get<0>(for_each([&](auto& v) { v = value; }));
     }
 
     template <class Range, class Size, class T>
@@ -470,7 +470,7 @@ namespace stdext
     template <class Range, class Function>
     range_position_type_t<Range> generate(const Range& range, Function&& func)
     {
-        return ::std::get<0>(for_each([&](auto& value) { value = func(); }, range));
+        return std::get<0>(for_each([&](auto& value) { value = func(); }, range));
     }
 
     template <class Range, class Size, class Function>
@@ -507,14 +507,14 @@ namespace stdext
     }
 
     template <class Range, class OutputRange, class Predicate>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         remove_copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
         return copy_if(range, result, [&](const auto& v) { return !pred(v); });
     }
 
     template <class Range, class OutputRange, class T>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         remove_copy(const Range& range, const OutputRange& result, const T& value)
     {
         return remove_copy_if(range, result, [&](const auto& v) { return v == value; });
@@ -557,30 +557,30 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> unique(const Range& range)
     {
-        return unique(range, ::std::equal_to<>());
+        return unique(range, std::equal_to<>());
     }
 
     template <class Range, class OutputRange, class BinaryPredicate>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         unique_copy(const Range& range, const OutputRange& result, BinaryPredicate&& pred)
     {
         auto from = range.begin_pos();
         if (range.is_end_pos(from))
-            return ::std::make_pair(from, result.begin_pos());
+            return std::make_pair(from, result.begin_pos());
 
         auto to = for_each([&](auto& out)
         {
             out = range.at_pos(from);
             from = find_if(next_pos(range, from), [&](const auto& value) { return !pred(value, range.at_pos(from)); });
         }, result);
-        return ::std::make_pair(from, to);
+        return std::make_pair(from, to);
     }
 
     template <class Range, class OutputRange>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         unique_copy(const Range& range, const OutputRange& result)
     {
-        return unique_copy(range, result, ::std::equal_to<>());
+        return unique_copy(range, result, std::equal_to<>());
     }
 
     template <class Range,
@@ -601,12 +601,12 @@ namespace stdext
 
     template <class Range, class OutputRange,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         reverse_copy(const Range& range, const OutputRange& result)
     {
         auto rng = make_reverse_range(range);
         auto pos = copy(rng, result);
-        return ::std::make_pair(rng.base_pos(pos.first), pos.second);
+        return std::make_pair(rng.base_pos(pos.first), pos.second);
     }
 
     template <class Range,
@@ -619,16 +619,16 @@ namespace stdext
         auto ranges = split_range(range, middle);
         auto pos = for_each([](auto& a, auto& b) { swap(a, b); }, ranges.first, ranges.second);
 
-        if (ranges.first.is_end_pos(::std::get<0>(pos)))
-            return rotate(ranges.second, ::std::get<1>(pos));
+        if (ranges.first.is_end_pos(std::get<0>(pos)))
+            return rotate(ranges.second, std::get<1>(pos));
 
-        rotate(subrange_from(range, ::std::get<0>(pos)), middle);
-        return ::std::get<0>(pos);
+        rotate(subrange_from(range, std::get<0>(pos)), middle);
+        return std::get<0>(pos);
     }
 
     template <class Range, class OutputRange,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         rotate_copy(const Range& range, range_position_type_t<Range> middle, const OutputRange& result)
     {
         auto pos = for_each([](const auto& from, auto& to) { to = from; }, subrange_from(range, middle), result);
@@ -642,7 +642,7 @@ namespace stdext
         if (is_empty(range))
             return;
 
-        ::std::uniform_int_distribution<range_size_type_t<Range>> dist;
+        std::uniform_int_distribution<range_size_type_t<Range>> dist;
 
         auto size = range.size();
         for (range_size_type_t<Range> n = 0; n < size - 1; ++n)
@@ -716,7 +716,7 @@ namespace stdext
     namespace detail
     {
         template <class Range, class Predicate>
-        range_position_type_t<Range> fast_stable_partition(const Range& range, Predicate&& pred, ::std::vector<range_value_type_t<Range>>& buf)
+        range_position_type_t<Range> fast_stable_partition(const Range& range, Predicate&& pred, std::vector<range_value_type_t<Range>>& buf)
         {
             auto l = find_if_not(range, pred);
             if (range.is_end_pos(l))
@@ -769,12 +769,12 @@ namespace stdext
         template <class Range, class Predicate>
         range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred, true_type /* is_counted */)
         {
-            ::std::vector<range_value_type_t<Range>> buf;
+            std::vector<range_value_type_t<Range>> buf;
             try
             {
                 buf.reserve(range.size());
             }
-            catch (const ::std::bad_alloc&)
+            catch (const std::bad_alloc&)
             {
                 return slow_stable_partition(range, pred);
             }
@@ -791,7 +791,7 @@ namespace stdext
     }
 
     template <class Range, class OutputRange1, class OutputRange2, class Predicate>
-    ::std::tuple<range_position_type_t<Range>, range_position_type_t<OutputRange1>, range_position_type_t<OutputRange2>>
+    std::tuple<range_position_type_t<Range>, range_position_type_t<OutputRange1>, range_position_type_t<OutputRange2>>
         partition_copy(const Range& range, const OutputRange1& out_true, const OutputRange2& out_false, Predicate&& pred)
     {
         auto pos = range.begin_pos();
@@ -842,8 +842,8 @@ namespace stdext
         range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred, true_type /* is_counted */)
         {
             auto size = range.size();
-            auto l = ::std::make_pair(range.begin_pos(), range_size_type_t<Range>(0));
-            auto r = ::std::make_pair(range.begin_pos(), size);
+            auto l = std::make_pair(range.begin_pos(), range_size_type_t<Range>(0));
+            auto r = std::make_pair(range.begin_pos(), size);
             advance_pos(range, r.first, size);
 
             while (l.second != r.second)
@@ -912,7 +912,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void push_heap(const Range& range)
     {
-        return push_heap(range, ::std::less<>());
+        return push_heap(range, std::less<>());
     }
 
     namespace detail
@@ -969,7 +969,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void pop_heap(const Range& range)
     {
-        pop_heap(range, ::std::less<>());
+        pop_heap(range, std::less<>());
     }
 
     template <class Range, class T, class Compare,
@@ -984,7 +984,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void emplace_heap(const Range& range, T&& value)
     {
-        emplace_heap(range, forward<T>(value), ::std::less<>());
+        emplace_heap(range, forward<T>(value), std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1023,7 +1023,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void make_heap(const Range& range)
     {
-        make_heap(range, ::std::less<>());
+        make_heap(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1045,7 +1045,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void sort_heap(const Range& range)
     {
-        sort_heap(range, ::std::less<>());
+        sort_heap(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1074,7 +1074,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     range_position_type_t<Range> is_heap_until(const Range& range)
     {
-        return is_heap_until(range, ::std::less<>());
+        return is_heap_until(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1088,7 +1088,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     bool is_heap(const Range& range)
     {
-        return range.is_end_pos(is_heap_until(range, ::std::less<>()));
+        return range.is_end_pos(is_heap_until(range, std::less<>()));
     }
 
     namespace detail
@@ -1167,7 +1167,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void nth_element(const Range& range, range_position_type_t<Range> nth)
     {
-        nth_element(range, nth, ::std::less<>());
+        nth_element(range, nth, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1189,13 +1189,13 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void sort(const Range& range)
     {
-        sort(range, ::std::less<>());
+        sort(range, std::less<>());
     }
 
     namespace detail
     {
         template <class Range, class Compare>
-        void fast_stable_sort(const Range& range, Compare&& comp, ::std::vector<range_value_type_t<Range>>& buf)
+        void fast_stable_sort(const Range& range, Compare&& comp, std::vector<range_value_type_t<Range>>& buf)
         {
             if (range.size() <= 1)
                 return;
@@ -1256,12 +1256,12 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void stable_sort(const Range& range, Compare&& comp)
     {
-        ::std::vector<range_value_type_t<Range>> buf;
+        std::vector<range_value_type_t<Range>> buf;
         try
         {
             buf.reserve(range.size());
         }
-        catch (const ::std::bad_alloc&)
+        catch (const std::bad_alloc&)
         {
             detail::slow_stable_sort(range, comp);
             return;
@@ -1274,7 +1274,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void stable_sort(const Range& range)
     {
-        stable_sort(range, ::std::less<>());
+        stable_sort(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1289,7 +1289,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_delimited_range<Range>::value)>
     void partial_sort(const Range& range, range_position_type_t<Range> middle)
     {
-        partial_sort(range, middle, ::std::less<>());
+        partial_sort(range, middle, std::less<>());
     }
 
     template <class Range, class OutputRange, class Compare,
@@ -1327,7 +1327,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && is_random_access_range<OutputRange>::value && is_counted_range<OutputRange>::value)>
     range_position_type_t<OutputRange> partial_sort_copy(const Range& range, const OutputRange& out)
     {
-        return partial_sort_copy(range, ::std::less<>());
+        return partial_sort_copy(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1355,7 +1355,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> is_sorted_until(const Range& range)
     {
-        return is_sorted_until(range, ::std::less<>());
+        return is_sorted_until(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1369,7 +1369,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     bool is_sorted(const Range& range)
     {
-        return range.is_end_pos(is_sorted_until(range, ::std::less<>()));
+        return range.is_end_pos(is_sorted_until(range, std::less<>()));
     }
 
     template <class Range, class T, class Compare,
@@ -1413,7 +1413,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     delimited_range<Range> equal_range(const Range& range, const T& value)
     {
-        return equal_range(range, value, ::std::less<>());
+        return equal_range(range, value, std::less<>());
     }
 
     template <class Range, class T, class Compare,
@@ -1431,35 +1431,35 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     bool binary_search(const Range& range, const T& value)
     {
-        return binary_search(range, value, ::std::less<>());
+        return binary_search(range, value, std::less<>());
     }
 
     template <class Range1, class Range2, class OutputRange, class Compare>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         merge(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
-        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
-        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        auto pos = std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(std::get<0>(pos)) && !range2.is_end_pos(std::get<1>(pos)) && !result.is_end_pos(std::get<2>(pos)))
         {
-            if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
-                write(result, ::std::get<2>(pos), read(range2, ::std::get<1>(pos)));
+            if (comp(range2.at_pos(std::get<1>(pos)), range1.at_pos(std::get<0>(pos))))
+                write(result, std::get<2>(pos), read(range2, std::get<1>(pos)));
             else
-                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
+                write(result, std::get<2>(pos), read(range1, std::get<0>(pos)));
         }
 
-        if (!result.is_end_pos(::std::get<2>(pos)))
+        if (!result.is_end_pos(std::get<2>(pos)))
         {
-            if (!range1.is_end_pos(::std::get<0>(pos)))
+            if (!range1.is_end_pos(std::get<0>(pos)))
             {
-                auto pos2 = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
-                ::std::get<0>(pos) = pos2.first;
-                ::std::get<2>(pos) = pos2.second;
+                auto pos2 = copy(subrange_from(range1, std::get<0>(pos)), subrange_from(result, std::get<2>(pos)));
+                std::get<0>(pos) = pos2.first;
+                std::get<2>(pos) = pos2.second;
             }
-            else if (!range2.is_end_pos(::std::get<1>(pos)))
+            else if (!range2.is_end_pos(std::get<1>(pos)))
             {
-                auto pos2 = copy(subrange_from(range2, ::std::get<1>(pos)), subrange_from(result, ::std::get<2>(pos)));
-                ::std::get<1>(pos) = pos2.first;
-                ::std::get<2>(pos) = pos2.second;
+                auto pos2 = copy(subrange_from(range2, std::get<1>(pos)), subrange_from(result, std::get<2>(pos)));
+                std::get<1>(pos) = pos2.first;
+                std::get<2>(pos) = pos2.second;
             }
         }
 
@@ -1467,16 +1467,16 @@ namespace stdext
     }
 
     template <class Range1, class Range2, class OutputRange>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         merge(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
-        return merge(range1, range2, result, ::std::less<>());
+        return merge(range1, range2, result, std::less<>());
     }
 
     namespace detail
     {
         template <class Range, class Compare>
-        void fast_inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, ::std::vector<range_value_type_t<Range>>& buf)
+        void fast_inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, std::vector<range_value_type_t<Range>>& buf)
         {
             auto l = range.begin_pos();
             while (!range.is_end_pos(middle))
@@ -1520,12 +1520,12 @@ namespace stdext
         template <class Range, class Compare>
         void inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, true_type /* is_counted */)
         {
-            ::std::vector<range_value_type_t<Range>> buf;
+            std::vector<range_value_type_t<Range>> buf;
             try
             {
                 buf.reserve(range.size());
             }
-            catch (const ::std::bad_alloc&)
+            catch (const std::bad_alloc&)
             {
                 slow_inplace_merge(range, middle, comp);
                 return;
@@ -1546,7 +1546,7 @@ namespace stdext
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     void inplace_merge(const Range& range, range_position_type_t<Range> middle)
     {
-        detail::inplace_merge(range, middle, ::std::less<>(), is_counted_range<Range>());
+        detail::inplace_merge(range, middle, std::less<>(), is_counted_range<Range>());
     }
 
     template <class Range1, class Range2, class Compare>
@@ -1564,54 +1564,54 @@ namespace stdext
     template <class Range1, class Range2>
     bool includes(const Range1& range1, const Range2& range2)
     {
-        return includes(range1, range2, ::std::less<>());
+        return includes(range1, range2, std::less<>());
     }
 
     template <class Range1, class Range2, class OutputRange, class Compare>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_union(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
-        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
-        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        auto pos = std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(std::get<0>(pos)) && !range2.is_end_pos(std::get<1>(pos)) && !result.is_end_pos(std::get<2>(pos)))
         {
-            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
-                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
-            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
-                write(result, ::std::get<2>(pos), read(range2, ::std::get<1>(pos)));
+            if (comp(range1.at_pos(std::get<0>(pos)), range2.at_pos(std::get<1>(pos))))
+                write(result, std::get<2>(pos), read(range1, std::get<0>(pos)));
+            else if (comp(range2.at_pos(std::get<1>(pos)), range1.at_pos(std::get<0>(pos))))
+                write(result, std::get<2>(pos), read(range2, std::get<1>(pos)));
             else
             {
-                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
-                range2.inc_pos(::std::get<1>(pos));
+                write(result, std::get<2>(pos), read(range1, std::get<0>(pos)));
+                range2.inc_pos(std::get<1>(pos));
             }
         }
 
-        ::std::tie(::std::get<0>(pos), ::std::get<2>(pos)) = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
-        ::std::tie(::std::get<1>(pos), ::std::get<2>(pos)) = copy(subrange_from(range2, ::std::get<1>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        std::tie(std::get<0>(pos), std::get<2>(pos)) = copy(subrange_from(range1, std::get<0>(pos)), subrange_from(result, std::get<2>(pos)));
+        std::tie(std::get<1>(pos), std::get<2>(pos)) = copy(subrange_from(range2, std::get<1>(pos)), subrange_from(result, std::get<2>(pos)));
         return pos;
     }
 
     template <class Range1, class Range2, class OutputRange>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_union(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
-        return set_union(range1, range2, result, ::std::less<>());
+        return set_union(range1, range2, result, std::less<>());
     }
 
     template <class Range1, class Range2, class OutputRange, class Compare>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_intersection(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
-        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
-        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        auto pos = std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(std::get<0>(pos)) && !range2.is_end_pos(std::get<1>(pos)) && !result.is_end_pos(std::get<2>(pos)))
         {
-            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
-                range1.inc_pos(::std::get<0>(pos));
-            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
-                range2.inc_pos(::std::get<1>(pos));
+            if (comp(range1.at_pos(std::get<0>(pos)), range2.at_pos(std::get<1>(pos))))
+                range1.inc_pos(std::get<0>(pos));
+            else if (comp(range2.at_pos(std::get<1>(pos)), range1.at_pos(std::get<0>(pos))))
+                range2.inc_pos(std::get<1>(pos));
             else
             {
-                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
-                range2.inc_pos(::std::get<1>(pos));
+                write(result, std::get<2>(pos), read(range1, std::get<0>(pos)));
+                range2.inc_pos(std::get<1>(pos));
             }
         }
 
@@ -1619,70 +1619,70 @@ namespace stdext
     }
 
     template <class Range1, class Range2, class OutputRange>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_intersection(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
-        return set_intersection(range1, range2, result, ::std::less<>());
+        return set_intersection(range1, range2, result, std::less<>());
     }
 
     template <class Range1, class Range2, class OutputRange, class Compare>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_difference(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
-        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
-        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        auto pos = std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(std::get<0>(pos)) && !range2.is_end_pos(std::get<1>(pos)) && !result.is_end_pos(std::get<2>(pos)))
         {
-            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
-                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
-            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
-                range2.inc_pos(::std::get<1>(pos));
+            if (comp(range1.at_pos(std::get<0>(pos)), range2.at_pos(std::get<1>(pos))))
+                write(result, std::get<2>(pos), read(range1, std::get<0>(pos)));
+            else if (comp(range2.at_pos(std::get<1>(pos)), range1.at_pos(std::get<0>(pos))))
+                range2.inc_pos(std::get<1>(pos));
             else
             {
-                range1.inc_pos(::std::get<0>(pos));
-                range2.inc_pos(::std::get<1>(pos));
+                range1.inc_pos(std::get<0>(pos));
+                range2.inc_pos(std::get<1>(pos));
             }
         }
 
-        ::std::tie(::std::get<0>(pos), ::std::get<2>(pos)) = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        std::tie(std::get<0>(pos), std::get<2>(pos)) = copy(subrange_from(range1, std::get<0>(pos)), subrange_from(result, std::get<2>(pos)));
         return pos;
     }
 
     template <class Range1, class Range2, class OutputRange>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_difference(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
-        return set_difference(range1, range2, result, ::std::less<>());
+        return set_difference(range1, range2, result, std::less<>());
     }
 
 
     template <class Range1, class Range2, class OutputRange, class Compare>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_symmetric_difference(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
-        auto pos = ::std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
-        while (!range1.is_end_pos(::std::get<0>(pos)) && !range2.is_end_pos(::std::get<1>(pos)) && !result.is_end_pos(::std::get<2>(pos)))
+        auto pos = std::make_tuple(range1.begin_pos(), range2.begin_pos(), result.begin_pos());
+        while (!range1.is_end_pos(std::get<0>(pos)) && !range2.is_end_pos(std::get<1>(pos)) && !result.is_end_pos(std::get<2>(pos)))
         {
-            if (comp(range1.at_pos(::std::get<0>(pos)), range2.at_pos(::std::get<1>(pos))))
-                write(result, ::std::get<2>(pos), read(range1, ::std::get<0>(pos)));
-            else if (comp(range2.at_pos(::std::get<1>(pos)), range1.at_pos(::std::get<0>(pos))))
-                write(result, ::std::get<2>(pos), read(range2, ::std::get<1>(pos)));
+            if (comp(range1.at_pos(std::get<0>(pos)), range2.at_pos(std::get<1>(pos))))
+                write(result, std::get<2>(pos), read(range1, std::get<0>(pos)));
+            else if (comp(range2.at_pos(std::get<1>(pos)), range1.at_pos(std::get<0>(pos))))
+                write(result, std::get<2>(pos), read(range2, std::get<1>(pos)));
             else
             {
-                range1.inc_pos(::std::get<0>(pos));
-                range2.inc_pos(::std::get<1>(pos));
+                range1.inc_pos(std::get<0>(pos));
+                range2.inc_pos(std::get<1>(pos));
             }
         }
 
-        ::std::tie(::std::get<0>(pos), ::std::get<2>(pos)) = copy(subrange_from(range1, ::std::get<0>(pos)), subrange_from(result, ::std::get<2>(pos)));
-        ::std::tie(::std::get<1>(pos), ::std::get<2>(pos)) = copy(subrange_from(range2, ::std::get<1>(pos)), subrange_from(result, ::std::get<2>(pos)));
+        std::tie(std::get<0>(pos), std::get<2>(pos)) = copy(subrange_from(range1, std::get<0>(pos)), subrange_from(result, std::get<2>(pos)));
+        std::tie(std::get<1>(pos), std::get<2>(pos)) = copy(subrange_from(range2, std::get<1>(pos)), subrange_from(result, std::get<2>(pos)));
         return pos;
     }
 
     template <class Range1, class Range2, class OutputRange>
-    ::std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
+    std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_symmetric_difference(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
-        return set_symmetric_difference(range1, range2, result, ::std::less<>());
+        return set_symmetric_difference(range1, range2, result, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1710,7 +1710,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> min_element(const Range& range)
     {
-        return min_element(range, ::std::less<>());
+        return min_element(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1738,15 +1738,15 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> max_element(const Range& range)
     {
-        return max_element(range, ::std::less<>());
+        return max_element(range, std::less<>());
     }
 
     template <class Range, class Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<Range>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<Range>>
         minmax_element(const Range& range, Compare&& comp)
     {
-        auto best = ::std::make_pair(range.begin_pos(), range.begin_pos());
+        auto best = std::make_pair(range.begin_pos(), range.begin_pos());
         if (range.is_end_pos(best.first))
             return best;
 
@@ -1765,10 +1765,10 @@ namespace stdext
 
     template <class Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
-    ::std::pair<range_position_type_t<Range>, range_position_type_t<Range>>
+    std::pair<range_position_type_t<Range>, range_position_type_t<Range>>
         minmax_element(const Range& range)
     {
-        return minmax_element(range, ::std::less<>());
+        return minmax_element(range, std::less<>());
     }
 
     template <class Range1, class Range2, class Compare>
@@ -1791,7 +1791,7 @@ namespace stdext
     template <class Range1, class Range2>
     bool lexicographical_compare(const Range1& range1, const Range2& range2)
     {
-        return lexicographical_compare(range1, range2, ::std::less<>());
+        return lexicographical_compare(range1, range2, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1816,7 +1816,7 @@ namespace stdext
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     bool next_permutation(const Range& range)
     {
-        return next_permutation(range, ::std::less<>());
+        return next_permutation(range, std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1830,7 +1830,7 @@ namespace stdext
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     bool prev_permutation(const Range& range)
     {
-        return next_permutation(range, ::std::greater<>());
+        return next_permutation(range, std::greater<>());
     }
 }
 
