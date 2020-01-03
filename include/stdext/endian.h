@@ -30,6 +30,39 @@ namespace stdext
         native_endian = STDEXT_BYTE_ORDER_NATIVE
     };
 
+    template <class T, byte_order ByteOrder, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    class endian_int;
+
+    using int8_le = endian_int<int8_t, byte_order::little_endian>;
+    using int16_le = endian_int<int16_t, byte_order::little_endian>;
+    using int32_le = endian_int<int32_t, byte_order::little_endian>;
+    using int64_le = endian_int<int64_t, byte_order::little_endian>;
+
+    using uint8_le = endian_int<uint8_t, byte_order::little_endian>;
+    using uint16_le = endian_int<uint16_t, byte_order::little_endian>;
+    using uint32_le = endian_int<uint32_t, byte_order::little_endian>;
+    using uint64_le = endian_int<uint64_t, byte_order::little_endian>;
+
+    using int8_be = endian_int<int8_t, byte_order::big_endian>;
+    using int16_be = endian_int<int16_t, byte_order::big_endian>;
+    using int32_be = endian_int<int32_t, byte_order::big_endian>;
+    using int64_be = endian_int<int64_t, byte_order::big_endian>;
+
+    using uint8_be = endian_int<uint8_t, byte_order::big_endian>;
+    using uint16_be = endian_int<uint16_t, byte_order::big_endian>;
+    using uint32_be = endian_int<uint32_t, byte_order::big_endian>;
+    using uint64_be = endian_int<uint64_t, byte_order::big_endian>;
+
+    using int8_pdp = endian_int<int8_t, byte_order::pdp_endian>;
+    using int16_pdp = endian_int<int16_t, byte_order::pdp_endian>;
+    using int32_pdp = endian_int<int32_t, byte_order::pdp_endian>;
+    using int64_pdp = endian_int<int64_t, byte_order::pdp_endian>;
+
+    using uint8_pdp = endian_int<uint8_t, byte_order::pdp_endian>;
+    using uint16_pdp = endian_int<uint16_t, byte_order::pdp_endian>;
+    using uint32_pdp = endian_int<uint32_t, byte_order::pdp_endian>;
+    using uint64_pdp = endian_int<uint64_t, byte_order::pdp_endian>;
+
     namespace detail
     {
         template <byte_order order, class T> struct endian;
@@ -391,6 +424,91 @@ namespace stdext
         };
 #endif
     }
+
+    template <class T, byte_order ByteOrder, STDEXT_REQUIRED(std::is_integral_v<T>)>
+    class endian_int
+    {
+    public:
+        endian_int() noexcept = default;
+        constexpr endian_int(T value) noexcept : value_(swap<ByteOrder>(value)) { }
+        constexpr endian_int& operator = (T value) { value_ = value; return *this; }
+
+        friend constexpr bool operator == (const endian_int& lhs, const endian_int& rhs) noexcept
+        {
+            return lhs.value == rhs.value;
+        }
+
+        friend constexpr bool operator != (const endian_int& lhs, const endian_int& rhs) noexcept
+        {
+            return lhs.value != rhs.value;
+        }
+
+        friend constexpr bool operator == (const endian_int& lhs, T rhs) noexcept
+        {
+            return lhs.get() == rhs;
+        }
+
+        friend constexpr bool operator == (T lhs, const endian_int& rhs) noexcept
+        {
+            return lhs == rhs.get();
+        }
+
+        friend constexpr bool operator != (const endian_int& lhs, T rhs) noexcept
+        {
+            return lhs.get() != rhs;
+        }
+
+        friend constexpr bool operator != (T lhs, const endian_int& rhs) noexcept
+        {
+            return lhs != rhs.get();
+        }
+
+        friend constexpr bool operator < (const endian_int& lhs, T rhs) noexcept
+        {
+            return lhs.get() < rhs;
+        }
+
+        friend constexpr bool operator < (T lhs, const endian_int& rhs) noexcept
+        {
+            return lhs < rhs.get();
+        }
+
+        friend constexpr bool operator > (const endian_int& lhs, T rhs) noexcept
+        {
+            return lhs.get() > rhs;
+        }
+
+        friend constexpr bool operator > (T lhs, const endian_int& rhs) noexcept
+        {
+            return lhs > rhs.get();
+        }
+
+        friend constexpr bool operator <= (const endian_int& lhs, T rhs) noexcept
+        {
+            return lhs.get() <= rhs;
+        }
+
+        friend constexpr bool operator <= (T lhs, const endian_int& rhs) noexcept
+        {
+            return lhs <= rhs.get();
+        }
+
+        friend constexpr bool operator >= (const endian_int& lhs, T rhs) noexcept
+        {
+            return lhs.get() >= rhs;
+        }
+
+        friend constexpr bool operator >= (T lhs, const endian_int& rhs) noexcept
+        {
+            return lhs >= rhs.get();
+        }
+
+        constexpr T get() const noexcept { return swap<ByteOrder>(value_); }
+        constexpr operator T () const noexcept { return get(); }
+
+    private:
+        T value_;
+    };
 
     inline namespace literals
     {
