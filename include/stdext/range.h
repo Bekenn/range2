@@ -1729,6 +1729,12 @@ namespace stdext
         return delimited_iterator_range<Iterator>(i, j);
     }
 
+    template <class RangeProvider, STDEXT_REQUIRES(is_stl_range_provider<RangeProvider>::value)>
+    auto make_range(RangeProvider& provider)
+    {
+        return make_range(provider.begin(), provider.end());
+    }
+
     template <class Range, class TerminationPredicate>
     auto make_range(range_iterator<Range> i, TerminationPredicate&& pred)
     {
