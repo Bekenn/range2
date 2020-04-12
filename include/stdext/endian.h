@@ -530,7 +530,7 @@ namespace stdext
                     uint32_t(str[0]) << 24
                     | uint32_t(str[1]) << 16
                     | uint32_t(str[2]) << 8
-                    | uint32_t(str[0]));
+                    | uint32_t(str[3]));
             }
 
             constexpr uint16_t operator ""_le16(unsigned long long v)
