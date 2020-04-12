@@ -54,10 +54,10 @@ namespace stdext
 
     constexpr size_t utf8_character_length(char first)
     {
-        return (first & 0x80) == char(0x00) ? 1
-            : (first & 0xE0) == char(0xC0) && uint8_t(first) >= 0xC2 ? 2
-            : (first & 0xF0) == char(0xE0) ? 3
-            : (first & 0xF8) == char(0xF0) && uint8_t(first) < 0xF5 ? 4
+        return (first & 0x80) == 0x00 ? 1
+            : (first & 0xE0) == 0xC0 && uint8_t(first) >= 0xC2 ? 2
+            : (first & 0xF0) == 0xE0 ? 3
+            : (first & 0xF8) == 0xF0 && uint8_t(first) < 0xF5 ? 4
             : 0;
     }
 

@@ -12,6 +12,7 @@ namespace stdext
         Int ston(string_view str, size_t* idx, int base)
         {
             using UInt = std::make_unsigned_t<Int>;
+            using SInt = std::make_signed_t<Int>;
 
             auto p = find_if_not(str, isspace);
             if (str.is_end_pos(p))
@@ -88,13 +89,11 @@ namespace stdext
             if (!valid)
                 throw std::invalid_argument("invalid numeric string");
 
-            Int result = value;
+            SInt result = value;
             if (result < 0)
                 throw std::out_of_range("numeric value too large");
 
-            if (negative)
-                result *= -1;
-            return result;
+            return negative ? -result : result;
         }
 
 #if 0

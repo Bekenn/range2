@@ -123,7 +123,7 @@ namespace stdext { namespace filesystem
 
         path& make_preferred()
         {
-            if (preferred_separator == '/')
+            if constexpr (preferred_separator == '/')
                 return *this;
 
             replace(make_range(pathstring.begin(), pathstring.end()), PATH_STR('/'), preferred_separator);

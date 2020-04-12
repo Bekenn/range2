@@ -84,7 +84,7 @@ namespace stdext
         return { utf_result::error, char32_t() };
     }
 
-    std::pair<utf_result, char32_t> to_utf32(char32_t in, utfstate_t& state)
+    std::pair<utf_result, char32_t> to_utf32(char32_t in, [[maybe_unused]] utfstate_t& state)
     {
         if (!utf32_is_valid(in))
             return { utf_result::error, char32_t() };

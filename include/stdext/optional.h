@@ -75,12 +75,14 @@ namespace stdext
         constexpr optional(nullopt_t) noexcept { initialized = false; }
         optional(const optional& rhs)
         {
-            if ((initialized = rhs.initialized))
+            initialized = rhs.initialized;
+            if (initialized)
                 construct(rhs.value());
         }
         optional(optional&& rhs) noexcept(std::is_nothrow_move_constructible<T>::value)
         {
-            if ((initialized = move(rhs.initialized)))
+            initialized = move(rhs.initialized);
+            if (initialized)
                 construct(move(rhs.value()));
         }
         constexpr optional(const T& v)
