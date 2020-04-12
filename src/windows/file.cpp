@@ -118,7 +118,7 @@ namespace stdext
         }
 
         template <class Stream>
-        size_t file_input_stream_base<Stream>::do_read(uint8_t* buffer, size_t size)
+        size_t file_input_stream_base<Stream>::do_read(std::byte* buffer, size_t size)
         {
             assert(self().is_open());
 
@@ -163,7 +163,7 @@ namespace stdext
         }
 
         template <class Stream>
-        size_t file_output_stream_base<Stream>::do_write(const uint8_t* buffer, size_t size)
+        size_t file_output_stream_base<Stream>::do_write(const std::byte* buffer, size_t size)
         {
             assert(self().is_open());
 
@@ -312,8 +312,7 @@ namespace stdext
     {
         DWORD creation_disposition(flags<file_open_flags> flags)
         {
-            // The static_cast is here to work around a Visual Studio 2015 bug.
-            switch (static_cast<file_open_flags>(flags))
+            switch (flags)
             {
             case file_open_flags::none:
                 return OPEN_EXISTING;
@@ -323,11 +322,14 @@ namespace stdext
                 return CREATE_NEW;
             case file_open_flags::truncate:
                 return TRUNCATE_EXISTING;
+#if STDEXT_COMPILER_MSVC
+#pragma warning(disable:4063)   // case '5' is not a valid value for switch of enum 'stdext::file_open_flags'
+#endif
             case make_flags(file_open_flags::create, file_open_flags::truncate):
                 return CREATE_ALWAYS;
             }
 
-            return -1;
+            return DWORD(-1);
         }
     }
 }

@@ -27,14 +27,14 @@ namespace stdext
     class seekable;
     class peekable;
 
-    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
     class input_stream_iterator;
-    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
     class output_stream_iterator;
 
-    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
     class stream_generator;
-    template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
     class stream_consumer;
 
     template <class CharT, class Traits = std::char_traits<CharT>>
@@ -75,32 +75,54 @@ namespace stdext
         virtual ~input_stream();
 
     public:
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        POD read()
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] POD read()
         {
             POD value;
-            if (do_read(reinterpret_cast<uint8_t*>(&value), sizeof(POD)) != sizeof(POD))
+            if (do_read(reinterpret_cast<std::byte*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
             return value;
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t read(POD* buffer, size_t count)
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t read(POD* buffer, size_t count)
         {
-            auto size = do_read(reinterpret_cast<uint8_t*>(buffer), count * sizeof(POD));
+            auto size = do_read(reinterpret_cast<std::byte*>(buffer), count * sizeof(POD));
             if (size % sizeof(POD) != 0)
                 throw stream_error("premature end of stream");
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t read(POD (&buffer)[length])
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t read(POD (&buffer)[length])
         {
             return read(buffer, length);
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t skip(size_t count = 1)
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void read_all(POD* buffer, size_t count)
+        {
+            auto size = do_read(reinterpret_cast<std::byte*>(buffer), count * sizeof(POD));
+            if (size != count * sizeof(POD))
+                throw stream_error("premature end of stream");
+        }
+
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void read_all(POD (&buffer)[length])
+        {
+            read_all(buffer, length);
+        }
+
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void skip()
+        {
+            auto size = do_skip(sizeof(POD));
+            if (size != sizeof(POD))
+                throw stream_error("premature end of stream");
+        }
+
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t skip(size_t count)
         {
             auto size = do_skip(count * sizeof(POD));
             if (size % sizeof(POD) != 0)
@@ -108,9 +130,17 @@ namespace stdext
             return size / sizeof(POD);
         }
 
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void skip_all(size_t count)
+        {
+            auto size = do_skip(count * sizeof(POD));
+            if (size != count * sizeof(POD))
+                throw stream_error("premature end of stream");
+        }
+
     private:
-        virtual size_t do_read(uint8_t* buffer, size_t size) = 0;
-        virtual size_t do_skip(size_t size) = 0;
+        [[nodiscard]] virtual size_t do_read(std::byte* buffer, size_t size) = 0;
+        [[nodiscard]] virtual size_t do_skip(size_t size) = 0;
     };
 
 
@@ -120,30 +150,44 @@ namespace stdext
         virtual ~output_stream();
 
     public:
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void write(const POD& value)
         {
-            if (do_write(reinterpret_cast<const uint8_t*>(&value), sizeof(POD)) != sizeof(POD))
+            if (do_write(reinterpret_cast<const std::byte*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t write(const POD* buffer, size_t count)
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t write(const POD* buffer, size_t count)
         {
-            auto size = do_write(reinterpret_cast<const uint8_t*>(buffer), count * sizeof(POD));
+            auto size = do_write(reinterpret_cast<const std::byte*>(buffer), count * sizeof(POD));
             if (size % sizeof(POD) != 0)
                 throw stream_error("premature end of stream");
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t write(const POD (&buffer)[length])
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t write(const POD (&buffer)[length])
         {
             return write(buffer, length);
         }
 
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void write_all(const POD* buffer, size_t count)
+        {
+            auto size = do_write(reinterpret_cast<const std::byte*>(buffer), count * sizeof(POD));
+            if (size != count * sizeof(POD))
+                throw stream_error("premature end of stream");
+        }
+
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void write_all(const POD(&buffer)[length])
+        {
+            write_all(buffer, length);
+        }
+
     private:
-        virtual size_t do_write(const uint8_t* buffer, size_t size) = 0;
+        [[nodiscard]] virtual size_t do_write(const std::byte* buffer, size_t size) = 0;
     };
 
     class stream : public input_stream, public output_stream
@@ -183,8 +227,8 @@ namespace stdext
         virtual ~peekable();
 
     public:
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        POD peek()
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] POD peek()
         {
             POD value;
             if (do_peek(&value, sizeof(POD)) != sizeof(POD))
@@ -192,8 +236,8 @@ namespace stdext
             return value;
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t peek(POD* buffer, size_t count)
+        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t peek(POD* buffer, size_t count)
         {
             auto size = do_peek(buffer, count * sizeof(POD));
             if (size % sizeof(POD) != 0)
@@ -201,14 +245,14 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_pod<POD>::value)>
-        size_t peek(POD (&buffer)[length])
+        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t peek(POD (&buffer)[length])
         {
             return peek(buffer, length);
         }
 
     private:
-        virtual size_t do_peek(void* buffer, size_t size) = 0;
+        [[nodiscard]] virtual size_t do_peek(void* buffer, size_t size) = 0;
     };
 
 
@@ -218,7 +262,7 @@ namespace stdext
         virtual ~direct_readable();
 
     public:
-        virtual size_t direct_read(std::function<size_t (const uint8_t* buffer, size_t size)> read) = 0;
+        [[nodiscard]] virtual size_t direct_read(std::function<size_t (const std::byte* buffer, size_t size)> read) = 0;
     };
 
     class direct_writable
@@ -227,10 +271,10 @@ namespace stdext
         virtual ~direct_writable();
 
     public:
-        virtual size_t direct_write(std::function<size_t (uint8_t* buffer, size_t size)> write) = 0;
+        [[nodiscard]] virtual size_t direct_write(std::function<size_t (std::byte* buffer, size_t size)> write) = 0;
     };
 
-    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
     class input_stream_iterator
     {
     public:
@@ -282,7 +326,7 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
     class output_stream_iterator
     {
     public:
@@ -311,7 +355,7 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
     class stream_generator
     {
     public:
@@ -373,7 +417,7 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(std::is_pod<POD>::value)>
+    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
     class stream_consumer
     {
     public:
@@ -394,7 +438,7 @@ namespace stdext
         }
 
     public:
-        bool operator () (const value_type& value)
+        [[nodiscard]] bool operator () (const value_type& value)
         {
             return stream->write(&value, 1) != 0;
         }
@@ -422,12 +466,12 @@ namespace stdext
         }
 
     public:
-        bool operator () (CharT value)
+        [[nodiscard]] bool operator () (CharT value)
         {
             return stream->write(&value, 1) != 0;
         }
 
-        bool operator () (basic_string_view<CharT, Traits> value)
+        [[nodiscard]] bool operator () (basic_string_view<CharT, Traits> value)
         {
             auto count = stream->write(value.data(), value.size());
             if (count == 0)
@@ -446,19 +490,19 @@ namespace stdext
     class memory_stream_base : public seekable
     {
     private:
-        using _uint8_t = preserve_const_t<std::remove_pointer_t<Pointer>, uint8_t>;
+        using byte = preserve_const_t<std::remove_pointer_t<Pointer>, std::byte>;
 
     private:
         memory_stream_base() = default; // not used
     protected:
-        memory_stream_base(_uint8_t* buffer, size_t size) noexcept
+        memory_stream_base(byte* buffer, size_t size) noexcept
             : current(static_cast<Pointer>(buffer)), first(current), last(first + size)
         {
         }
         ~memory_stream_base() override;
 
     public:
-        void reset(_uint8_t* buffer, size_t size) noexcept
+        void reset(byte* buffer, size_t size) noexcept
         {
             first = current = static_cast<Pointer>(buffer);
             last = first + size;
@@ -491,8 +535,8 @@ namespace stdext
         Pointer last;
     };
 
-    template <> memory_stream_base<const uint8_t*>::~memory_stream_base();
-    template <> memory_stream_base<uint8_t*>::~memory_stream_base();
+    template <> memory_stream_base<const std::byte*>::~memory_stream_base();
+    template <> memory_stream_base<std::byte*>::~memory_stream_base();
 
 
     template <class Stream>
@@ -503,7 +547,7 @@ namespace stdext
         ~memory_input_stream_base() override = default;
 
     public:
-        size_t direct_read(std::function<size_t(const uint8_t* buffer, size_t size)> read) override
+        [[nodiscard]] size_t direct_read(std::function<size_t(const std::byte* buffer, size_t size)> read) override
         {
             auto size = read(self().current, size_t(self().last - self().current));
             self().current += size;
@@ -511,7 +555,7 @@ namespace stdext
         }
 
     protected:
-        size_t read_impl(uint8_t* buffer, size_t size)
+        [[nodiscard]] size_t read_impl(std::byte* buffer, size_t size)
         {
             size = std::min(size, size_t(self().last - self().current));
             std::copy_n(self().current, size, buffer);
@@ -519,7 +563,7 @@ namespace stdext
             return size;
         }
 
-        size_t skip_impl(size_t size)
+        [[nodiscard]] size_t skip_impl(size_t size)
         {
             size = std::min(size, size_t(self().last - self().current));
             self().current += size;
@@ -527,10 +571,10 @@ namespace stdext
         }
 
     private:
-        size_t do_peek(void* buffer, size_t size) override
+        [[nodiscard]] size_t do_peek(void* buffer, size_t size) override
         {
             size = std::min(size, size_t(self().last - self().current));
-            std::copy(self().current, self().current + size, static_cast<uint8_t*>(buffer));
+            std::copy(self().current, self().current + size, static_cast<std::byte*>(buffer));
             return size;
         }
 
@@ -547,7 +591,7 @@ namespace stdext
         ~memory_output_stream_base() override = default;
 
     public:
-        size_t direct_write(std::function<size_t(uint8_t* buffer, size_t size)> write) override
+        [[nodiscard]] size_t direct_write(std::function<size_t(std::byte* buffer, size_t size)> write) override
         {
             auto size = write(self().current, size_t(self().last - self().current));
             self().current += size;
@@ -555,7 +599,7 @@ namespace stdext
         }
 
     protected:
-        size_t write_impl(const uint8_t* buffer, size_t size)
+        [[nodiscard]] size_t write_impl(const std::byte* buffer, size_t size)
         {
             size = std::min(size, size_t(self().last - self().current));
             self().current = std::copy_n(buffer, size, self().current);
@@ -567,68 +611,68 @@ namespace stdext
     };
 
 
-    class memory_input_stream : public memory_stream_base<const uint8_t*>, public memory_input_stream_base<memory_input_stream>, public input_stream
+    class memory_input_stream : public memory_stream_base<const std::byte*>, public memory_input_stream_base<memory_input_stream>, public input_stream
     {
     public:
-        memory_input_stream(const uint8_t* buffer, size_t size) noexcept
-            : memory_stream_base<const uint8_t*>(buffer, size)
+        memory_input_stream(const std::byte* buffer, size_t size) noexcept
+            : memory_stream_base<const std::byte*>(buffer, size)
         {
         }
 
         ~memory_input_stream() override;
 
     private:
-        size_t do_read(uint8_t* buffer, size_t size) override
+        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) override
         {
             return read_impl(buffer, size);
         }
 
-        size_t do_skip(size_t size) override
+        [[nodiscard]] size_t do_skip(size_t size) override
         {
             return skip_impl(size);
         }
     };
 
 
-    class memory_output_stream : public memory_stream_base<uint8_t*>, public memory_output_stream_base<memory_output_stream>, public output_stream
+    class memory_output_stream : public memory_stream_base<std::byte*>, public memory_output_stream_base<memory_output_stream>, public output_stream
     {
     public:
-        memory_output_stream(uint8_t* buffer, size_t size) noexcept
-            : memory_stream_base<uint8_t*>(buffer, size)
+        memory_output_stream(std::byte* buffer, size_t size) noexcept
+            : memory_stream_base<std::byte*>(buffer, size)
         {
         }
 
         ~memory_output_stream() override;
 
     private:
-        size_t do_write(const uint8_t* buffer, size_t size) override
+        [[nodiscard]] size_t do_write(const std::byte* buffer, size_t size) override
         {
             return write_impl(buffer, size);
         }
     };
 
-    class memory_stream : public memory_stream_base<uint8_t*>, public memory_input_stream_base<memory_stream>, public memory_output_stream_base<memory_stream>, public stream
+    class memory_stream : public memory_stream_base<std::byte*>, public memory_input_stream_base<memory_stream>, public memory_output_stream_base<memory_stream>, public stream
     {
     public:
-        memory_stream(uint8_t* buffer, size_t size) noexcept
-            : memory_stream_base<uint8_t*>(buffer, size)
+        memory_stream(std::byte* buffer, size_t size) noexcept
+            : memory_stream_base<std::byte*>(buffer, size)
         {
         }
 
         ~memory_stream() override;
 
     private:
-        size_t do_read(uint8_t* buffer, size_t size) override
+        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) override
         {
             return read_impl(buffer, size);
         }
 
-        size_t do_write(const uint8_t* buffer, size_t size) override
+        [[nodiscard]] size_t do_write(const std::byte* buffer, size_t size) override
         {
             return write_impl(buffer, size);
         }
 
-        size_t do_skip(size_t size) override
+        [[nodiscard]] size_t do_skip(size_t size) override
         {
             return skip_impl(size);
         }

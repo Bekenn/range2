@@ -172,18 +172,18 @@ done:
                 ++len;
 
             if (len > precision)
-                precision = len;
+                precision = unsigned(len);
 
             len = precision;
 
             if (options.test_any(detail::format_options::alternative_form) && (base == 16 || base == 2))
                 len += 2;
 
-            if (negative || options.test_any(detail::format_options::show_sign | detail::format_options::pad_sign))
+            if (negative || options.test_any(make_flags(detail::format_options::show_sign, detail::format_options::pad_sign)))
                 ++len;
 
             if (len > width)
-                width = len;
+                width = unsigned(len);
 
             // Generate output
             auto put = [&](char ch)
@@ -243,7 +243,7 @@ done:
             {
                 auto digit = unsigned(uval / test);
                 uval %= test;
-                if (!put(digit < 10 ? '0' + digit : upper ? 'A' - 10 + digit : 'a' - 10 + digit))
+                if (!put(digit < 10 ? char('0' + digit) : upper ? char('A' + digit - 10) : char('a' + digit - 10)))
                     return false;
                 test /= base;
             }

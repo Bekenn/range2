@@ -53,7 +53,7 @@ namespace stdext
     template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 
-    class format_error : std::logic_error
+    class format_error : public std::logic_error
     {
         using logic_error::logic_error;
     };
@@ -164,7 +164,6 @@ namespace stdext
             alternative_form    = 0x08,
             zero_pad            = 0x10,
         };
-        STDEXT_FLAGS_ENUM(format_options)
 
         enum class format_type
         {

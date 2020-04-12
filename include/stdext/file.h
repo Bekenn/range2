@@ -73,7 +73,7 @@ namespace stdext
         class file_input_stream_base : public input_stream
         {
         private:
-            size_t do_read(uint8_t* buffer, size_t size) override;
+            size_t do_read(std::byte* buffer, size_t size) override;
             size_t do_skip(size_t size) override;
 
         private:
@@ -85,7 +85,7 @@ namespace stdext
         class file_output_stream_base : public output_stream
         {
         private:
-            size_t do_write(const uint8_t* buffer, size_t size) override;
+            size_t do_write(const std::byte* buffer, size_t size) override;
 
         private:
             Stream& self() noexcept { return static_cast<Stream&>(*this); }

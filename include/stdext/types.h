@@ -18,49 +18,6 @@
 #include <cstdint>
 
 
-// Handy-dandy macro for adding flag operations for enums
-#define STDEXT_FLAGS_ENUM(T)                                            \
-constexpr T operator ~ (T v) noexcept                                   \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return static_cast<T>(~static_cast<U>(v));                          \
-}                                                                       \
-constexpr auto operator + (T v) noexcept                                \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return static_cast<U>(v);                                           \
-}                                                                       \
-constexpr T operator | (T a, T b) noexcept                              \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return static_cast<T>(static_cast<U>(a) | static_cast<U>(b));       \
-}                                                                       \
-constexpr T operator & (T a, T b) noexcept                              \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return static_cast<T>(static_cast<U>(a) & static_cast<U>(b));       \
-}                                                                       \
-constexpr T operator ^ (T a, T b) noexcept                              \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));       \
-}                                                                       \
-constexpr T& operator |= (T& a, T b) noexcept                           \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return a = static_cast<T>(static_cast<U>(a) | static_cast<U>(b));   \
-}                                                                       \
-constexpr T& operator &= (T& a, T b) noexcept                           \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return a = static_cast<T>(static_cast<U>(a) & static_cast<U>(b));   \
-}                                                                       \
-constexpr T& operator ^= (T& a, T b) noexcept                           \
-{                                                                       \
-    using U = std::underlying_type_t<T>;                              \
-    return a = static_cast<T>(static_cast<U>(a) ^ static_cast<U>(b));   \
-}
-
 namespace stdext
 {
     // Types imported from cstddef

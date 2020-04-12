@@ -17,8 +17,8 @@ namespace stdext
     peekable::~peekable() = default;
     direct_readable::~direct_readable() = default;
     direct_writable::~direct_writable() = default;
-    template <> memory_stream_base<const uint8_t*>::~memory_stream_base() = default;
-    template <> memory_stream_base<uint8_t*>::~memory_stream_base() = default;
+    template <> memory_stream_base<const std::byte*>::~memory_stream_base() = default;
+    template <> memory_stream_base<std::byte*>::~memory_stream_base() = default;
     memory_input_stream::~memory_input_stream() = default;
     memory_output_stream::~memory_output_stream() = default;
     memory_stream::~memory_stream() = default;
@@ -38,6 +38,8 @@ namespace stdext
         case seek_from::end:
             p = end_position() + offset;
             break;
+        default:
+            unreachable();
         }
 
         set_position(p);
