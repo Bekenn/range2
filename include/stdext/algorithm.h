@@ -158,6 +158,12 @@ namespace stdext
         return adjacent_find(range, std::equal_to<>());
     }
 
+    template <class Function>
+    void for_each_argument(Function&& func)
+    {
+		discard(func);
+    }
+
     template <class Function, class... Args>
     void for_each_argument(Function&& func, Args&&... args)
     {
