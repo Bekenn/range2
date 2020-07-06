@@ -20,8 +20,8 @@ endif()
 
 if(MSVC)
     target_compile_definitions(stdext
-        PUBLIC _SCL_SECURE_NO_WARNINGS
-        PRIVATE _UNICODE _CRT_SECURE_NO_WARNINGS
+        PUBLIC _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS
+        PRIVATE _UNICODE
     )
     target_compile_options(stdext PRIVATE /permissive-)
 else()

@@ -492,9 +492,8 @@ namespace stdext
     private:
         using byte = preserve_const_t<std::remove_pointer_t<Pointer>, std::byte>;
 
-    private:
-        memory_stream_base() = default; // not used
     protected:
+        memory_stream_base() = default;
         memory_stream_base(byte* buffer, size_t size) noexcept
             : current(static_cast<Pointer>(buffer)), first(current), last(first + size)
         {
@@ -502,6 +501,11 @@ namespace stdext
         ~memory_stream_base() override;
 
     public:
+        void reset() noexcept
+        {
+            first = current = last = nullptr;
+        }
+
         void reset(byte* buffer, size_t size) noexcept
         {
             first = current = static_cast<Pointer>(buffer);
@@ -530,9 +534,9 @@ namespace stdext
     private:
         template <class Stream> friend class memory_input_stream_base;
         template <class Stream> friend class memory_output_stream_base;
-        Pointer current;
-        Pointer first;
-        Pointer last;
+        Pointer current = nullptr;
+        Pointer first = nullptr;
+        Pointer last = nullptr;
     };
 
     template <> memory_stream_base<const std::byte*>::~memory_stream_base();
@@ -614,6 +618,8 @@ namespace stdext
     class memory_input_stream : public memory_stream_base<const std::byte*>, public memory_input_stream_base<memory_input_stream>, public input_stream
     {
     public:
+        memory_input_stream() = default;
+
         memory_input_stream(const std::byte* buffer, size_t size) noexcept
             : memory_stream_base<const std::byte*>(buffer, size)
         {
@@ -637,6 +643,8 @@ namespace stdext
     class memory_output_stream : public memory_stream_base<std::byte*>, public memory_output_stream_base<memory_output_stream>, public output_stream
     {
     public:
+        memory_output_stream() = default;
+
         memory_output_stream(std::byte* buffer, size_t size) noexcept
             : memory_stream_base<std::byte*>(buffer, size)
         {
@@ -654,6 +662,8 @@ namespace stdext
     class memory_stream : public memory_stream_base<std::byte*>, public memory_input_stream_base<memory_stream>, public memory_output_stream_base<memory_stream>, public stream
     {
     public:
+        memory_stream() = default;
+
         memory_stream(std::byte* buffer, size_t size) noexcept
             : memory_stream_base<std::byte*>(buffer, size)
         {

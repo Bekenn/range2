@@ -49,6 +49,7 @@ namespace stdext
     };
 
     constexpr char32_t UNICODE_REPLACEMENT_CHARACTER = 0xFFFD;
+    constexpr char32_t UNICODE_BYTE_ORDER_MARK = 0xFEFF;
     constexpr char32_t INVALID_UNICODE_CHARACTER = char32_t(-1);
     constexpr size_t MAX_UTF8_CHARACTER_LENGTH = 4;
 
@@ -335,6 +336,35 @@ namespace stdext
     std::pair<utf_result, std::u32string> to_u32string(Char* str)
     {
         return to_u32string(make_cstring_generator(str));
+    }
+
+    template <class Generator, STDEXT_REQUIRES(is_generator_v<std::decay_t<Generator>>)>
+    char32_t extract_utf32(Generator&& in)
+    {
+        if (!in)
+            return U'\0';
+
+        std::pair<utf_result, char32_t> result;
+        utfstate_t state;
+        while (in)
+        {
+            result = to_utf32(*in, state);
+            if (result.first != utf_result::error || state.consumed == 0)
+                ++in;
+            if (result.first != utf_result::partial_read)
+                break;
+        }
+
+        return result.first == utf_result::ok ? result.second : UNICODE_REPLACEMENT_CHARACTER;
+    }
+
+    template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
+    char32_t extract_utf32(Char*& str)
+    {
+        auto gen = make_cstring_generator(str);
+        auto result = extract_utf32(gen);
+        str = gen.base;
+        return result;
     }
 
     template <class Generator, class Char>
