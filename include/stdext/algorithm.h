@@ -161,7 +161,7 @@ namespace stdext
     template <class Function>
     void for_each_argument(Function&& func)
     {
-		discard(func);
+        discard(func);
     }
 
     template <class Function, class... Args>
