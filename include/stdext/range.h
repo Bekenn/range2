@@ -658,12 +658,16 @@ namespace stdext
         {
         public:
             using typename delimited_forward_iterator_range<Iterator>::position;
+            using reverse_iterator = std::reverse_iterator<Iterator>;
 
         public:
             using delimited_forward_iterator_range<Iterator>::delimited_forward_iterator_range;
 
         public:
             constexpr position& dec_pos(position& pos) const { return --pos; }
+
+            constexpr reverse_iterator rbegin() const { return std::make_reverse_iterator(this->end()); }
+            constexpr reverse_iterator rend() const { return std::make_reverse_iterator(this->begin()); }
         };
 
         template <class Iterator>
