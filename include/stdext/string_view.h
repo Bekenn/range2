@@ -47,13 +47,13 @@ namespace stdext
     long double stold(string_view str, size_t* idx = nullptr);
 
     template <class charT, class traits>
-    class basic_string_view : public const_array_view<charT>
+    class basic_string_view : public array_view<const charT>
     {
     public:
-        using value_type = typename const_array_view<charT>::value_type;
-        using pointer = typename const_array_view<charT>::pointer;
-        using reverse_iterator = typename const_array_view<charT>::reverse_iterator;
-        using size_type = typename const_array_view<charT>::size_type;
+        using value_type = typename array_view<const charT>::value_type;
+        using pointer = typename array_view<const charT>::pointer;
+        using reverse_iterator = typename array_view<const charT>::reverse_iterator;
+        using size_type = typename array_view<const charT>::size_type;
         using traits_type = traits;
         template <class Allocator = std::allocator<std::remove_cv_t<value_type>>>
         using string_type = std::basic_string<std::remove_cv_t<value_type>, traits_type, Allocator>;
@@ -62,25 +62,25 @@ namespace stdext
         static constexpr auto npos = size_type(-1);
 
     public:
-        using const_array_view<charT>::const_array_view;
+        using array_view<const charT>::array_view;
 
         constexpr basic_string_view() noexcept = default;
 
         constexpr basic_string_view(const basic_string_view& str, size_type pos, size_type n = npos) noexcept
-            : const_array_view<charT>(str.data() + pos, std::min(n, str.length()) - pos) { }
+            : array_view<const charT>(str.data() + pos, std::min(n, str.length()) - pos) { }
 
         template <class Allocator>
         basic_string_view(const string_type<Allocator>& str) noexcept
-            : const_array_view<charT>(str.data(), str.length()) { }
+            : array_view<const charT>(str.data(), str.length()) { }
 
         constexpr basic_string_view(pointer s, size_type n) noexcept
-            : const_array_view<charT>(s, n) { }
+            : array_view<const charT>(s, n) { }
 
         constexpr basic_string_view(pointer s) noexcept
-            : const_array_view<charT>(s, traits_type::length(s)) { }
+            : array_view<const charT>(s, traits_type::length(s)) { }
 
         constexpr basic_string_view(pointer begin, pointer end) noexcept
-            : const_array_view<charT>(begin, std::distance(begin, end)) { }
+            : array_view<const charT>(begin, std::distance(begin, end)) { }
 
         template <class Allocator>
         auto& operator = (const string_type<Allocator>& str) noexcept
