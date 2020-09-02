@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 add_executable(streamtest "src/main.cpp")
 target_link_libraries(streamtest stdext)

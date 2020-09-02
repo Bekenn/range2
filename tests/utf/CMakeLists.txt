@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 add_executable(utftest "src/main.cpp" "UTF-8-test.txt")
 target_link_libraries(utftest stdext)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 set(STDEXT_ONLY_BUILD FALSE)
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
@@ -9,7 +9,7 @@ if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     endif()
 endif()
 
-add_library(stdext "")
+add_library(stdext)
 target_include_directories(stdext PUBLIC include)
 target_compile_features(stdext PUBLIC cxx_std_17)
 set_target_properties(stdext PROPERTIES CXX_EXTENSIONS OFF)
@@ -41,8 +41,7 @@ elseif(UNIX)
 endif()
 
 target_sources(stdext PRIVATE ${SOURCES} ${HEADERS})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX src FILES ${SOURCES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include PREFIX include FILES ${HEADERS})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
 set_source_files_properties(${SOURCES_DISABLED} PROPERTIES LANGUAGE "")
 
 if(STDEXT_ONLY_BUILD)
