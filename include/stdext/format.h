@@ -150,6 +150,7 @@ namespace stdext
         stringbuf buf;
         bool result = format(buf, fmt, forward<Args>(args)...);
         assert(result);
+        discard(result);
         return buf.extract();
     }
 
