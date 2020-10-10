@@ -23,7 +23,10 @@ if(MSVC)
         PUBLIC _SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS
         PRIVATE _UNICODE
     )
-    target_compile_options(stdext PRIVATE /permissive-)
+    # The XP toolset is incompatible with /permissive-.
+    if(NOT CMAKE_VS_PLATFORM_TOOLSET MATCHES [[_xp(,.*)?$]])
+        target_compile_options(stdext PRIVATE /permissive-)
+    endif()
 else()
     target_compile_options(stdext PRIVATE -Wno-switch)
 endif()
