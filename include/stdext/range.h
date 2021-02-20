@@ -10,6 +10,7 @@
 #define STDEXT_RANGE_INCLUDED
 #pragma once
 
+#include <stdext/compressed_types.h>
 #include <stdext/consumer.h>
 #include <stdext/generator.h>
 #include <stdext/meta.h>

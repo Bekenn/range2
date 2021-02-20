@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="stdext::compressed_base&lt;*,true&gt;">
+        <DisplayString>{($T1&amp;)*this}</DisplayString>
+        <Expand>
+            <ExpandedItem>($T1&amp;)*this</ExpandedItem>
+        </Expand>
+    </Type>
+
+    <Type Name="stdext::compressed_base&lt;*,false&gt;">
+        <DisplayString>{value}</DisplayString>
+        <Expand>
+            <ExpandedItem>value</ExpandedItem>
+        </Expand>
+    </Type>
+</AutoVisualizer>

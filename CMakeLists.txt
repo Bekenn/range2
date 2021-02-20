@@ -27,8 +27,11 @@ if(MSVC)
     if(NOT CMAKE_VS_PLATFORM_TOOLSET MATCHES [[_xp(,.*)?$]])
         target_compile_options(stdext PRIVATE /permissive-)
     endif()
+
+    set(NATVIS msvc/stdext.natvis)
 else()
     target_compile_options(stdext PRIVATE -Wno-switch)
+    set(NATVIS "")
 endif()
 
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS include/*)
@@ -43,8 +46,8 @@ elseif(UNIX)
     list(APPEND SOURCES_DISABLED ${WINDOWS_SOURCES})
 endif()
 
-target_sources(stdext PRIVATE ${SOURCES} ${HEADERS})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS})
+target_sources(stdext PRIVATE ${SOURCES} ${HEADERS} ${NATVIS})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${HEADERS} ${NATVIS})
 set_source_files_properties(${SOURCES_DISABLED} PROPERTIES LANGUAGE "")
 
 if(STDEXT_ONLY_BUILD)
