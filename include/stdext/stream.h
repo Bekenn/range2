@@ -27,14 +27,14 @@ namespace stdext
     class seekable;
     class peekable;
 
-    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class input_stream_iterator;
-    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class output_stream_iterator;
 
-    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class stream_generator;
-    template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class stream_consumer;
 
     template <class CharT, class Traits = std::char_traits<CharT>>
@@ -274,9 +274,14 @@ namespace stdext
         [[nodiscard]] virtual size_t direct_write(std::function<size_t (std::byte* buffer, size_t size)> write) = 0;
     };
 
-    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class input_stream_iterator
     {
+        static_assert(std::is_default_constructible_v<POD>);
+        static_assert(std::is_copy_constructible_v<POD>);
+        static_assert(std::is_copy_assignable_v<POD>);
+        static_assert(std::is_trivially_copyable_v<POD>);
+
     public:
         using value_type = POD;
         using difference_type = ptrdiff_t;
@@ -326,9 +331,11 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class output_stream_iterator
     {
+        static_assert(std::is_trivially_copyable_v<POD>);
+
     public:
         using value_type = void;
         using difference_type = void;
@@ -355,9 +362,14 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class stream_generator
     {
+        static_assert(std::is_default_constructible_v<POD>);
+        static_assert(std::is_copy_constructible_v<POD>);
+        static_assert(std::is_copy_assignable_v<POD>);
+        static_assert(std::is_trivially_copyable_v<POD>);
+
     public:
         using iterator_category = generator_tag;
         using value_type = POD;
@@ -417,9 +429,11 @@ namespace stdext
     };
 
 
-    template <class POD, STDEXT_REQUIRED(std::is_trivially_copyable_v<POD>)>
+    template <class POD>
     class stream_consumer
     {
+        static_assert(std::is_trivially_copyable_v<POD>);
+
     public:
         using value_type = POD;
 

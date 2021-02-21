@@ -20,15 +20,16 @@ constexpr size_t lengthof(T (&)[length])
     return length;
 }
 
-const uint8_t stuff[] =
+const byte stuff[] =
 {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf
+    byte(0), byte(1), byte(2), byte(3), byte(4), byte(5), byte(6), byte(7),
+    byte(8), byte(9), byte(0xa), byte(0xb), byte(0xc), byte(0xd), byte(0xe), byte(0xf)
 };
 
 template <class POD, size_t size>
-void test(memory_input_stream& is, POD (&data)[size])
+void test(const POD (&data)[size])
 {
-    is.reset(stuff, sizeof(stuff));
+    memory_input_stream is(stuff, sizeof(stuff));
     for (auto n : data)
         assert(n == is.read<POD>());
 
@@ -62,23 +63,22 @@ void test(memory_input_stream& is, POD (&data)[size])
     assert(i == input_stream_iterator<POD>());
 }
 
-int main(int argc, char* argv[])
+int main()
 {
-    uint8_t data8[] =
+    static const uint8_t data8[] =
     {
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0xa, 0xb, 0xc, 0xd, 0xe, 0xf
     };
-    uint16_t data16[] =
+    static const uint16_t data16[] =
     {
         0x0100, 0x0302, 0x0504, 0x0706, 0x0908, 0x0b0a, 0x0d0c, 0x0f0e
     };
-    uint32_t data32[] =
+    static const uint32_t data32[] =
     {
         0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c
     };
 
-    memory_input_stream is(stuff, sizeof(stuff));
-    test(is, data8);
-    test(is, data16);
-    test(is, data32);
+    test(data8);
+    test(data16);
+    test(data32);
 }
