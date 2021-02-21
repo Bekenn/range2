@@ -89,6 +89,11 @@ namespace stdext
         static constexpr bool value = std::is_base_of<std::random_access_iterator_tag, iterator_category<Iterator>>::value;
     };
 
+    template <class Iterator> constexpr auto is_input_iterator_v = is_input_iterator<Iterator>::value;
+    template <class Iterator> constexpr auto is_forward_iterator_v = is_forward_iterator<Iterator>::value;
+    template <class Iterator> constexpr auto is_bidirectional_iterator_v = is_bidirectional_iterator<Iterator>::value;
+    template <class Iterator> constexpr auto is_random_access_iterator_v = is_random_access_iterator<Iterator>::value;
+
     template <class Iterator>
     class iterator_proxy
     {
