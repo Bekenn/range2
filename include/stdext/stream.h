@@ -231,7 +231,7 @@ namespace stdext
         [[nodiscard]] POD peek()
         {
             POD value;
-            if (do_peek(&value, sizeof(POD)) != sizeof(POD))
+            if (do_peek(reinterpret_cast<std::byte*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
             return value;
         }
@@ -239,7 +239,7 @@ namespace stdext
         template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t peek(POD* buffer, size_t count)
         {
-            auto size = do_peek(buffer, count * sizeof(POD));
+            auto size = do_peek(reinterpret_cast<std::byte*>(buffer), count * sizeof(POD));
             if (size % sizeof(POD) != 0)
                 throw stream_error("premature end of stream");
             return size / sizeof(POD);
@@ -252,7 +252,7 @@ namespace stdext
         }
 
     private:
-        [[nodiscard]] virtual size_t do_peek(void* buffer, size_t size) = 0;
+        [[nodiscard]] virtual size_t do_peek(std::byte* buffer, size_t size) = 0;
     };
 
 
@@ -290,44 +290,41 @@ namespace stdext
         using iterator_category = std::input_iterator_tag;
 
     private:
-        static constexpr bool noexcept_swappable()
-        {
-            return noexcept(swap(declval<value_type&>(), declval<value_type&>()));
-        }
+        static constexpr bool noexcept_swappable = noexcept(swap(declval<value_type&>(), declval<value_type&>()));
 
     public:
-        input_stream_iterator() : stream(nullptr) { }
-        explicit input_stream_iterator(input_stream& stream) : stream(&stream) { ++*this; }
+        input_stream_iterator() : _stream(nullptr) { }
+        explicit input_stream_iterator(input_stream& stream) : _stream(&stream) { ++*this; }
 
     public:
         friend bool operator == (const input_stream_iterator& a, const input_stream_iterator& b) noexcept
         {
-            if (a.stream != b.stream)
+            if (a._stream != b._stream)
                 return false;
-            if (a.stream == nullptr)
+            if (a._stream == nullptr)
                 return true;
-            return a.value == b.value;
+            return a._value == b._value;
         }
         friend bool operator != (const input_stream_iterator& a, const input_stream_iterator& b) noexcept
         {
             return !(a == b);
         }
         friend void swap(input_stream_iterator& a, input_stream_iterator& b)
-            noexcept(input_stream_iterator::noexcept_swappable())
+            noexcept(input_stream_iterator::noexcept_swappable)
         {
-            swap(a.stream, b.stream);
-            swap(a.value, b.value);
+            swap(a._stream, b._stream);
+            swap(a._value, b._value);
         }
 
     public:
-        reference operator * () const { return value; }
-        pointer operator -> () const { return &value; }
-        input_stream_iterator& operator ++ () { if (stream->read(&value, 1) == 0) stream = nullptr; return *this; }
-        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(value)); ++*this; return proxy; }
+        reference operator * () const { return _value; }
+        pointer operator -> () const { return &_value; }
+        input_stream_iterator& operator ++ () { if (_stream->read(&_value, 1) == 0) _stream = nullptr; return *this; }
+        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(_value)); ++*this; return proxy; }
 
     private:
-        input_stream* stream;
-        POD value;
+        input_stream* _stream;
+        POD _value;
     };
 
 
@@ -344,21 +341,21 @@ namespace stdext
         using iterator_category = std::output_iterator_tag;
 
     public:
-        explicit output_stream_iterator(output_stream& stream) : stream(&stream) { }
+        explicit output_stream_iterator(output_stream& stream) : _stream(&stream) { }
 
     public:
         output_stream_iterator& operator * () { return *this; }
-        void operator = (const POD& value) { stream->write(value); }
+        void operator = (const POD& value) { _stream->write(value); }
         output_stream_iterator& operator ++ () { return *this; }
         output_stream_iterator& operator ++ (int) { return *this; }
 
         friend void swap(output_stream_iterator& a, output_stream_iterator& b) noexcept
         {
-            swap(a.stream, b.stream);
+            swap(a._stream, b._stream);
         }
 
     private:
-        output_stream* stream;
+        output_stream* _stream;
     };
 
 
@@ -378,8 +375,8 @@ namespace stdext
         using reference = const value_type&;
 
     public:
-        stream_generator() noexcept : stream(), value() { }
-        explicit stream_generator(input_stream& stream) noexcept : stream(&stream)
+        stream_generator() noexcept : _stream(), _value() { }
+        explicit stream_generator(input_stream& stream) noexcept : _stream(&stream)
         {
             next();
         }
@@ -387,7 +384,7 @@ namespace stdext
     public:
         friend bool operator == (const stream_generator& a, const stream_generator& b) noexcept
         {
-            return a.stream == b.stream && a.value == b.value;
+            return a._stream == b._stream && a._value == b._value;
         }
         friend bool operator != (const stream_generator& a, const stream_generator& b) noexcept
         {
@@ -396,36 +393,36 @@ namespace stdext
 
         friend void swap(stream_generator& a, stream_generator& b) noexcept
         {
-            swap(a.stream, b.stream);
-            swap(a.value, b.value);
+            swap(a._stream, b._stream);
+            swap(a._value, b._value);
         }
 
     public:
-        reference operator * () const noexcept { return value; }
-        pointer operator -> () const noexcept { return &value; }
+        reference operator * () const noexcept { return _value; }
+        pointer operator -> () const noexcept { return &_value; }
         stream_generator& operator ++ () { next(); return *this; }
         iterator_proxy<stream_generator> operator ++ (int)
         {
-            iterator_proxy<stream_generator> proxy(value);
+            iterator_proxy<stream_generator> proxy(_value);
             ++*this;
             return proxy;
         }
 
-        explicit operator bool () const noexcept { return stream != nullptr; }
+        explicit operator bool () const noexcept { return _stream != nullptr; }
 
     private:
         void next()
         {
-            if (stream->read(&value, 1) == 0)
+            if (_stream->read(&_value, 1) == 0)
             {
-                stream = nullptr;
-                value = POD();
+                _stream = nullptr;
+                _value = POD();
             }
         }
 
     private:
-        input_stream* stream;
-        POD value;
+        input_stream* _stream;
+        POD _value;
     };
 
 
@@ -438,13 +435,13 @@ namespace stdext
         using value_type = POD;
 
     public:
-        stream_consumer() noexcept : stream() { }
-        explicit stream_consumer(output_stream& stream) noexcept : stream(&stream) { }
+        stream_consumer() noexcept : _stream() { }
+        explicit stream_consumer(output_stream& stream) noexcept : _stream(&stream) { }
 
     public:
         friend bool operator == (const stream_consumer& a, const stream_consumer& b) noexcept
         {
-            return a.stream == b.stream;
+            return a._stream == b._stream;
         }
         friend bool operator != (const stream_consumer& a, const stream_consumer& b) noexcept
         {
@@ -454,11 +451,11 @@ namespace stdext
     public:
         [[nodiscard]] bool operator () (const value_type& value)
         {
-            return stream->write(&value, 1) != 0;
+            return _stream->write(&value, 1) != 0;
         }
 
     private:
-        output_stream* stream;
+        output_stream* _stream;
     };
 
 
@@ -466,13 +463,13 @@ namespace stdext
     class basic_string_stream_consumer
     {
     public:
-        basic_string_stream_consumer() noexcept : stream() { }
-        explicit basic_string_stream_consumer(output_stream& stream) noexcept : stream(&stream) { }
+        basic_string_stream_consumer() noexcept : _stream() { }
+        explicit basic_string_stream_consumer(output_stream& stream) noexcept : _stream(&stream) { }
 
     public:
         friend bool operator == (const basic_string_stream_consumer& a, const basic_string_stream_consumer& b) noexcept
         {
-            return a.stream = b.stream;
+            return a._stream = b._stream;
         }
         friend bool operator != (const basic_string_stream_consumer& a, const basic_string_stream_consumer& b) noexcept
         {
@@ -482,12 +479,12 @@ namespace stdext
     public:
         [[nodiscard]] bool operator () (CharT value)
         {
-            return stream->write(&value, 1) != 0;
+            return _stream->write(&value, 1) != 0;
         }
 
         [[nodiscard]] bool operator () (basic_string_view<CharT, Traits> value)
         {
-            auto count = stream->write(value.data(), value.size());
+            auto count = _stream->write(value.data(), value.size());
             if (count == 0)
                 return false;
             if (count != value.size())
@@ -496,7 +493,7 @@ namespace stdext
         }
 
     private:
-        output_stream* stream;
+        output_stream* _stream;
     };
 
 
@@ -508,8 +505,8 @@ namespace stdext
 
     protected:
         memory_stream_base() = default;
-        memory_stream_base(byte* buffer, size_t size) noexcept
-            : current(static_cast<Pointer>(buffer)), first(current), last(first + size)
+        explicit memory_stream_base(byte* buffer, size_t size) noexcept
+            : _current(static_cast<Pointer>(buffer)), _first(_current), _last(_first + size)
         {
         }
         ~memory_stream_base() override;
@@ -517,40 +514,40 @@ namespace stdext
     public:
         void reset() noexcept
         {
-            first = current = last = nullptr;
+            _first = _current = _last = nullptr;
         }
 
         void reset(byte* buffer, size_t size) noexcept
         {
-            first = current = static_cast<Pointer>(buffer);
-            last = first + size;
+            _first = _current = static_cast<Pointer>(buffer);
+            _last = _first + size;
         }
 
     public:
-        stream_position position() const override
+        stream_position position() const final
         {
-            return current - first;
+            return _current - _first;
         }
 
-        stream_position end_position() const override
+        stream_position end_position() const final
         {
-            return last - first;
+            return _last - _first;
         }
 
-        void set_position(stream_position position) override
+        void set_position(stream_position position) final
         {
-            if (position > size_t(last - first))
+            if (position > size_t(_last - _first))
                 throw std::invalid_argument("position out of range");
 
-            current = first + position;
+            _current = _first + position;
         }
 
     private:
         template <class Stream> friend class memory_input_stream_base;
         template <class Stream> friend class memory_output_stream_base;
-        Pointer current = nullptr;
-        Pointer first = nullptr;
-        Pointer last = nullptr;
+        Pointer _current = nullptr;
+        Pointer _first = nullptr;
+        Pointer _last = nullptr;
     };
 
     template <> memory_stream_base<const std::byte*>::~memory_stream_base();
@@ -565,34 +562,34 @@ namespace stdext
         ~memory_input_stream_base() override = default;
 
     public:
-        [[nodiscard]] size_t direct_read(std::function<size_t(const std::byte* buffer, size_t size)> read) override
+        [[nodiscard]] size_t direct_read(std::function<size_t(const std::byte* buffer, size_t size)> read) final
         {
-            auto size = read(self().current, size_t(self().last - self().current));
-            self().current += size;
+            auto size = read(self()._current, size_t(self()._last - self()._current));
+            self()._current += size;
             return size;
         }
 
     protected:
         [[nodiscard]] size_t read_impl(std::byte* buffer, size_t size)
         {
-            size = std::min(size, size_t(self().last - self().current));
-            std::copy_n(self().current, size, buffer);
-            self().current += size;
+            size = std::min(size, size_t(self()._last - self()._current));
+            std::copy_n(self()._current, size, buffer);
+            self()._current += size;
             return size;
         }
 
         [[nodiscard]] size_t skip_impl(size_t size)
         {
-            size = std::min(size, size_t(self().last - self().current));
-            self().current += size;
+            size = std::min(size, size_t(self()._last - self()._current));
+            self()._current += size;
             return size;
         }
 
     private:
-        [[nodiscard]] size_t do_peek(void* buffer, size_t size) override
+        [[nodiscard]] size_t do_peek(std::byte* buffer, size_t size) final
         {
-            size = std::min(size, size_t(self().last - self().current));
-            std::copy(self().current, self().current + size, static_cast<std::byte*>(buffer));
+            size = std::min(size, size_t(self()._last - self()._current));
+            std::copy(self()._current, self()._current + size, buffer);
             return size;
         }
 
@@ -609,18 +606,18 @@ namespace stdext
         ~memory_output_stream_base() override = default;
 
     public:
-        [[nodiscard]] size_t direct_write(std::function<size_t(std::byte* buffer, size_t size)> write) override
+        [[nodiscard]] size_t direct_write(std::function<size_t(std::byte* buffer, size_t size)> write) final
         {
-            auto size = write(self().current, size_t(self().last - self().current));
-            self().current += size;
+            auto size = write(self()._current, size_t(self()._last - self()._current));
+            self()._current += size;
             return size;
         }
 
     protected:
         [[nodiscard]] size_t write_impl(const std::byte* buffer, size_t size)
         {
-            size = std::min(size, size_t(self().last - self().current));
-            self().current = std::copy_n(buffer, size, self().current);
+            size = std::min(size, size_t(self()._last - self()._current));
+            self()._current = std::copy_n(buffer, size, self()._current);
             return size;
         }
 
@@ -634,7 +631,7 @@ namespace stdext
     public:
         memory_input_stream() = default;
 
-        memory_input_stream(const std::byte* buffer, size_t size) noexcept
+        explicit memory_input_stream(const std::byte* buffer, size_t size) noexcept
             : memory_stream_base<const std::byte*>(buffer, size)
         {
         }
@@ -642,12 +639,12 @@ namespace stdext
         ~memory_input_stream() override;
 
     private:
-        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) override
+        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) final
         {
             return read_impl(buffer, size);
         }
 
-        [[nodiscard]] size_t do_skip(size_t size) override
+        [[nodiscard]] size_t do_skip(size_t size) final
         {
             return skip_impl(size);
         }
@@ -659,7 +656,7 @@ namespace stdext
     public:
         memory_output_stream() = default;
 
-        memory_output_stream(std::byte* buffer, size_t size) noexcept
+        explicit memory_output_stream(std::byte* buffer, size_t size) noexcept
             : memory_stream_base<std::byte*>(buffer, size)
         {
         }
@@ -667,7 +664,7 @@ namespace stdext
         ~memory_output_stream() override;
 
     private:
-        [[nodiscard]] size_t do_write(const std::byte* buffer, size_t size) override
+        [[nodiscard]] size_t do_write(const std::byte* buffer, size_t size) final
         {
             return write_impl(buffer, size);
         }
@@ -678,7 +675,7 @@ namespace stdext
     public:
         memory_stream() = default;
 
-        memory_stream(std::byte* buffer, size_t size) noexcept
+        explicit memory_stream(std::byte* buffer, size_t size) noexcept
             : memory_stream_base<std::byte*>(buffer, size)
         {
         }
@@ -686,17 +683,17 @@ namespace stdext
         ~memory_stream() override;
 
     private:
-        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) override
+        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) final
         {
             return read_impl(buffer, size);
         }
 
-        [[nodiscard]] size_t do_write(const std::byte* buffer, size_t size) override
+        [[nodiscard]] size_t do_write(const std::byte* buffer, size_t size) final
         {
             return write_impl(buffer, size);
         }
 
-        [[nodiscard]] size_t do_skip(size_t size) override
+        [[nodiscard]] size_t do_skip(size_t size) final
         {
             return skip_impl(size);
         }
