@@ -22,6 +22,7 @@ namespace stdext
     memory_input_stream::~memory_input_stream() = default;
     memory_output_stream::~memory_output_stream() = default;
     memory_stream::~memory_stream() = default;
+    substream::~substream() = default;
 
     stream_position seekable::seek(seek_from from, stream_offset offset)
     {

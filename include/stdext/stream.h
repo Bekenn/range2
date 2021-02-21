@@ -51,6 +51,8 @@ namespace stdext
     class memory_output_stream;
     class memory_stream;
 
+    class substream;
+
     input_stream& in();
     output_stream& out();
     output_stream& err();
@@ -697,6 +699,69 @@ namespace stdext
         {
             return skip_impl(size);
         }
+    };
+
+    class substream : public input_stream
+    {
+    public:
+        substream() = default;
+        substream(const substream&) = delete;
+        substream& operator = (const substream&) = delete;
+
+        substream(substream&& other) noexcept
+            : _stream(exchange(other._stream, nullptr)), _max_extent(exchange(other._max_extent, 0))
+        {
+        }
+
+        substream& operator = (substream&& other) noexcept
+        {
+            _stream = exchange(other._stream, nullptr);
+            _max_extent = exchange(other._max_extent, 0);
+            return *this;
+        }
+
+        explicit substream(input_stream& stream, size_t max_extent) noexcept
+            : _stream(&stream), _max_extent(max_extent)
+        {
+        }
+
+        ~substream() override;
+
+    public:
+        bool is_attached() const noexcept { return _stream != nullptr; }
+
+        void attach(input_stream& stream, size_t max_extent) noexcept
+        {
+            _stream = &stream;
+            _max_extent = max_extent;
+        }
+
+        void detach() noexcept
+        {
+            _stream = nullptr;
+            _max_extent = 0;
+        }
+
+    private:
+        [[nodiscard]] size_t do_read(std::byte* buffer, size_t size) final
+        {
+            assert(is_attached());
+            auto bytes = _stream->read(buffer, min(size, _max_extent));
+            _max_extent -= bytes;
+            return bytes;
+        }
+
+        [[nodiscard]] size_t do_skip(size_t size) final
+        {
+            assert(is_attached());
+            auto bytes = _stream->skip<std::byte>(min(size, _max_extent));
+            _max_extent -= bytes;
+            return bytes;
+        }
+
+    private:
+        input_stream* _stream = nullptr;
+        size_t _max_extent = 0;
     };
 }
 
