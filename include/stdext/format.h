@@ -11,6 +11,7 @@
 #pragma once
 
 #include <stdext/consumer.h>
+#include <stdext/flags.h>
 #include <stdext/generator.h>
 #include <stdext/meta.h>
 #include <stdext/string.h>

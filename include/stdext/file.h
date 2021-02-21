@@ -10,6 +10,7 @@
 #define STDEXT_FILE_INCLUDED
 #pragma once
 
+#include <stdext/flags.h>
 #include <stdext/platform.h>
 #include <stdext/stream.h>
 #include <stdext/types.h>
