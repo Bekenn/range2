@@ -20,6 +20,17 @@
 
 namespace stdext
 {
+    namespace detail
+    {
+        // lightweight traits
+        template <class T1, class T2> constexpr bool is_same = false;
+        template <class T> constexpr bool is_same<T, T> = true;
+
+        template <bool Enable, class T> struct enable_if { };
+        template <class T> struct enable_if<true, T> { using type = T; };
+        template <bool Enable, class T> using enable_if_t = typename enable_if<Enable, T>::type;
+    }
+
     // Useful declarations
     using std::swap;
     using std::move;
@@ -40,6 +51,20 @@ namespace stdext
     {
         return size;
     }
+
+    // min
+    template <class T> constexpr T min(T a) noexcept { return a; }
+    template <class T> constexpr T min(T a, T b) noexcept { return b < a ? b : a; }
+    template <class T, class... Us>
+    constexpr detail::enable_if_t<(... && detail::is_same<T, Us>), T>
+        min(T a, T b, Us... rest) noexcept { return min(min(a, b), rest...); }
+
+    // max
+    template <class T> constexpr T max(T a) noexcept { return a; }
+    template <class T> constexpr T max(T a, T b) noexcept { return b < a ? a : b; }
+    template <class T, class... Us>
+    constexpr detail::enable_if_t<(... && detail::is_same<T, Us>), T>
+        max(T a, T b, Us... rest) noexcept { return max(a, max(b, rest...)); }
 
     // Run-time invocation of unreachable results in undefined behavior.
     [[noreturn]] inline void unreachable() noexcept
