@@ -70,7 +70,8 @@ namespace stdext
     [[noreturn]] inline void unreachable() noexcept
     {
 #ifndef NDEBUG
-        std::abort();
+        [[noreturn]] extern void abort();
+        abort();
 #endif
 #if STDEXT_COMPILER_GCC
         __builtin_unreachable();

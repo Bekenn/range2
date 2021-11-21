@@ -31,8 +31,8 @@ namespace stdext
 
     public:
         constexpr compressed_base() = default;
-        explicit constexpr compressed_base(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>::value) : value(v) { }
-        explicit constexpr compressed_base(T&& v) noexcept(std::is_nothrow_move_constructible_v<T>::value) : value(move(v)) { }
+        explicit constexpr compressed_base(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) : value(v) { }
+        explicit constexpr compressed_base(T&& v) noexcept(std::is_nothrow_move_constructible_v<T>) : value(move(v)) { }
 
         friend constexpr bool operator == (const compressed_base& a, const compressed_base& b) noexcept
         {
