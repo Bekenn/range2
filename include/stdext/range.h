@@ -1816,7 +1816,7 @@ namespace stdext
     template <class Iterator, STDEXT_REQUIRES(is_iterator<Iterator>::value)>
     auto make_counted_range(Iterator it, iterator_size_type_t<Iterator> count)
     {
-        return counted_iterator_range<Iterator>(forward(it), count);
+        return counted_iterator_range<Iterator>(it, count);
     }
 
     template <class Range>
