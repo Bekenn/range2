@@ -10,6 +10,7 @@
 #define STDEXT_UNICODE_INCLUDED
 #pragma once
 
+#include <stdext/flags.h>
 #include <stdext/range.h>
 #include <stdext/string.h>
 
@@ -34,6 +35,12 @@ namespace stdext
         partial_read,
         partial_write,
         error
+    };
+
+    enum class utf_conversion_options
+    {
+        none = 0,
+        sanitize = 1
     };
 
     struct utfstate_t
@@ -172,7 +179,7 @@ namespace stdext
 
         template <class Char, class Generator, class Consumer,
             STDEXT_REQUIRES(is_generator_v<std::decay_t<Generator>> && is_consumer_v<std::decay_t<Consumer>(Char)>)>
-        utf_result to_utf(Generator&& in, Consumer&& out, utfstate_t& state)
+        utf_result to_utf(Generator&& in, Consumer&& out, utfstate_t& state, flags<utf_conversion_options> options)
         {
             auto result = utf_result::ok;
 
@@ -181,9 +188,27 @@ namespace stdext
                 Char code;
                 std::tie(result, code) = to_utf<Char>(*in, state);
                 if (result == utf_result::error)
-                    return utf_result::error;
+                {
+                    if (!options.test_any(utf_conversion_options::sanitize))
+                        return utf_result::error;
+
+                    if (state.consumed == 0)
+                        ++in;
+
+                    state = { };
+                    do
+                    {
+                        std::tie(result, code) = to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
+                        if (!out(code))
+                            return utf_result::partial_write;
+                    } while (result == utf_result::partial_write);
+
+                    continue;
+                }
+
                 if (result != utf_result::partial_write)
                     ++in;
+
                 if (result != utf_result::partial_read)
                 {
                     if (!out(code))
@@ -195,7 +220,7 @@ namespace stdext
         }
 
         template <class Generator, class Function>
-        std::pair<utf_result, size_t> to_utf_length(Generator&& in, Function&& convert)
+        std::pair<utf_result, size_t> to_utf_length(Generator&& in, Function&& convert, flags<utf_conversion_options> options)
         {
             auto result = std::make_pair(utf_result::ok, size_t(0));
             utfstate_t state;
@@ -203,9 +228,26 @@ namespace stdext
             {
                 result.first = convert(*in, state).first;
                 if (result.first == utf_result::error)
-                    break;
+                {
+                    if (!options.test_any(utf_conversion_options::sanitize))
+                        return result;
+
+                    if (state.consumed == 0)
+                        ++in;
+
+                    state = { };
+                    do
+                    {
+                        result.first = convert(UNICODE_REPLACEMENT_CHARACTER, state).first;
+                        ++result.second;
+                    } while (result.first == utf_result::partial_write);
+
+                    continue;
+                }
+
                 if (result.first != utf_result::partial_write)
                     ++in;
+
                 if (result.first != utf_result::partial_read)
                     ++result.second;
             }
@@ -213,129 +255,129 @@ namespace stdext
         }
 
         template <class Char, class Generator>
-        std::pair<utf_result, std::basic_string<Char>> to_ustring(Generator&& in)
+        std::pair<utf_result, std::basic_string<Char>> to_ustring(Generator&& in, flags<utf_conversion_options> options)
         {
             std::basic_string<Char> str;
             utfstate_t state;
-            return { to_utf<Char>(std::forward<Generator>(in), make_consumer<Char>(std::back_inserter(str)), state), move(str) };
+            return { to_utf<Char>(std::forward<Generator>(in), make_consumer<Char>(std::back_inserter(str)), state, options), move(str) };
         }
     }
 
     template <class Generator, class Consumer,
         STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>(value_type_t<std::decay_t<Generator>, can_generate>)>)>
-    utf_result to_utf8(Generator&& in, Consumer&& out, utfstate_t& state)
+    utf_result to_utf8(Generator&& in, Consumer&& out, utfstate_t& state, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return detail::to_utf<char>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
+        return detail::to_utf<char>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state, options);
     }
 
     template <class Char, class Consumer, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>> && is_consumer_v<std::decay_t<Consumer>(Char)>)>
-    utf_result to_utf8(Char* s, Consumer&& out)
+    utf_result to_utf8(Char* s, Consumer&& out, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
         utfstate_t state;
-        return detail::to_utf<char>(make_cstring_generator(s), forward<Consumer>(out), state);
+        return detail::to_utf<char>(make_cstring_generator(s), forward<Consumer>(out), state, options);
     }
 
     template <class Generator, class Consumer,
         STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>(value_type_t<std::decay_t<Generator>, can_generate>)>)>
-    utf_result to_utf16(Generator&& in, Consumer&& out, utfstate_t& state)
+    utf_result to_utf16(Generator&& in, Consumer&& out, utfstate_t& state, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return detail::to_utf<char16_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
+        return detail::to_utf<char16_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state, options);
     }
 
     template <class Char, class Consumer, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    utf_result to_utf16(Char* s, Consumer&& out)
+    utf_result to_utf16(Char* s, Consumer&& out, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
         utfstate_t state;
-        return detail::to_utf<char16_t>(make_cstring_generator(s), forward<Consumer>(out), state);
+        return detail::to_utf<char16_t>(make_cstring_generator(s), forward<Consumer>(out), state, options);
     }
 
     template <class Generator, class Consumer,
         STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>(value_type_t<std::decay_t<Generator>, can_generate>)>)>
-    utf_result to_utf32(Generator&& in, Consumer&& out, utfstate_t& state)
+    utf_result to_utf32(Generator&& in, Consumer&& out, utfstate_t& state, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return detail::to_utf<char32_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state);
+        return detail::to_utf<char32_t>(as_generator(forward<Generator>(in)), forward<Consumer>(out), state, options);
     }
 
     template <class Char, class Consumer, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    utf_result to_utf32(Char* s, Consumer&& out)
+    utf_result to_utf32(Char* s, Consumer&& out, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
         utfstate_t state;
-        return detail::to_utf<char32_t>(make_cstring_generator(s), forward<Consumer>(out), state);
+        return detail::to_utf<char32_t>(make_cstring_generator(s), forward<Consumer>(out), state, options);
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate_v<std::decay_t<Generator>>)>
-    std::pair<utf_result, size_t> to_utf8_length(Generator&& in)
+    std::pair<utf_result, size_t> to_utf8_length(Generator&& in, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
         return detail::to_utf_length(as_generator(forward<Generator>(in)),
-            [](auto&&... args) { return to_utf8(forward<decltype(args)>(args)...); });
+            [](auto&&... args) { return to_utf8(forward<decltype(args)>(args)...); }, options);
     }
 
     template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    std::pair<utf_result, size_t> to_utf8_length(Char* str)
+    std::pair<utf_result, size_t> to_utf8_length(Char* str, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return to_utf8_length(make_cstring_generator(str));
+        return to_utf8_length(make_cstring_generator(str), options);
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate_v<std::decay_t<Generator>>)>
-    std::pair<utf_result, size_t> to_utf16_length(Generator&& in)
+    std::pair<utf_result, size_t> to_utf16_length(Generator&& in, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
         return detail::to_utf_length(as_generator(forward<Generator>(in)),
-            [](auto&&... args) { return to_utf16(forward<decltype(args)>(args)...); });
+            [](auto&&... args) { return to_utf16(forward<decltype(args)>(args)...); }, options);
     }
 
     template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    std::pair<utf_result, size_t> to_utf16_length(Char* str)
+    std::pair<utf_result, size_t> to_utf16_length(Char* str, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return to_utf16_length(make_cstring_generator(str));
+        return to_utf16_length(make_cstring_generator(str), options);
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate_v<std::decay_t<Generator>>)>
-    std::pair<utf_result, size_t> to_utf32_length(Generator&& in)
+    std::pair<utf_result, size_t> to_utf32_length(Generator&& in, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
         return detail::to_utf_length(as_generator(forward<Generator>(in)),
-            [](auto&&... args) { return to_utf32(forward<decltype(args)>(args)...); });
+            [](auto&&... args) { return to_utf32(forward<decltype(args)>(args)...); }, options);
     }
 
     template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    std::pair<utf_result, size_t> to_utf32_length(Char* str)
+    std::pair<utf_result, size_t> to_utf32_length(Char* str, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return to_utf32_length(make_cstring_generator(str));
+        return to_utf32_length(make_cstring_generator(str), options);
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate_v<std::decay_t<Generator>>)>
-    std::pair<utf_result, std::string> to_u8string(Generator&& in)
+    std::pair<utf_result, std::string> to_u8string(Generator&& in, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return detail::to_ustring<char>(forward<Generator>(in));
+        return detail::to_ustring<char>(forward<Generator>(in), options);
     }
 
     template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    std::pair<utf_result, std::string> to_u8string(Char* str)
+    std::pair<utf_result, std::string> to_u8string(Char* str, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return to_u8string(make_cstring_generator(str));
+        return to_u8string(make_cstring_generator(str), options);
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate_v<std::decay_t<Generator>>)>
-    std::pair<utf_result, std::u16string> to_u16string(Generator&& in)
+    std::pair<utf_result, std::u16string> to_u16string(Generator&& in, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return detail::to_ustring<char16_t>(forward<Generator>(in));
+        return detail::to_ustring<char16_t>(forward<Generator>(in), options);
     }
 
     template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    std::pair<utf_result, std::u16string> to_u16string(Char* str)
+    std::pair<utf_result, std::u16string> to_u16string(Char* str, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return to_u16string(make_cstring_generator(str));
+        return to_u16string(make_cstring_generator(str), options);
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate_v<std::decay_t<Generator>>)>
-    std::pair<utf_result, std::u32string> to_u32string(Generator&& in)
+    std::pair<utf_result, std::u32string> to_u32string(Generator&& in, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return detail::to_ustring<char32_t>(forward<Generator>(in));
+        return detail::to_ustring<char32_t>(forward<Generator>(in), options);
     }
 
     template <class Char, STDEXT_REQUIRES(is_unicode_character_type_v<std::decay_t<Char>>)>
-    std::pair<utf_result, std::u32string> to_u32string(Char* str)
+    std::pair<utf_result, std::u32string> to_u32string(Char* str, flags<utf_conversion_options> options = utf_conversion_options::none)
     {
-        return to_u32string(make_cstring_generator(str));
+        return to_u32string(make_cstring_generator(str), options);
     }
 
     template <class Generator, STDEXT_REQUIRES(is_generator_v<std::decay_t<Generator>>)>
@@ -467,7 +509,7 @@ namespace stdext
                 case utf_result::error:
                     if (state.consumed == 0)
                         ++g;
-                    state = utfstate_t();
+                    state = { };
                     result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
                     value = result.second;
                     if (result.first != utf_result::ok)
@@ -477,7 +519,7 @@ namespace stdext
             } while (g);
 
             // Ran out of characters during a partial read.
-            state = utfstate_t();
+            state = { };
             auto result = detail::to_utf<Char>(UNICODE_REPLACEMENT_CHARACTER, state);
             value = result.second;
         }
