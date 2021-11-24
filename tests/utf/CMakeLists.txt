@@ -15,3 +15,5 @@ add_custom_command(TARGET utftest POST_BUILD
 if(WIN32)
     target_compile_definitions(utftest PRIVATE _SCL_SECURE_NO_WARNINGS)
 endif()
+
+catch_discover_tests(utftest WORKING_DIRECTORY $<TARGET_FILE_DIR:utftest>)

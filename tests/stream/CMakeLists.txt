@@ -13,3 +13,5 @@ endif()
 if(MSVC)
     set_property(TARGET streamtest APPEND_STRING PROPERTY COMPILE_FLAGS "/wd4814")
 endif()
+
+catch_discover_tests(streamtest)
