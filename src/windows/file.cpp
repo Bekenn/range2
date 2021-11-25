@@ -46,7 +46,7 @@ namespace stdext
         {
         }
 
-        file_stream_base::file_stream_base(file_stream_base&& other) : handle(move(other.handle))
+        file_stream_base::file_stream_base(file_stream_base&& other) : handle(stdext::move(other.handle))
         {
             other.handle = INVALID_HANDLE_VALUE;
         }
@@ -56,7 +56,7 @@ namespace stdext
             if (is_open())
                 close();
 
-            handle = move(other.handle);
+            handle = stdext::move(other.handle);
             other.handle = INVALID_HANDLE_VALUE;
             return *this;
         }

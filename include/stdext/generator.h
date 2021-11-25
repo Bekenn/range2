@@ -57,13 +57,13 @@ namespace stdext
     template <class T, STDEXT_REQUIRES(is_generator<std::decay_t<T>>::value)>
     decltype(auto) as_generator(T&& g)
     {
-        return forward<T>(g);
+        return stdext::forward<T>(g);
     }
 
     template <class T, STDEXT_REQUIRES(is_generator_adaptable<std::decay_t<T>>::value)>
     auto as_generator(T&& g)
     {
-        return make_generator(forward<T>(g));
+        return make_generator(stdext::forward<T>(g));
     }
 
     namespace detail
@@ -112,7 +112,7 @@ namespace stdext
     template <class Generator, class Consumer, STDEXT_REQUIRES(is_consumer<std::decay_t<Consumer>(value_type_t<std::decay_t<Generator>, can_generate>)>::value)>
     bool operator >> (Generator&& g, Consumer&& c)
     {
-        for (decltype(auto) gen = as_generator(forward<Generator>(g)); gen; ++gen)
+        for (decltype(auto) gen = as_generator(stdext::forward<Generator>(g)); gen; ++gen)
         {
             if (!c(*gen))
                 return false;
@@ -157,7 +157,7 @@ namespace stdext
     public:
         iterator_generator() : i() { }
         explicit iterator_generator(const iterator& i) : i(i) { }
-        explicit iterator_generator(iterator&& i) : i(move(i)) { }
+        explicit iterator_generator(iterator&& i) : i(stdext::move(i)) { }
 
     public:
         friend bool operator == (const iterator_generator& a, const iterator_generator& b) noexcept
@@ -196,9 +196,9 @@ namespace stdext
     public:
         delimited_iterator_generator() : iterator_generator<Iterator>(), j() { }
         delimited_iterator_generator(const iterator& i, const sentinel& j) : iterator_generator<Iterator>(i), j(j) { }
-        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator<Iterator>(i), j(move(j)) { }
-        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator<Iterator>(move(i)), j(j) { }
-        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator<Iterator>(move(i)), j(move(j)) { }
+        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator<Iterator>(i), j(stdext::move(j)) { }
+        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator<Iterator>(stdext::move(i)), j(j) { }
+        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator<Iterator>(stdext::move(i)), j(stdext::move(j)) { }
 
     public:
         explicit operator bool () const { return this->base() != j; }
@@ -220,7 +220,7 @@ namespace stdext
     public:
         function_generator() : f(), value() { }
         explicit function_generator(const Function& f) : f(f), value(this->f()) { }
-        explicit function_generator(Function&& f) : f(move(f)), value(this->f()) { }
+        explicit function_generator(Function&& f) : f(stdext::move(f)), value(this->f()) { }
 
     public:
         friend bool operator == (const function_generator& a, const function_generator& b) noexcept
@@ -269,7 +269,7 @@ namespace stdext
     public:
         function_generator() : f(), opt() { }
         explicit function_generator(const Function& f) : f(f), opt(this->f()) { }
-        explicit function_generator(Function&& f) : f(move(f)), opt(this->f()) { }
+        explicit function_generator(Function&& f) : f(stdext::move(f)), opt(this->f()) { }
 
     public:
         friend bool operator == (const function_generator& a, const function_generator& b) noexcept
@@ -322,7 +322,7 @@ namespace stdext
             : v(v) { }
         explicit constant_generator(value_type&& v)
             noexcept(std::is_nothrow_move_constructible<value_type>::value)
-            : v(move(v)) { }
+            : v(stdext::move(v)) { }
 
     public:
         friend bool operator == (const constant_generator& a, const constant_generator& b) noexcept
@@ -366,11 +366,11 @@ namespace stdext
         terminated_generator(const iterator& g, const TerminationPredicate& term)
             : i(g), term(term) { }
         terminated_generator(const iterator& g, TerminationPredicate&& term)
-            : i(g), term(move(term)) { }
+            : i(g), term(stdext::move(term)) { }
         terminated_generator(iterator&& g, const TerminationPredicate& term)
-            : i(move(g)), term(term) { }
+            : i(stdext::move(g)), term(term) { }
         terminated_generator(iterator&& g, TerminationPredicate&& term)
-            : i(std::move(g)), term(move(term)) { }
+            : i(stdext::move(g)), term(stdext::move(term)) { }
 
     public:
         friend void swap(terminated_generator& a, terminated_generator& b)
@@ -395,26 +395,26 @@ namespace stdext
     template <class Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && !is_generator<std::decay_t<Iterator>>::value)>
     auto make_generator(Iterator&& i)
     {
-        return iterator_generator<std::decay_t<Iterator>>(forward<Iterator>(i));
+        return iterator_generator<std::decay_t<Iterator>>(stdext::forward<Iterator>(i));
     }
 
     template <class Iterator, class Sentinel,
         STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && is_equality_comparable<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
     auto make_generator(Iterator&& i, Sentinel&& j)
     {
-        return delimited_iterator_generator<std::decay_t<Iterator>, std::decay_t<Sentinel>>(forward<Iterator>(i), forward<Sentinel>(j));
+        return delimited_iterator_generator<std::decay_t<Iterator>, std::decay_t<Sentinel>>(stdext::forward<Iterator>(i), stdext::forward<Sentinel>(j));
     }
 
     template <class Function, STDEXT_REQUIRES(std::is_invocable_v<std::decay_t<Function>>)>
     auto make_generator(Function&& function)
     {
-        return function_generator<std::decay_t<Function>>(forward<Function>(function));
+        return function_generator<std::decay_t<Function>>(stdext::forward<Function>(function));
     }
 
     template <class T>
     auto make_constant_generator(T&& v)
     {
-        return constant_generator<std::decay_t<T>>(forward<T>(v));
+        return constant_generator<std::decay_t<T>>(stdext::forward<T>(v));
     }
 
     template <class Iterator, class TerminationPredicate,
@@ -422,7 +422,7 @@ namespace stdext
     auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
     {
         return terminated_generator<std::decay_t<Iterator>, std::decay_t<TerminationPredicate>>
-            (forward<Iterator>(i), forward<TerminationPredicate>(term));
+            (stdext::forward<Iterator>(i), stdext::forward<TerminationPredicate>(term));
     }
 }
 

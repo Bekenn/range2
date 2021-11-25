@@ -11,19 +11,8 @@
 #pragma once
 
 #include <stdext/types.h>
-#include <stdext/utility.h>
 
 #include <type_traits>
-
-#if defined _LIBCPP_VERSION && _LIBCPP_VERSION < 3800
-#include <experimental/type_traits>
-namespace std
-{
-    using std::experimental::is_integral_v;
-    using std::experimental::is_same_v;
-    using std::experimental::is_signed_v;
-}
-#endif
 
 
 #define STDEXT_REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), ::stdext::nullptr_t>
@@ -51,13 +40,18 @@ template <class T, class... ArgTypes> struct has_method_##MethodName            
 
 namespace stdext
 {
+    // declval
+    template <class T> std::add_rvalue_reference_t<T> declval();
+
     // Useful declarations
+    using std::integral_constant;
+    using std::bool_constant;
     using std::true_type;
     using std::false_type;
 
     // Debugging helpers
     template <class T> struct error_type;
-    template <class T, T v> struct error_value;
+    template <auto V> struct error_value;
 
     // Test whether T1() == T2() is well-formed
     template <class T1, class T2> struct is_equality_comparable;

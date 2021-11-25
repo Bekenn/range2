@@ -23,20 +23,20 @@ namespace stdext
     {
     public:
         explicit scope_guard(const Callback& cb) : _cb(cb), _valid(true) { }
-        explicit scope_guard(Callback&& cb) : _cb(move(cb)), _valid(true) { }
+        explicit scope_guard(Callback&& cb) : _cb(stdext::move(cb)), _valid(true) { }
 
         scope_guard(const scope_guard&) = delete;
         scope_guard& operator = (const scope_guard&) = delete;
 
         scope_guard(scope_guard&& other)
-            : _cb(move(other._cb)), _valid(exchange(other._valid, false))
+            : _cb(stdext::move(other._cb)), _valid(stdext::exchange(other._valid, false))
         {
         }
 
         scope_guard& operator = (scope_guard&& other)
         {
-            _cb = move(other._cb);
-            _valid = exchange(other._valid, false);
+            _cb = stdext::move(other._cb);
+            _valid = stdext::exchange(other._valid, false);
         }
 
         ~scope_guard() noexcept(noexcept(_cb()))
@@ -66,7 +66,7 @@ namespace stdext
         }
 
         explicit scope_error_guard(Callback&& cb, bool call_on_error)
-            : scope_guard<Callback>(move(cb)), _exception_count(std::uncaught_exceptions()), _call_on_error(call_on_error)
+            : scope_guard<Callback>(stdext::move(cb)), _exception_count(std::uncaught_exceptions()), _call_on_error(call_on_error)
         {
         }
 
@@ -88,13 +88,13 @@ namespace stdext
     template <class Callback>
     auto make_scope_guard(Callback&& cb)
     {
-        return scope_guard<std::decay_t<Callback>>(forward<Callback>(cb));
+        return scope_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb));
     }
 
     template <class Callback>
     auto make_scope_error_guard(Callback&& cb, bool call_on_error)
     {
-        return scope_error_guard<std::decay_t<Callback>>(forward<Callback>(cb), call_on_error);
+        return scope_error_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb), call_on_error);
     }
 
 #define at_scope_exit(...) auto STDEXT_CONCAT(scope_guard_, __COUNTER__) = ::stdext::make_scope_guard(__VA_ARGS__)

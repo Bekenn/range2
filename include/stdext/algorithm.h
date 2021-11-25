@@ -168,7 +168,7 @@ namespace stdext
     void for_each_argument(Function&& func, Args&&... args)
     {
         using t = int[sizeof...(Args)];
-        t{(func(forward<Args>(args)), 0)...};
+        t{(func(stdext::forward<Args>(args)), 0)...};
     }
 
     namespace detail
@@ -245,7 +245,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
-        auto pos = mismatch(range1, range2, forward<BinaryPredicate>(pred));
+        auto pos = mismatch(range1, range2, stdext::forward<BinaryPredicate>(pred));
         return range1.is_end_pos(pos.first) && range2.is_end_pos(pos.second);
     }
 
@@ -292,7 +292,7 @@ namespace stdext
         {
             if (range1.size() != range2.size())
                 return false;
-            return is_permutation(range1, range2, forward<BinaryPredicate>(pred), false_type());
+            return is_permutation(range1, range2, stdext::forward<BinaryPredicate>(pred), false_type());
         }
     }
 
@@ -300,7 +300,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
-        return detail::is_permutation(range1, range2, forward<BinaryPredicate>(pred),
+        return detail::is_permutation(range1, range2, stdext::forward<BinaryPredicate>(pred),
             std::conditional_t<is_counted_range<Range1>::value && is_counted_range<Range2>::value,
                 true_type,
                 false_type>());
@@ -397,7 +397,7 @@ namespace stdext
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         move(const Range& range, const OutputRange& result)
     {
-        return for_each([](auto& from, auto& to) { to = move(from); }, range, result);
+        return for_each([](auto& from, auto& to) { to = stdext::move(from); }, range, result);
     }
 
     template <class Range, class OutputRange,
@@ -483,7 +483,7 @@ namespace stdext
     range_position_type_t<Range> generate_n(const Range& range, Size n, Function&& func)
     {
         auto counted = make_counted_range(range, n);
-        auto pos = generate(counted, forward<Function>(func));
+        auto pos = generate(counted, stdext::forward<Function>(func));
         return counted.base_pos(pos);
     }
 
@@ -497,7 +497,7 @@ namespace stdext
         {
             if (!pred(value))
             {
-                rng.at_pos(pos) = move(value);
+                rng.at_pos(pos) = stdext::move(value);
                 rng.inc_pos(pos);
             }
         }, rng);
@@ -550,7 +550,7 @@ namespace stdext
         range.inc_pos(read_pos);
         while (!range.is_end_pos(read_pos))
         {
-            range.at_pos(write_pos) = move(range.at_pos(read_pos));
+            range.at_pos(write_pos) = stdext::move(range.at_pos(read_pos));
             range.inc_pos(read_pos);
             range.inc_pos(write_pos);
             read_pos = find_if(subrange_from(read_pos), [&](const auto& value) { return !pred(value, range.at_pos(write_pos)); });
@@ -738,7 +738,7 @@ namespace stdext
                 r = find_if_not(subrange_from(range, next_pos(range, mid)), pred);
 
                 for (auto pos = l; pos != mid; range.inc_pos(pos))
-                    buf.emplace_back(move(range.at_pos(pos)));
+                    buf.emplace_back(stdext::move(range.at_pos(pos)));
 
                 l = move(make_range(range, mid, r), make_range(range, l, r)).second;
                 move(make_range(buf.begin(), buf.end()), make_range(range, l, r));
@@ -769,7 +769,7 @@ namespace stdext
         template <class Range, class Predicate>
         range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred, false_type /* is_counted */)
         {
-            return slow_stable_partition(range, forward<Predicate>(pred));
+            return slow_stable_partition(range, stdext::forward<Predicate>(pred));
         }
 
         template <class Range, class Predicate>
@@ -793,7 +793,7 @@ namespace stdext
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred)
     {
-        return detail::stable_partition(range, forward<Predicate>(pred), is_counted_range<Range>());
+        return detail::stable_partition(range, stdext::forward<Predicate>(pred), is_counted_range<Range>());
     }
 
     template <class Range, class OutputRange1, class OutputRange2, class Predicate>
@@ -982,7 +982,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void emplace_heap(const Range& range, T&& value, Compare&& comp)
     {
-        range[0] = forward<T>(value);
+        range[0] = stdext::forward<T>(value);
         detail::heap_rebalance_root(range, comp);
     }
 
@@ -990,7 +990,7 @@ namespace stdext
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void emplace_heap(const Range& range, T&& value)
     {
-        emplace_heap(range, forward<T>(value), std::less<>());
+        emplace_heap(range, stdext::forward<T>(value), std::less<>());
     }
 
     template <class Range, class Compare,
@@ -1221,7 +1221,7 @@ namespace stdext
 
                 r = find_if_not(subrange_from(range, next_pos(range, mid)), pred);
                 for (auto pos = l; pos != mid; range.inc_pos(pos))
-                    buf.emplace_back(move(range.at_pos(pos)));
+                    buf.emplace_back(stdext::move(range.at_pos(pos)));
                 l = move(make_range(range, mid, r), make_range(range, l, r)).second;
                 move(make_range(buf.begin(), buf.end()), make_range(range, l, r));
                 buf.resize(0);
@@ -1492,7 +1492,7 @@ namespace stdext
                     return;
 
                 auto r = lower_bound(subrange_from(range, middle), [&](const auto& value) { return comp(range.at_pos(l), value); });
-                for_each([&](auto& value) { buf.emplace_back(move(value)); }, make_range(range, l, middle));
+                for_each([&](auto& value) { buf.emplace_back(stdext::move(value)); }, make_range(range, l, middle));
                 middle = move(make_range(range, middle, r), make_range(range, l, r)).second;
                 move(make_range(buf.begin(), buf.end()), make_range(range, middle, r));
                 buf.resize(0);

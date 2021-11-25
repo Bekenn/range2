@@ -322,7 +322,7 @@ namespace stdext
         reference operator * () const { return _value; }
         pointer operator -> () const { return &_value; }
         input_stream_iterator& operator ++ () { if (_stream->read(&_value, 1) == 0) _stream = nullptr; return *this; }
-        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(move(_value)); ++*this; return proxy; }
+        iterator_proxy<input_stream_iterator> operator ++ (int) { iterator_proxy<input_stream_iterator> proxy(stdext::move(_value)); ++*this; return proxy; }
 
     private:
         input_stream* _stream;
@@ -709,14 +709,14 @@ namespace stdext
         substream& operator = (const substream&) = delete;
 
         substream(substream&& other) noexcept
-            : _stream(exchange(other._stream, nullptr)), _max_extent(exchange(other._max_extent, 0))
+            : _stream(stdext::exchange(other._stream, nullptr)), _max_extent(stdext::exchange(other._max_extent, 0))
         {
         }
 
         substream& operator = (substream&& other) noexcept
         {
-            _stream = exchange(other._stream, nullptr);
-            _max_extent = exchange(other._max_extent, 0);
+            _stream = stdext::exchange(other._stream, nullptr);
+            _max_extent = stdext::exchange(other._max_extent, 0);
             return *this;
         }
 

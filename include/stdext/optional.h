@@ -10,7 +10,7 @@
 #define STDEXT_OPTIONAL_INCLUDED
 #pragma once
 
-#include <stdext/traits.h>
+#include <stdext/utility.h>
 
 #include <initializer_list>
 #include <new>
@@ -89,9 +89,9 @@ namespace stdext
         }
         optional(optional&& rhs) noexcept(std::is_nothrow_move_constructible<T>::value)
         {
-            initialized = move(rhs.initialized);
+            initialized = stdext::move(rhs.initialized);
             if (initialized)
-                construct(move(rhs.value()));
+                construct(stdext::move(rhs.value()));
         }
         constexpr optional(const T& v)
         {
@@ -101,19 +101,19 @@ namespace stdext
         constexpr optional(T&& v)
         {
             initialized = true;
-            construct(move(v));
+            construct(stdext::move(v));
         }
         template <class... Args>
         constexpr explicit optional(in_place_t, Args&&... args)
         {
             initialized = true;
-            construct(forward<Args>(args)...);
+            construct(stdext::forward<Args>(args)...);
         }
         template <class U, class... Args, STDEXT_REQUIRES(std::is_constructible<T, std::initializer_list<U>, Args&&...>::value)>
         constexpr explicit optional(in_place_t, std::initializer_list<U> il, Args&&... args)
         {
             initialized = true;
-            construct(il, forward<Args>(args)...);
+            construct(il, stdext::forward<Args>(args)...);
         }
 
         // 5.3.3, Assignment
@@ -150,7 +150,7 @@ namespace stdext
             if (initialized)
             {
                 if (rhs.initialized)
-                    value() = move(rhs.value());
+                    value() = stdext::move(rhs.value());
                 else
                 {
                     destroy();
@@ -159,7 +159,7 @@ namespace stdext
             }
             else if (rhs.initialized)
             {
-                construct(move(rhs.value()));
+                construct(stdext::move(rhs.value()));
                 initialized = true;
             }
             return *this;
@@ -168,10 +168,10 @@ namespace stdext
         template <class U> optional& operator=(U&& rhs)
         {
             if (initialized)
-                value() = move(rhs);
+                value() = stdext::move(rhs);
             else
             {
-                construct(move(rhs));
+                construct(stdext::move(rhs));
                 initialized = true;
             }
         }
@@ -180,14 +180,14 @@ namespace stdext
         {
             if (initialized)
                 destroy();
-            construct(forward<Args>(args)...);
+            construct(stdext::forward<Args>(args)...);
             initialized = true;
         }
 
         template <class U, class... Args>
         void emplace(std::initializer_list<U> il, Args&&... args)
         {
-            emplace(il, forward<Args>(args)...);
+            emplace(il, stdext::forward<Args>(args)...);
         }
 
         // 5.3.4, Swap
@@ -201,14 +201,14 @@ namespace stdext
                     swap(value(), rhs.value());
                 else
                 {
-                    rhs.emplace(move(value()));
+                    rhs.emplace(stdext::move(value()));
                     destroy();
                     initialized = false;
                 }
             }
             else if (rhs.initialized)
             {
-                emplace(move(rhs.value()));
+                emplace(stdext::move(rhs.value()));
                 rhs.destroy();
                 rhs.initialized = false;
             }
@@ -232,30 +232,30 @@ namespace stdext
         {
             if (!initialized)
                 throw bad_optional_access();
-            return move(this->object);
+            return stdext::move(this->object);
         }
         constexpr const T&& value() const &&
         {
             if (!initialized)
                 throw bad_optional_access();
-            return move(this->object);
+            return stdext::move(this->object);
         }
         template <class U, STDEXT_REQUIRES(std::is_copy_constructible<T>::value && std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) const &
         {
-            return initialized ? this->object : static_cast<T>(forward<U>(v));
+            return initialized ? this->object : static_cast<T>(stdext::forward<U>(v));
         }
         template <class U, STDEXT_REQUIRES(std::is_move_constructible<T>::value && std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) &&
         {
-            return initialized ? move(this->object) : static_cast<T>(forward<U>(v));
+            return initialized ? stdext::move(this->object) : static_cast<T>(stdext::forward<U>(v));
         }
 
     private:
         template <class... Args>
         void construct(Args&&... args)
         {
-            new(&this->object) T(forward<Args>(args)...);
+            new(&this->object) T(stdext::forward<Args>(args)...);
         }
 
         void destroy()
@@ -411,7 +411,7 @@ namespace stdext
     template <class T>
     constexpr optional<std::decay_t<T>> make_optional(T&& v)
     {
-        return optional<std::decay_t<T>>(forward<T>(v));
+        return optional<std::decay_t<T>>(stdext::forward<T>(v));
     }
 }
 

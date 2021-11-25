@@ -21,7 +21,6 @@
 #include <array>
 #include <functional>
 #include <stdexcept>
-#include <utility>
 
 #include <cctype>
 #include <cstdlib>
@@ -64,13 +63,13 @@ namespace stdext
         template <class Consumer, class Arg>
         bool format_dispatch(Consumer& out, string_view fmt, Arg&& arg)
         {
-            return format_arg(out, fmt, forward<Arg>(arg));
+            return format_arg(out, fmt, stdext::forward<Arg>(arg));
         }
 
         template <size_t Index, class Consumer, class DispatchTuple, class ArgsTuple, class... Args>
         bool format_dispatch(Consumer& out, string_view fmt, const DispatchTuple& dispatch, const ArgsTuple& args, type_list<Args...>)
         {
-            return std::get<Index>(dispatch)(out, fmt, forward<list_element_t<type_list<Args...>, Index>>(std::get<Index>(args)));
+            return std::get<Index>(dispatch)(out, fmt, stdext::forward<list_element_t<type_list<Args...>, Index>>(std::get<Index>(args)));
         }
 
         template <size_t... Indices, class Consumer, class DispatchTuple, class ArgsTuple, class... Args>
@@ -149,7 +148,7 @@ namespace stdext
     std::string format_string(string_view fmt, Args&&... args)
     {
         stringbuf buf;
-        bool result = format(buf, fmt, forward<Args>(args)...);
+        bool result = format(buf, fmt, stdext::forward<Args>(args)...);
         assert(result);
         discard(result);
         return buf.extract();
@@ -203,7 +202,7 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for string_view");
 
-        auto sv = string_view(forward<Arg>(arg));
+        auto sv = string_view(stdext::forward<Arg>(arg));
         if constexpr (is_consumer_v<std::decay_t<Consumer>(string_view)>)
             return out(sv);
         else
@@ -217,7 +216,7 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for u16string_view");
 
-        auto sv = u16string_view(forward<Arg>(arg));
+        auto sv = u16string_view(stdext::forward<Arg>(arg));
         auto generator = make_generator(sv);
         return generator >> to_multibyte() >> out;
     }
@@ -228,7 +227,7 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for u32string_view");
 
-        auto sv = u32string_view(forward<Arg>(arg));
+        auto sv = u32string_view(stdext::forward<Arg>(arg));
         auto generator = make_generator(sv);
         return generator >> to_multibyte() >> out;
     }
@@ -240,7 +239,7 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for wstring_view");
 
-        auto sv = wstring_view(forward<Arg>(arg));
+        auto sv = wstring_view(stdext::forward<Arg>(arg));
         auto generator = make_generator(sv);
         return generator >> to_multibyte() >> out;
     }
@@ -250,13 +249,13 @@ namespace stdext
     {
         if (!fmt.empty())
             throw format_error("Unrecognized format for invocable");
-        return std::invoke(forward<Arg>(arg), out);
+        return std::invoke(stdext::forward<Arg>(arg), out);
     }
 
     template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
-        return std::invoke(forward<Arg>(arg), out, fmt);
+        return std::invoke(stdext::forward<Arg>(arg), out, fmt);
     }
 }
 

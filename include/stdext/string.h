@@ -56,7 +56,7 @@ namespace stdext
 
         string_type extract()
         {
-            return std::exchange(str, { });
+            return stdext::exchange(str, { });
         }
 
         void reset()
@@ -77,7 +77,7 @@ namespace stdext
     template <class Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value)>
     auto make_cstring_generator(Iterator&& i)
     {
-        return make_terminated_generator(forward<Iterator>(i),
+        return make_terminated_generator(stdext::forward<Iterator>(i),
             cstring_termination_predicate<iterator_value_type_t<std::decay_t<Iterator>>>);
     }
 
@@ -119,7 +119,7 @@ namespace stdext
     public:
         to_multibyte_generator() = default;
         to_multibyte_generator(const generator& g) : _g(g) { next(); }
-        to_multibyte_generator(generator&& g) : _g(move(g)) { next(); }
+        to_multibyte_generator(generator&& g) : _g(stdext::move(g)) { next(); }
 
     public:
         friend bool operator == (const to_multibyte_generator& a, const to_multibyte_generator& b) noexcept
@@ -127,7 +127,7 @@ namespace stdext
             return a._g == b._g
                 && a._state == b._state
                 && a._current == b._current
-                && std::equal(a._value + a._current, a._value + lengthof(a._value), b._value);
+                && std::equal(a._value + a._current, a._value + std::size(a._value), b._value);
         }
 
         friend bool operator != (const to_multibyte_generator& a, const to_multibyte_generator& b) noexcept
@@ -169,13 +169,13 @@ namespace stdext
 
         explicit operator bool() const noexcept
         {
-            return _g || _current == lengthof(_value);
+            return _g || _current == std::size(_value);
         }
 
     private:
         void next()
         {
-            if (_current == lengthof(_value))
+            if (_current == std::size(_value))
             {
                 assert(bool(_g));
                 auto length = detail::to_mb(_value, *_g, &_state);
@@ -183,7 +183,7 @@ namespace stdext
                 if (length == size_t(-1))
                     throw std::system_error(errno, std::generic_category());
 
-                _current = lengthof(_value) - length;
+                _current = std::size(_value) - length;
                 std::move(_value, _value + length, _value + _current);
                 return;
             }
@@ -194,7 +194,7 @@ namespace stdext
     private:
         generator _g = { };
         std::mbstate_t _state = { };
-        size_t _current = lengthof(_value);
+        size_t _current = std::size(_value);
         value_type _value[MB_LEN_MAX] = { };
     };
 
@@ -212,7 +212,7 @@ namespace stdext
     public:
         to_wchar_generator() noexcept : _g(), _state(), _value() { }
         to_wchar_generator(const generator& g) : _g(g), _state(), _value() { next(); }
-        to_wchar_generator(generator&& g) : _g(move(g)), _state(), _value() { next(); }
+        to_wchar_generator(generator&& g) : _g(stdext::move(g)), _state(), _value() { next(); }
 
     public:
         friend bool operator == (const to_wchar_generator& a, const to_wchar_generator& b) noexcept
@@ -292,13 +292,13 @@ namespace stdext
     template <class Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_multibyte_tag)
     {
-        return to_multibyte_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(forward<Generator>(g)));
+        return to_multibyte_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(stdext::forward<Generator>(g)));
     }
 
     template <class Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_wchar_tag)
     {
-        return to_wchar_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(forward<Generator>(g)));
+        return to_wchar_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(stdext::forward<Generator>(g)));
     }
 }
 

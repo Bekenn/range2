@@ -257,7 +257,7 @@ namespace stdext
     template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     range_value_type_t<Range> consume(const Range& range, range_position_type_t<Range>& pos)
     {
-        auto value = move(range.at_pos(pos));
+        auto value = stdext::move(range.at_pos(pos));
         range.inc_pos(pos);
         return value;
     }
@@ -272,7 +272,7 @@ namespace stdext
     template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
     void write(const Range& range, range_position_type_t<Range>& pos, range_value_type_t<Range>&& value)
     {
-        range.at_pos(pos) = move(value);
+        range.at_pos(pos) = stdext::move(value);
         range.inc_pos(pos);
     }
 
@@ -544,7 +544,7 @@ namespace stdext
             forward_iterator_range(iterator first, const TerminationPredicate& term)
                 : first(first), term(term) { }
             forward_iterator_range(iterator first, TerminationPredicate&& term)
-                : first(first), term(move(term)) { }
+                : first(first), term(stdext::move(term)) { }
 
         public:
             friend bool operator == (const forward_iterator_range& a, const forward_iterator_range& b) noexcept
@@ -999,7 +999,7 @@ namespace stdext
             delegated_multi_pass_range(const range& r, position first, const TerminationPredicate& term)
                 : r(&r), first(first), term(term) { }
             delegated_multi_pass_range(const range& r, position first, TerminationPredicate&& term)
-                : r(&r), first(first), term(move(term)) { }
+                : r(&r), first(first), term(stdext::move(term)) { }
 
             friend bool operator == (const delegated_multi_pass_range& a, const delegated_multi_pass_range& b) noexcept
             {
@@ -1312,7 +1312,7 @@ namespace stdext
             reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, const TerminationPredicate& term)
                 : r(&range), first(last), term(term) { }
             reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, TerminationPredicate&& term)
-                : r(&range), first(last), term(move(term)) { }
+                : r(&range), first(last), term(stdext::move(term)) { }
 
             friend bool operator == (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
             {
@@ -1641,43 +1641,43 @@ namespace stdext
     template <class Range, class TerminationPredicate, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_range(const Range& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return delegated_range<Range, std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
+        return delegated_range<Range, std::decay_t<TerminationPredicate>>(range, pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_range(const delegated_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return delegated_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
+        return delegated_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_range(const delimited_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return delegated_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
+        return delegated_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_range(const reverse_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
+        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
+        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Iterator, class DelegatedPredicate, class TerminationPredicate>
     auto make_range(const iterator_range<Iterator, DelegatedPredicate>& range, Iterator pos, TerminationPredicate&& pred)
     {
-        return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(pos, forward<TerminationPredicate>(pred));
+        return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Iterator, class TerminationPredicate>
     auto make_range(const delimited_iterator_range<Iterator>& range, Iterator pos, TerminationPredicate&& pred)
     {
-        return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(pos, forward<TerminationPredicate>(pred));
+        return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
@@ -1725,7 +1725,7 @@ namespace stdext
     template <class Iterator, class TerminationPredicate, STDEXT_REQUIRES(is_iterator<Iterator>::value)>
     auto make_range(Iterator i, TerminationPredicate&& pred)
     {
-        return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(i, forward<TerminationPredicate>(pred));
+        return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(i, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Iterator, STDEXT_REQUIRES(is_iterator<Iterator>::value)>
@@ -1743,7 +1743,7 @@ namespace stdext
     template <class Range, class TerminationPredicate>
     auto make_range(range_iterator<Range> i, TerminationPredicate&& pred)
     {
-        return make_range(i.base_range(), i.base_pos(), forward<TerminationPredicate>(pred));
+        return make_range(i.base_range(), i.base_pos(), stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range>
@@ -1828,37 +1828,37 @@ namespace stdext
     template <class Range, class TerminationPredicate, STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     auto make_reverse_range(const Range& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range, pos, forward<TerminationPredicate>(pred));
+        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range, pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_reverse_range(const delegated_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
+        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const delimited_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, forward<TerminationPredicate>(pred));
+        return reverse_range<Range, std::decay_t<TerminationPredicate>>(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class DelegatedPredicate, class TerminationPredicate>
     auto make_reverse_range(const reverse_range<Range, DelegatedPredicate>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return make_range(range.base(), pos, forward<TerminationPredicate>(pred));
+        return make_range(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const delimited_reverse_range<Range>& range, range_position_type_t<Range> pos, TerminationPredicate&& pred)
     {
-        return make_range(range.base(), pos, forward<TerminationPredicate>(pred));
+        return make_range(range.base(), pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, class TerminationPredicate>
     auto make_reverse_range(const counted_reverse_range<Range>& range, range_position_type_t<counted_reverse_range<Range>> pos, TerminationPredicate&& pred)
     {
-        return make_range(range.base(), range.base_pos(pos), forward<TerminationPredicate>(pred));
+        return make_range(range.base(), range.base_pos(pos), stdext::forward<TerminationPredicate>(pred));
     }
 
     template <class Range, STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>

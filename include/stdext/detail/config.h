@@ -68,7 +68,7 @@
 #endif
 #endif
 
-#ifdef __aarch64__
+#if defined __aarch64__ || defined _M_ARM64
 #undef STDEXT_ARCH_ARM64
 #define STDEXT_ARCH_ARM64 1
 #endif
@@ -133,13 +133,15 @@
 #endif
 
 // Feature detection
-#ifndef __has_include
-#define __has_include(x) 0
+#ifdef __has_include
+#define STDEXT_HAS_INCLUDE(x) __has_include(x)
+#else
+#define STDEXT_HAS_INCLUDE(x) 0
 #endif
 
 #define STDEXT_HAS_C_UNICODE 0
 
-#if __has_include(<cuchar>)
+#if STDEXT_HAS_INCLUDE(<cuchar>)
 #undef STDEXT_HAS_C_UNICODE
 #define STDEXT_HAS_C_UNICODE 1
 #endif

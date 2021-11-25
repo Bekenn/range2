@@ -10,7 +10,7 @@
 #define STDEXT_ITERATOR_INCLUDED
 #pragma once
 
-#include <stdext/traits.h>
+#include <stdext/utility.h>
 
 #include <iterator>
 
@@ -102,10 +102,10 @@ namespace stdext
 
     public:
         explicit iterator_proxy(const value_type& value) : value(value) { }
-        explicit iterator_proxy(value_type&& value) : value(move(value)) { }
+        explicit iterator_proxy(value_type&& value) : value(stdext::move(value)) { }
 
     public:
-        value_type operator * () { return move(value); }
+        value_type operator * () { return stdext::move(value); }
 
     private:
         value_type value;

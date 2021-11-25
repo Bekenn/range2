@@ -32,7 +32,7 @@ namespace stdext
     public:
         constexpr compressed_base() = default;
         explicit constexpr compressed_base(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) : value(v) { }
-        explicit constexpr compressed_base(T&& v) noexcept(std::is_nothrow_move_constructible_v<T>) : value(move(v)) { }
+        explicit constexpr compressed_base(T&& v) noexcept(std::is_nothrow_move_constructible_v<T>) : value(stdext::move(v)) { }
 
         friend constexpr bool operator == (const compressed_base& a, const compressed_base& b) noexcept
         {
@@ -46,8 +46,8 @@ namespace stdext
     public:
         constexpr T& get() & noexcept { return value; }
         constexpr const T& get() const & noexcept { return value; }
-        constexpr T&& get() && noexcept { return move(value); }
-        constexpr const T&& get() const && noexcept { return move(value); }
+        constexpr T&& get() && noexcept { return stdext::move(value); }
+        constexpr const T&& get() const && noexcept { return stdext::move(value); }
 
     private:
         T value;
@@ -95,11 +95,11 @@ namespace stdext
         constexpr compressed_pair(const T1& v1, const T2& v2) noexcept(std::is_nothrow_copy_constructible_v<T1> && std::is_nothrow_copy_constructible_v<T2>)
             : first_base(v1), second_base(v2) { }
         constexpr compressed_pair(const T1& v1, T2&& v2) noexcept(std::is_nothrow_copy_constructible_v<T1> && std::is_nothrow_move_constructible_v<T2>)
-            : first_base(v1), second_base(move(v2)) { }
+            : first_base(v1), second_base(stdext::move(v2)) { }
         constexpr compressed_pair(T1&& v1, const T2& v2) noexcept(std::is_nothrow_move_constructible_v<T1> && std::is_nothrow_copy_constructible_v<T2>)
-            : first_base(move(v1)), second_base(v2) { }
+            : first_base(stdext::move(v1)), second_base(v2) { }
         constexpr compressed_pair(T1&& v1, T2&& v2) noexcept(std::is_nothrow_move_constructible_v<T1> && std::is_nothrow_move_constructible_v<T2>)
-            : first_base(move(v1)), second_base(move(v2)) { }
+            : first_base(stdext::move(v1)), second_base(stdext::move(v2)) { }
 
         constexpr T1& first() & noexcept { return static_cast<first_base&>(*this).get(); }
         constexpr const T1& first() const & noexcept { return static_cast<const first_base&>(*this).get(); }
@@ -137,21 +137,21 @@ namespace stdext
             constexpr compressed_pair_same_type(const T& v1, const T& v2) noexcept(std::is_nothrow_copy_constructible_v<T> && std::is_nothrow_copy_assignable_v<T>)
                 : v1_(v1), v2_(v2) { }
             constexpr compressed_pair_same_type(const T& v1, T&& v2) noexcept(std::is_nothrow_copy_constructible_v<T> && std::is_nothrow_move_constructible_v<T>)
-                : v1_(v1), v2_(move(v2)) { }
+                : v1_(v1), v2_(stdext::move(v2)) { }
             constexpr compressed_pair_same_type(T&& v1, const T& v2) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>)
-                : v1_(move(v1)), v2_(v2) { }
+                : v1_(stdext::move(v1)), v2_(v2) { }
             constexpr compressed_pair_same_type(T&& v1, T&& v2) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_constructible_v<T>)
-                : v1_(move(v1)), v2_(move(v2)) { }
+                : v1_(stdext::move(v1)), v2_(stdext::move(v2)) { }
 
             constexpr T& first() & noexcept { return v1_; }
             constexpr const T& first() const & noexcept { return v1_; }
-            constexpr T&& first() && noexcept { return move(v1_); }
-            constexpr const T& first() const && noexcept { return move(v1_); }
+            constexpr T&& first() && noexcept { return stdext::move(v1_); }
+            constexpr const T& first() const && noexcept { return stdext::move(v1_); }
 
             constexpr T& second() & noexcept { return v2_; }
             constexpr const T& second() const & noexcept { return v2_; }
-            constexpr T& second() && noexcept { return move(v2_); }
-            constexpr const T& second() const && noexcept { return move(v2_); }
+            constexpr T& second() && noexcept { return stdext::move(v2_); }
+            constexpr const T& second() const && noexcept { return stdext::move(v2_); }
 
             constexpr void swap(compressed_pair_same_type& p) noexcept
             {
