@@ -58,5 +58,5 @@ set_source_files_properties(${SOURCES_DISABLED} PROPERTIES LANGUAGE "")
 
 if(STDEXT_STANDALONE_BUILD)
     enable_testing()
-    add_subdirectory(tests)
+    add_subdirectory(test)
 endif()
