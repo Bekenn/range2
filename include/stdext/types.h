@@ -19,6 +19,7 @@
 namespace stdext
 {
     // Types imported from cstddef
+    using std::byte;
     using std::ptrdiff_t;
     using std::size_t;
     using std::max_align_t;

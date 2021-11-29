@@ -119,7 +119,7 @@ namespace stdext
         }
 
         template <class Stream>
-        size_t file_input_stream_base<Stream>::do_read(std::byte* buffer, size_t size)
+        size_t file_input_stream_base<Stream>::do_read(byte* buffer, size_t size)
         {
             assert(self().is_open());
 
@@ -151,7 +151,7 @@ namespace stdext
         }
 
         template <class Stream>
-        size_t file_output_stream_base<Stream>::do_write(const std::byte* buffer, size_t size)
+        size_t file_output_stream_base<Stream>::do_write(const byte* buffer, size_t size)
         {
             assert(self().is_open());
 

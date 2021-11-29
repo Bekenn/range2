@@ -17,8 +17,8 @@ namespace stdext
     peekable::~peekable() = default;
     direct_readable::~direct_readable() = default;
     direct_writable::~direct_writable() = default;
-    template <> memory_stream_base<const std::byte*>::~memory_stream_base() = default;
-    template <> memory_stream_base<std::byte*>::~memory_stream_base() = default;
+    template <> memory_stream_base<const byte*>::~memory_stream_base() = default;
+    template <> memory_stream_base<byte*>::~memory_stream_base() = default;
     memory_input_stream::~memory_input_stream() = default;
     memory_output_stream::~memory_output_stream() = default;
     memory_stream::~memory_stream() = default;
