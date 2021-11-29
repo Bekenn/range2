@@ -54,19 +54,18 @@ namespace stdext
     template <auto V> struct error_value;
 
     // Test whether T1() == T2() is well-formed
-    template <class T1, class T2> struct is_equality_comparable;
-    template <class T1, class T2> constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
+    namespace detail
+    {
+        template <class T1, class T2>
+        static true_type test_equality_comparable(decltype(declval<T1>() == declval<T2>() && declval<T1>() != declval<T2>())*);
+        template <class T1, class T2>
+        static false_type test_equality_comparable(...);
+    }
 
     template <class T1, class T2>
-    struct is_equality_comparable
-    {
-        template <class U1, class U2>
-        static true_type test(decltype(declval<U1>() == declval<U2>()
-            && declval<U1>() != declval<U2>())*);
-        template <class U1, class U2>
-        static false_type test(...);
-        static constexpr bool value = decltype(test<T1, T2>(nullptr))::value;
-    };
+    struct is_equality_comparable : bool_constant<decltype(detail::test_equality_comparable<T1, T2>(0))::value> { };
+    template <class T1, class T2>
+    constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
 
     // Conversion from type From to type possibly-const To, where To is const-qualified if From is const-qualified.
     template <class From, class To> struct preserve_const;
