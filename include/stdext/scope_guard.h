@@ -57,16 +57,43 @@ namespace stdext
     };
 
     template <class Callback>
-    class scope_error_guard : public scope_guard<Callback>
+    class scope_success_guard : public scope_guard<Callback>
     {
     public:
-        explicit scope_error_guard(const Callback& cb, bool call_on_error)
-            : scope_guard<Callback>(cb), _exception_count(std::uncaught_exceptions()), _call_on_error(call_on_error)
+        explicit scope_success_guard(const Callback& cb)
+        : scope_guard<Callback>(cb), _exception_count(std::uncaught_exceptions())
         {
         }
 
-        explicit scope_error_guard(Callback&& cb, bool call_on_error)
-            : scope_guard<Callback>(stdext::move(cb)), _exception_count(std::uncaught_exceptions()), _call_on_error(call_on_error)
+        explicit scope_success_guard(Callback&& cb)
+        : scope_guard<Callback>(stdext::move(cb)), _exception_count(std::uncaught_exceptions())
+        {
+        }
+
+        scope_success_guard(scope_success_guard&&) = default;
+        scope_success_guard& operator = (scope_success_guard&&) = default;
+
+        ~scope_success_guard() noexcept(noexcept(std::declval<Callback>()()))
+        {
+            if (std::uncaught_exceptions() != _exception_count)
+                this->invalidate();
+        }
+
+    private:
+        int _exception_count;
+    };
+
+    template <class Callback>
+    class scope_error_guard : public scope_guard<Callback>
+    {
+    public:
+        explicit scope_error_guard(const Callback& cb)
+            : scope_guard<Callback>(cb), _exception_count(std::uncaught_exceptions())
+        {
+        }
+
+        explicit scope_error_guard(Callback&& cb)
+            : scope_guard<Callback>(stdext::move(cb)), _exception_count(std::uncaught_exceptions())
         {
         }
 
@@ -75,15 +102,22 @@ namespace stdext
 
         ~scope_error_guard() noexcept(noexcept(std::declval<Callback>()()))
         {
-            bool error = std::uncaught_exceptions() != _exception_count;
-            if (_call_on_error != error)
+            if (std::uncaught_exceptions() == _exception_count)
                 this->invalidate();
         }
 
     private:
         int _exception_count;
-        bool _call_on_error;
     };
+
+    template <class Callback>
+    scope_guard(Callback&&) -> scope_guard<std::decay_t<Callback>>;
+
+    template <class Callback>
+    scope_success_guard(Callback&&) -> scope_success_guard<std::decay_t<Callback>>;
+
+    template <class Callback>
+    scope_error_guard(Callback&&) -> scope_error_guard<std::decay_t<Callback>>;
 
     template <class Callback>
     auto make_scope_guard(Callback&& cb)
@@ -92,14 +126,20 @@ namespace stdext
     }
 
     template <class Callback>
-    auto make_scope_error_guard(Callback&& cb, bool call_on_error)
+    auto make_scope_success_guard(Callback&& cb)
     {
-        return scope_error_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb), call_on_error);
+        return scope_success_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb));
+    }
+
+    template <class Callback>
+    auto make_scope_error_guard(Callback&& cb)
+    {
+        return scope_error_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb));
     }
 
 #define at_scope_exit(...) auto STDEXT_CONCAT(scope_guard_, __COUNTER__) = ::stdext::make_scope_guard(__VA_ARGS__)
-#define at_scope_success(...) auto STDEXT_CONCAT(scope_success_, __COUNTER__) = ::stdext::make_scope_error_guard(__VA_ARGS__, false)
-#define at_scope_error(...) auto STDEXT_CONCAT(scope_error_, __COUNTER__) = ::stdext::make_scope_error_guard(__VA_ARGS__, true)
+#define at_scope_success(...) auto STDEXT_CONCAT(scope_success_, __COUNTER__) = ::stdext::make_scope_success_guard(__VA_ARGS__)
+#define at_scope_error(...) auto STDEXT_CONCAT(scope_error_, __COUNTER__) = ::stdext::make_scope_error_guard(__VA_ARGS__)
 }
 
 #endif
