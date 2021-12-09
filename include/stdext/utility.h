@@ -101,17 +101,34 @@ namespace stdext
     }
 
     // swap
-    template <class T, STDEXT_REQUIRES(std::is_move_constructible_v<T> && std::is_move_assignable_v<T>)>
-    constexpr void swap(T& a, T& b) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>)
+    namespace _swap
     {
-        a = stdext::exchange(b, a);
+        template <class T, STDEXT_REQUIRES(std::is_move_constructible_v<T> && std::is_move_assignable_v<T>)>
+        constexpr void swap(T& a, T& b) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>)
+        {
+            a = stdext::exchange(b, a);
+        }
+
+        struct impl
+        {
+            template <class T, STDEXT_REQUIRES(std::is_move_constructible_v<T> && std::is_move_assignable_v<T>)>
+            constexpr void operator()(T& a, T& b) const noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>)
+            {
+                return swap(a, b);
+            }
+
+            template <class T, size_t N, STDEXT_REQUIRES(std::is_swappable_v<T>)>
+            constexpr void operator()(T (&a)[N], T (&b)[N]) const noexcept(std::is_nothrow_swappable_v<T>)
+            {
+                for (size_t n = 0; n != N; ++n)
+                    swap(a[n], b[n]);
+            }
+        };
     }
 
-    template <class T, size_t N, STDEXT_REQUIRES(std::is_swappable_v<T>)>
-    constexpr void swap(T (&a)[N], T (&b)[N]) noexcept(std::is_nothrow_swappable_v<T>)
+    inline namespace _customizable
     {
-        for (size_t n = 0; n != N; ++n)
-            swap(a[n], b[n]);
+        inline constexpr _swap::impl swap;
     }
 
     // min

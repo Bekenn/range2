@@ -251,6 +251,144 @@ namespace stdext
             return initialized ? stdext::move(this->object) : static_cast<T>(stdext::forward<U>(v));
         }
 
+        // 5.7, Relational operators
+        friend constexpr bool operator==(const optional& x, const optional& y)
+        {
+            return x.has_value() != y.has_value() ? false
+                : !x.has_value() ? true
+                : x.value() == y.value();
+        }
+        friend constexpr bool operator!=(const optional& x, const optional& y)
+        {
+            return !(x == y);
+        }
+        friend constexpr bool operator<(const optional& x, const optional& y)
+        {
+            return !y.has_value() ? false
+                : !x.has_value() ? true
+                : x.value() < y.value();
+        }
+        friend constexpr bool operator>(const optional& x, const optional& y)
+        {
+            return y < x;
+        }
+        friend constexpr bool operator<=(const optional& x, const optional& y)
+        {
+            return !x.has_value() ? true
+                : !y.has_value() ? false
+                : x.value() <= y.value();
+        }
+        friend constexpr bool operator>=(const optional& x, const optional& y)
+        {
+            return y <= x;
+        }
+
+        // 5.8, Comparison with nullopt
+        friend constexpr bool operator==(const optional& x, nullopt_t) noexcept
+        {
+            return !x.has_value();
+        }
+        friend constexpr bool operator==(nullopt_t, const optional& x) noexcept
+        {
+            return !x.has_value();
+        }
+        friend constexpr bool operator!=(const optional& x, nullopt_t) noexcept
+        {
+            return x.has_value();
+        }
+        friend constexpr bool operator!=(nullopt_t, const optional& x) noexcept
+        {
+            return x.has_value();
+        }
+        friend constexpr bool operator<(const optional& x, nullopt_t) noexcept
+        {
+            return false;
+        }
+        friend constexpr bool operator<(nullopt_t, const optional& x) noexcept
+        {
+            return x.has_value();
+        }
+        friend constexpr bool operator<=(const optional& x, nullopt_t) noexcept
+        {
+            return !x.has_value();
+        }
+        friend constexpr bool operator<=(nullopt_t, const optional& x) noexcept
+        {
+            return true;
+        }
+        friend constexpr bool operator>(const optional& x, nullopt_t) noexcept
+        {
+            return x.has_value();
+        }
+        friend constexpr bool operator>(nullopt_t, const optional& x) noexcept
+        {
+            return false;
+        }
+        friend constexpr bool operator>=(const optional& x, nullopt_t) noexcept
+        {
+            return true;
+        }
+        friend constexpr bool operator>=(nullopt_t, const optional& x) noexcept
+        {
+            return x.has_value();
+        }
+
+        // 5.9, Comparison with T
+        friend constexpr bool operator==(const optional& x, const T& v)
+        {
+            return !x.has_value() || x.value() == v;
+        }
+        friend constexpr bool operator==(const T& v, const optional& x)
+        {
+            return x == v;
+        }
+        friend constexpr bool operator!=(const optional& x, const T& v)
+        {
+            return !(x == v);
+        }
+        friend constexpr bool operator!=(const T& v, const optional& x)
+        {
+            return !(x == v);
+        }
+        friend constexpr bool operator<(const optional& x, const T& v)
+        {
+            return !x.has_value() || x.value() < v;
+        }
+        friend constexpr bool operator<(const T& v, const optional& x)
+        {
+            return x < v;
+        }
+        friend constexpr bool operator<=(const optional& x, const T& v)
+        {
+            return !x.has_value() || x.value() <= v;
+        }
+        friend constexpr bool operator<=(const T& v, const optional& x)
+        {
+            return x <= v;
+        }
+        friend constexpr bool operator>(const optional& x, const T& v)
+        {
+            return v < x;
+        }
+        friend constexpr bool operator>(const T& v, const optional& x)
+        {
+            return x < v;
+        }
+        friend constexpr bool operator>=(const optional& x, const T& v)
+        {
+            return v <= x;
+        }
+        friend constexpr bool operator>=(const T& v, const optional& x)
+        {
+            return x <= v;
+        }
+
+        // 5.10, Specialized algorithms
+        friend void swap(optional& x, optional& y) noexcept(noexcept(x.swap(y)))
+        {
+            x.swap(y);
+        }
+
     private:
         template <class... Args>
         void construct(Args&&... args)
@@ -264,150 +402,6 @@ namespace stdext
         }
     };
 
-    // 5.7, Relational operators
-    template <class T>
-    constexpr bool operator==(const optional<T>& x, const optional<T>& y)
-    {
-        return x.has_value() != y.has_value() ? false
-            : !x.has_value() ? true
-            : x.value() == y.value();
-    }
-    template <class T>
-    constexpr bool operator!=(const optional<T>& x, const optional<T>& y)
-    {
-        return !(x == y);
-    }
-    template <class T>
-    constexpr bool operator<(const optional<T>& x, const optional<T>& y)
-    {
-        return !y.has_value() ? false
-            : !x.has_value() ? true
-            : x.value() < y.value();
-    }
-    template <class T>
-    constexpr bool operator>(const optional<T>& x, const optional<T>& y)
-    {
-        return y < x;
-    }
-    template <class T>
-    constexpr bool operator<=(const optional<T>& x, const optional<T>& y)
-    {
-        return !x.has_value() ? true
-            : !y.has_value() ? false
-            : x.value() <= y.value();
-    }
-    template <class T>
-    constexpr bool operator>=(const optional<T>& x, const optional<T>& y)
-    {
-        return y <= x;
-    }
-
-    // 5.8, Comparison with nullopt
-    template <class T> constexpr bool operator==(const optional<T>& x, nullopt_t) noexcept
-    {
-        return !x.has_value();
-    }
-    template <class T> constexpr bool operator==(nullopt_t, const optional<T>& x) noexcept
-    {
-        return !x.has_value();
-    }
-    template <class T> constexpr bool operator!=(const optional<T>& x, nullopt_t) noexcept
-    {
-        return x.has_value();
-    }
-    template <class T> constexpr bool operator!=(nullopt_t, const optional<T>& x) noexcept
-    {
-        return x.has_value();
-    }
-    template <class T> constexpr bool operator<(const optional<T>& x, nullopt_t) noexcept
-    {
-        return false;
-    }
-    template <class T> constexpr bool operator<(nullopt_t, const optional<T>& x) noexcept
-    {
-        return x.has_value();
-    }
-    template <class T> constexpr bool operator<=(const optional<T>& x, nullopt_t) noexcept
-    {
-        return !x.has_value();
-    }
-    template <class T> constexpr bool operator<=(nullopt_t, const optional<T>& x) noexcept
-    {
-        return true;
-    }
-    template <class T> constexpr bool operator>(const optional<T>& x, nullopt_t) noexcept
-    {
-        return x.has_value();
-    }
-    template <class T> constexpr bool operator>(nullopt_t, const optional<T>& x) noexcept
-    {
-        return false;
-    }
-    template <class T> constexpr bool operator>=(const optional<T>& x, nullopt_t) noexcept
-    {
-        return true;
-    }
-    template <class T> constexpr bool operator>=(nullopt_t, const optional<T>& x) noexcept
-    {
-        return x.has_value();
-    }
-
-    // 5.9, Comparison with T
-    template <class T> constexpr bool operator==(const optional<T>& x, const T& v)
-    {
-        return !x.has_value() || x.value() == v;
-    }
-    template <class T> constexpr bool operator==(const T& v, const optional<T>& x)
-    {
-        return x == v;
-    }
-    template <class T> constexpr bool operator!=(const optional<T>& x, const T& v)
-    {
-        return !(x == v);
-    }
-    template <class T> constexpr bool operator!=(const T& v, const optional<T>& x)
-    {
-        return !(x == v);
-    }
-    template <class T> constexpr bool operator<(const optional<T>& x, const T& v)
-    {
-        return !x.has_value() || x.value() < v;
-    }
-    template <class T> constexpr bool operator<(const T& v, const optional<T>& x)
-    {
-        return x < v;
-    }
-    template <class T> constexpr bool operator<=(const optional<T>& x, const T& v)
-    {
-        return !x.has_value() || x.value() <= v;
-    }
-    template <class T> constexpr bool operator<=(const T& v, const optional<T>& x)
-    {
-        return x <= v;
-    }
-    template <class T> constexpr bool operator>(const optional<T>& x, const T& v)
-    {
-        return v < x;
-    }
-    template <class T> constexpr bool operator>(const T& v, const optional<T>& x)
-    {
-        return x < v;
-    }
-    template <class T> constexpr bool operator>=(const optional<T>& x, const T& v)
-    {
-        return v <= x;
-    }
-    template <class T> constexpr bool operator>=(const T& v, const optional<T>& x)
-    {
-        return x <= v;
-    }
-
-    // 5.10, Specialized algorithms
-    template <class T>
-    void swap(optional<T>& x, optional<T>& y) noexcept(noexcept(x.swap(y)))
-    {
-        x.swap(y);
-    }
     template <class T>
     constexpr optional<std::decay_t<T>> make_optional(T&& v)
     {

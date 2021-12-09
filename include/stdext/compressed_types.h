@@ -113,7 +113,6 @@ namespace stdext
 
         constexpr void swap(compressed_pair& p) noexcept
         {
-            using std::swap;
             swap(first(), p.first());
             swap(second(), p.second());
         }
@@ -155,7 +154,6 @@ namespace stdext
 
             constexpr void swap(compressed_pair_same_type& p) noexcept
             {
-                using std::swap;
                 swap(v1_, p.v1_);
                 swap(v2_, p.v2_);
             }
