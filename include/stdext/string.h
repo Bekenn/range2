@@ -85,7 +85,7 @@ namespace stdext
     std::string to_mbstring(const wchar_t* str);
     std::wstring to_wstring(const char* str);
 
-    namespace detail
+    namespace _private
     {
 #if STDEXT_HAS_C_UNICODE
         inline size_t to_mb(char* s, char16_t c16, std::mbstate_t* ps)
@@ -178,7 +178,7 @@ namespace stdext
             if (_current == std::size(_value))
             {
                 assert(bool(_g));
-                auto length = detail::to_mb(_value, *_g, &_state);
+                auto length = _private::to_mb(_value, *_g, &_state);
                 ++_g;
                 if (length == size_t(-1))
                     throw std::system_error(errno, std::generic_category());

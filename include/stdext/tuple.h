@@ -27,7 +27,7 @@ namespace stdext
         using type = type_list<Ts...>;
     };
 
-    namespace detail
+    namespace _private
     {
         template <class... Tuples> struct tuples_size;
         template <class Tuple>
@@ -66,7 +66,7 @@ namespace stdext
     template <class... Tuples>
     auto zip(const Tuples&... tuples)
     {
-        return detail::zip(std::tuple<Tuples&...>(tuples...), iota_list<detail::tuples_size<Tuples...>::value, size_t>());
+        return _private::zip(std::tuple<Tuples&...>(tuples...), iota_list<_private::tuples_size<Tuples...>::value, size_t>());
     }
 }
 

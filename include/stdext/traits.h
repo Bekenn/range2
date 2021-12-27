@@ -54,7 +54,7 @@ namespace stdext
     template <auto V> struct error_value;
 
     // Test whether T1() == T2() is well-formed
-    namespace detail
+    namespace _private
     {
         template <class T1, class T2>
         static true_type test_equality_comparable(decltype(declval<T1>() == declval<T2>() && declval<T1>() != declval<T2>())*);
@@ -63,7 +63,7 @@ namespace stdext
     }
 
     template <class T1, class T2>
-    struct is_equality_comparable : bool_constant<decltype(detail::test_equality_comparable<T1, T2>(0))::value> { };
+    struct is_equality_comparable : bool_constant<decltype(_private::test_equality_comparable<T1, T2>(0))::value> { };
     template <class T1, class T2>
     constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
 
@@ -86,7 +86,7 @@ namespace stdext
     template <class T> struct equivalent_sized_type;
     template <class T> using equivalent_sized_type_t = typename equivalent_sized_type<T>::type;
 
-    namespace detail
+    namespace _private
     {
         template <class T, bool is_integral = std::is_integral_v<T>> struct equivalent_sized_type_base;
         template <size_t size, bool is_signed> struct make_sized_integral_type;
@@ -131,11 +131,11 @@ namespace stdext
     }
 
     template <class T>
-    struct equivalent_sized_type : detail::equivalent_sized_type_base<T>
+    struct equivalent_sized_type : _private::equivalent_sized_type_base<T>
     {
     };
 
-    namespace detail
+    namespace _private
     {
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct value_type_of { };
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct position_type_of { };
@@ -148,15 +148,15 @@ namespace stdext
         template <class T, template <class> class IsT, bool = IsT<T>::value> struct generator_type_of { };
     }
 
-    template <class T, template <class> class IsT> struct value_type : detail::value_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct position_type : detail::position_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct difference_type : detail::difference_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct size_type : detail::size_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct pointer_type : detail::pointer_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct reference_type : detail::reference_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct iterator_type : detail::iterator_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct sentinel_type : detail::sentinel_type_of<T, IsT> { };
-    template <class T, template <class> class IsT> struct generator_type : detail::generator_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct value_type : _private::value_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct position_type : _private::position_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct difference_type : _private::difference_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct size_type : _private::size_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct pointer_type : _private::pointer_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct reference_type : _private::reference_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct iterator_type : _private::iterator_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct sentinel_type : _private::sentinel_type_of<T, IsT> { };
+    template <class T, template <class> class IsT> struct generator_type : _private::generator_type_of<T, IsT> { };
 
     template <class T, template <class> class IsT> using value_type_t = typename value_type<T, IsT>::type;
     template <class T, template <class> class IsT> using position_type_t = typename position_type<T, IsT>::type;

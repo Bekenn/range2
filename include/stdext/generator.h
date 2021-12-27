@@ -23,7 +23,7 @@ namespace stdext
 {
     struct generator_tag : std::forward_iterator_tag { };
 
-    namespace detail
+    namespace _private
     {
         template <class T, bool = is_iterator<T>::value>
         struct is_generator_helper { static constexpr bool value = false; };
@@ -35,7 +35,7 @@ namespace stdext
     }
 
     template <class T> struct is_generator
-        : std::conditional_t<detail::is_generator_helper<T>::value, true_type, false_type>
+        : std::conditional_t<_private::is_generator_helper<T>::value, true_type, false_type>
     { };
     template <class T> constexpr auto is_generator_v = is_generator<T>::value;
 
@@ -66,7 +66,7 @@ namespace stdext
         return make_generator(stdext::forward<T>(g));
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Generator>
         struct value_type_of<Generator, is_generator, true> { using type = typename Generator::value_type; };

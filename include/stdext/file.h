@@ -40,7 +40,7 @@ namespace stdext
     class file_output_stream;
     class file_stream;
 
-    namespace detail
+    namespace _private
     {
         class file_stream_base : public seekable
         {
@@ -94,7 +94,7 @@ namespace stdext
         };
     }
 
-    class file_input_stream : public detail::file_stream_base, public detail::file_input_stream_base<file_input_stream>
+    class file_input_stream : public _private::file_stream_base, public _private::file_input_stream_base<file_input_stream>
     {
     public:
         file_input_stream() = default;
@@ -110,7 +110,7 @@ namespace stdext
         std::error_code open(const char* path, utf8_path_encoding);
     };
 
-    class file_output_stream : public detail::file_stream_base, public detail::file_output_stream_base<file_output_stream>
+    class file_output_stream : public _private::file_stream_base, public _private::file_output_stream_base<file_output_stream>
     {
     private:
         static constexpr flags<file_open_flags> default_flags = { file_open_flags::create, file_open_flags::truncate };
@@ -129,7 +129,7 @@ namespace stdext
         std::error_code open(const char* path, utf8_path_encoding, flags<file_open_flags> flags = default_flags);
     };
 
-    class file_stream : public detail::file_stream_base, public detail::file_input_stream_base<file_stream>, public detail::file_output_stream_base<file_stream>, public stream
+    class file_stream : public _private::file_stream_base, public _private::file_input_stream_base<file_stream>, public _private::file_output_stream_base<file_stream>, public stream
     {
     private:
         static constexpr flags<file_open_flags> default_flags = { file_open_flags::create };

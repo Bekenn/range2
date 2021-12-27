@@ -63,7 +63,7 @@ namespace stdext
     using uint32_pdp = endian_int<uint32_t, byte_order::pdp_endian>;
     using uint64_pdp = endian_int<uint64_t, byte_order::pdp_endian>;
 
-    namespace detail
+    namespace _private
     {
         template <byte_order order, class T> struct endian;
     }
@@ -75,7 +75,7 @@ namespace stdext
             return v;
 
         using sized_t = equivalent_sized_type_t<T>;
-        return T(detail::endian<order, sized_t>::swap(sized_t(v)));
+        return T(_private::endian<order, sized_t>::swap(sized_t(v)));
     }
 
     template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
@@ -101,7 +101,7 @@ namespace stdext
     size_t read(input_stream& s, T (&buffer)[length])
     {
         using sized_t = equivalent_sized_type_t<T>;
-        return detail::endian<order, sized_t>::read(s, buffer, length);
+        return _private::endian<order, sized_t>::read(s, buffer, length);
     }
 
     template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
@@ -132,7 +132,7 @@ namespace stdext
         return write(s, buffer, length);
     }
 
-    namespace detail
+    namespace _private
     {
         template <byte_order order, class T>
         struct endian

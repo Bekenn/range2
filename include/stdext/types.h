@@ -10,7 +10,7 @@
 #define STDEXT_TYPES_INCLUDED
 #pragma once
 
-#include <stdext/detail/config.h>
+#include <stdext/_impl/config.h>
 
 #include <cstddef>
 #include <cstdint>

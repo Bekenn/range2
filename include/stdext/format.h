@@ -58,7 +58,7 @@ namespace stdext
         using logic_error::logic_error;
     };
 
-    namespace detail
+    namespace _private
     {
         template <class Consumer, class Arg>
         bool format_dispatch(Consumer& out, string_view fmt, Arg&& arg)
@@ -87,7 +87,7 @@ namespace stdext
     bool format(Consumer&& out, string_view fmt, Args&&... args)
     {
         std::tuple<Args&...> arglist = { args... };
-        auto dispatch = std::make_tuple(std::ref(static_cast<bool (&)(Consumer& out, string_view fmt, Args&& arg)>(detail::format_dispatch))...);
+        auto dispatch = std::make_tuple(std::ref(static_cast<bool (&)(Consumer& out, string_view fmt, Args&& arg)>(_private::format_dispatch))...);
         for (auto i = fmt.begin(); i != fmt.end(); )
         {
             if (*i != '$')
@@ -119,7 +119,7 @@ namespace stdext
                 }
                 if (*i != '}')
                     throw format_error("Invalid format string");
-                if (!detail::format_dispatch(n, std::make_index_sequence<sizeof...(Args)>(), out, f, dispatch, arglist, type_list<Args...>()))
+                if (!_private::format_dispatch(n, std::make_index_sequence<sizeof...(Args)>(), out, f, dispatch, arglist, type_list<Args...>()))
                     return false;
                 ++i;
             }
@@ -127,7 +127,7 @@ namespace stdext
             {
                 char* p;
                 auto n = strtoul(&*i, &p, 10);
-                if (!detail::format_dispatch(n, std::make_index_sequence<sizeof...(Args)>(), out, "", dispatch, arglist, type_list<Args...>()))
+                if (!_private::format_dispatch(n, std::make_index_sequence<sizeof...(Args)>(), out, "", dispatch, arglist, type_list<Args...>()))
                     return false;
                 i += p - &*i;
             }
@@ -154,7 +154,7 @@ namespace stdext
         return buf.extract();
     }
 
-    namespace detail
+    namespace _private
     {
         enum class format_options
         {
@@ -185,15 +185,15 @@ namespace stdext
     template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
     bool format_arg(Consumer& out, string_view fmt, Arg arg)
     {
-        auto type = std::is_same_v<Arg, char> ? detail::format_type::_char
+        auto type = std::is_same_v<Arg, char> ? _private::format_type::_char
 #if STDEXT_HAS_C_UNICODE
-            : std::is_same_v<Arg, char16_t> ? detail::format_type::_char16
-            : std::is_same_v<Arg, char32_t> ? detail::format_type::_char32
+            : std::is_same_v<Arg, char16_t> ? _private::format_type::_char16
+            : std::is_same_v<Arg, char32_t> ? _private::format_type::_char32
 #endif
-            : std::is_same_v<Arg, wchar_t> ? detail::format_type::_wchar
-            : std::is_signed_v<Arg> ? detail::format_type::_signed
-            : detail::format_type::_unsigned;
-        return detail::format_integer(std::ref(out), fmt, arg, type);
+            : std::is_same_v<Arg, wchar_t> ? _private::format_type::_wchar
+            : std::is_signed_v<Arg> ? _private::format_type::_signed
+            : _private::format_type::_unsigned;
+        return _private::format_integer(std::ref(out), fmt, arg, type);
     }
 
     template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>

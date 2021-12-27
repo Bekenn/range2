@@ -26,17 +26,17 @@ namespace stdext
     struct random_access_range_tag : bidirectional_range_tag { };
 
     // range traits
-    namespace detail
+    namespace _private
     {
         DECLARE_HAS_INNER_TYPE(range_category);
     }
     template <class T> struct is_range
-        : std::conditional_t<detail::HAS_INNER_TYPE(T, range_category),
+        : std::conditional_t<_private::HAS_INNER_TYPE(T, range_category),
             true_type,
             false_type>
     { };
 
-    namespace detail
+    namespace _private
     {
         DECLARE_HAS_METHOD(end_pos);
         template <class T>
@@ -55,12 +55,12 @@ namespace stdext
         };
     }
     template <class T> struct is_delimited_range
-        : std::conditional_t<is_range<T>::value && detail::check_end_pos_getter<T>::value && detail::check_end_pos_setter<T>::value,
+        : std::conditional_t<is_range<T>::value && _private::check_end_pos_getter<T>::value && _private::check_end_pos_setter<T>::value,
             true_type,
             false_type>
     { };
 
-    namespace detail
+    namespace _private
     {
         DECLARE_HAS_METHOD(size);
         template <class T>
@@ -80,12 +80,12 @@ namespace stdext
         };
     }
     template <class T> struct is_counted_range
-        : std::conditional_t<is_range<T>::value && detail::check_has_size<T>::value && detail::check_has_resize<T>::value,
+        : std::conditional_t<is_range<T>::value && _private::check_has_size<T>::value && _private::check_has_resize<T>::value,
             true_type,
             false_type>
     { };
 
-    namespace detail
+    namespace _private
     {
         template <class T>
         struct check_stl_range
@@ -99,12 +99,12 @@ namespace stdext
         };
     }
     template <class T> struct is_stl_range_provider
-        : std::conditional_t<detail::check_stl_range<T>::value,
+        : std::conditional_t<_private::check_stl_range<T>::value,
             true_type,
             false_type>
     { };
 
-    namespace detail
+    namespace _private
     {
         template <class T>
         struct value_type_of<T, is_stl_range_provider, true> { using type = iterator_value_type_t<iterator_type_t<T, is_stl_range_provider>>; };
@@ -122,7 +122,7 @@ namespace stdext
 
     template <class Range> using range_category = typename Range::range_category;
 
-    namespace detail
+    namespace _private
     {
         template <class Range>
         struct value_type_of<Range, is_range, true> { using type = typename Range::value_type; };
@@ -181,7 +181,7 @@ namespace stdext
         return range.dec_pos(pos);
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range>
         range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n, multi_pass_range_tag)
@@ -213,10 +213,10 @@ namespace stdext
     template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range>& advance_pos(const Range& range, range_position_type_t<Range>& pos, range_difference_type_t<Range> n)
     {
-        return detail::advance_pos(range, pos, n, range_category<Range>());
+        return _private::advance_pos(range, pos, n, range_category<Range>());
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range>
         range_difference_type_t<Range> distance(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2, multi_pass_range_tag)
@@ -237,7 +237,7 @@ namespace stdext
     template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_difference_type_t<Range> distance(const Range& range, range_position_type_t<Range> p1, range_position_type_t<Range> p2)
     {
-        return detail::distance(range, p1, p2, range_category<Range>());
+        return _private::distance(range, p1, p2, range_category<Range>());
     }
 
     template <class Range, STDEXT_REQUIRES(is_range<Range>::value)>
@@ -276,7 +276,7 @@ namespace stdext
         range.inc_pos(pos);
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range>
         range_size_type_t<Range> size_before(const Range& range, range_position_type_t<Range> pos, multi_pass_range_tag)
@@ -312,13 +312,13 @@ namespace stdext
     template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_size_type_t<Range> size_before(const Range& range, range_position_type_t<Range> pos)
     {
-        return detail::size_before(range, pos, range_category<Range>());
+        return _private::size_before(range, pos, range_category<Range>());
     }
 
     template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_size_type_t<Range> size_after(const Range& range, range_position_type_t<Range> pos)
     {
-        return detail::size_after(range, pos, range_category<Range>());
+        return _private::size_after(range, pos, range_category<Range>());
     }
 
     template <class Range, STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
@@ -365,7 +365,7 @@ namespace stdext
     }
 
     // adapter ranges
-    namespace detail
+    namespace _private
     {
         template <class Range, class TerminationPredicate> class delegated_multi_pass_range;
         template <class Range, class TerminationPredicate> class delegated_bidirectional_range;
@@ -418,66 +418,66 @@ namespace stdext
     }
 
     template <class Range, class TerminationPredicate> using delegated_range =
-        std::conditional_t<is_random_access_range<Range>::value, detail::delegated_random_access_range<Range, TerminationPredicate>,
-            std::conditional_t<is_bidirectional_range<Range>::value, detail::delegated_bidirectional_range<Range, TerminationPredicate>,
-                std::enable_if_t<is_multi_pass_range<Range>::value, detail::delegated_multi_pass_range<Range, TerminationPredicate>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::delegated_random_access_range<Range, TerminationPredicate>,
+            std::conditional_t<is_bidirectional_range<Range>::value, _private::delegated_bidirectional_range<Range, TerminationPredicate>,
+                std::enable_if_t<is_multi_pass_range<Range>::value, _private::delegated_multi_pass_range<Range, TerminationPredicate>>
             >
         >;
 
     template <class Range> using delimited_range =
-        std::conditional_t<is_random_access_range<Range>::value, detail::delimited_random_access_range<Range>,
-            std::conditional_t<is_bidirectional_range<Range>::value, detail::delimited_bidirectional_range<Range>,
-                std::enable_if_t<is_multi_pass_range<Range>::value, detail::delimited_multi_pass_range<Range>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::delimited_random_access_range<Range>,
+            std::conditional_t<is_bidirectional_range<Range>::value, _private::delimited_bidirectional_range<Range>,
+                std::enable_if_t<is_multi_pass_range<Range>::value, _private::delimited_multi_pass_range<Range>>
             >
         >;
 
     template <class Range> using counted_range =
-        std::conditional_t<is_random_access_range<Range>::value, detail::counted_random_access_range<Range>,
-            std::conditional_t<is_bidirectional_range<Range>::value, detail::counted_bidirectional_range<Range>,
-                std::enable_if_t<is_multi_pass_range<Range>::value, detail::counted_multi_pass_range<Range>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::counted_random_access_range<Range>,
+            std::conditional_t<is_bidirectional_range<Range>::value, _private::counted_bidirectional_range<Range>,
+                std::enable_if_t<is_multi_pass_range<Range>::value, _private::counted_multi_pass_range<Range>>
             >
         >;
 
     template <class Range, class TerminationPredicate> using reverse_range =
-        std::conditional_t<is_random_access_range<Range>::value, detail::reverse_random_access_range<Range, TerminationPredicate>,
-            std::enable_if_t<is_bidirectional_range<Range>::value, detail::reverse_bidirectional_range<Range, TerminationPredicate>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::reverse_random_access_range<Range, TerminationPredicate>,
+            std::enable_if_t<is_bidirectional_range<Range>::value, _private::reverse_bidirectional_range<Range, TerminationPredicate>>
         >;
 
     template <class Range> using delimited_reverse_range =
-        std::conditional_t<is_random_access_range<Range>::value, detail::delimited_reverse_random_access_range<Range>,
-            std::enable_if_t<is_bidirectional_range<Range>::value, detail::delimited_reverse_bidirectional_range<Range>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::delimited_reverse_random_access_range<Range>,
+            std::enable_if_t<is_bidirectional_range<Range>::value, _private::delimited_reverse_bidirectional_range<Range>>
         >;
 
     template <class Range> using counted_reverse_range =
-        std::conditional_t<is_random_access_range<Range>::value, detail::counted_reverse_random_access_range<Range>,
-            std::enable_if_t<is_bidirectional_range<Range>::value, detail::counted_reverse_bidirectional_range<Range>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::counted_reverse_random_access_range<Range>,
+            std::enable_if_t<is_bidirectional_range<Range>::value, _private::counted_reverse_bidirectional_range<Range>>
         >;
 
     template <class Iterator, class TerminationPredicate> using iterator_range =
-        std::conditional_t<is_random_access_iterator<Iterator>::value, detail::random_access_iterator_range<Iterator, TerminationPredicate>,
-            std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::bidirectional_iterator_range<Iterator, TerminationPredicate>,
-                std::enable_if_t<is_forward_iterator<Iterator>::value, detail::forward_iterator_range<Iterator, TerminationPredicate>>
+        std::conditional_t<is_random_access_iterator<Iterator>::value, _private::random_access_iterator_range<Iterator, TerminationPredicate>,
+            std::conditional_t<is_bidirectional_iterator<Iterator>::value, _private::bidirectional_iterator_range<Iterator, TerminationPredicate>,
+                std::enable_if_t<is_forward_iterator<Iterator>::value, _private::forward_iterator_range<Iterator, TerminationPredicate>>
             >
         >;
 
     template <class Iterator> using delimited_iterator_range =
-        std::conditional_t<is_random_access_iterator<Iterator>::value, detail::delimited_random_access_iterator_range<Iterator>,
-            std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::delimited_bidirectional_iterator_range<Iterator>,
-                std::enable_if_t<is_forward_iterator<Iterator>::value, detail::delimited_forward_iterator_range<Iterator>>
+        std::conditional_t<is_random_access_iterator<Iterator>::value, _private::delimited_random_access_iterator_range<Iterator>,
+            std::conditional_t<is_bidirectional_iterator<Iterator>::value, _private::delimited_bidirectional_iterator_range<Iterator>,
+                std::enable_if_t<is_forward_iterator<Iterator>::value, _private::delimited_forward_iterator_range<Iterator>>
             >
         >;
 
     template <class Iterator> using counted_iterator_range =
-        std::conditional_t<is_random_access_iterator<Iterator>::value, detail::counted_random_access_iterator_range<Iterator>,
-            std::conditional_t<is_bidirectional_iterator<Iterator>::value, detail::counted_bidirectional_iterator_range<Iterator>,
-                std::enable_if_t<is_forward_iterator<Iterator>::value, detail::counted_forward_iterator_range<Iterator>>
+        std::conditional_t<is_random_access_iterator<Iterator>::value, _private::counted_random_access_iterator_range<Iterator>,
+            std::conditional_t<is_bidirectional_iterator<Iterator>::value, _private::counted_bidirectional_iterator_range<Iterator>,
+                std::enable_if_t<is_forward_iterator<Iterator>::value, _private::counted_forward_iterator_range<Iterator>>
             >
         >;
 
     template <class Range> using range_iterator =
-        std::conditional_t<is_random_access_range<Range>::value, detail::random_access_range_iterator<Range>,
-            std::conditional_t<is_bidirectional_range<Range>::value, detail::bidirectional_range_iterator<Range>,
-                std::enable_if_t<is_multi_pass_range<Range>::value, detail::multi_pass_range_iterator<Range>>
+        std::conditional_t<is_random_access_range<Range>::value, _private::random_access_range_iterator<Range>,
+            std::conditional_t<is_bidirectional_range<Range>::value, _private::bidirectional_range_iterator<Range>,
+                std::enable_if_t<is_multi_pass_range<Range>::value, _private::multi_pass_range_iterator<Range>>
             >
         >;
 
@@ -501,14 +501,14 @@ namespace stdext
         return std::make_pair(subrange_to(range, pos), subrange_from(range, pos));
     }
 
-    namespace detail
+    namespace _private
     {
         // Iterator ranges
         template <class Iterator, class TerminationPredicate>
         class forward_iterator_range
         {
         public:
-            using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
+            using range_category = _private::iterator_range_category_map_t<iterator_category<Iterator>>;
             using value_type = iterator_value_type_t<Iterator>;
             using position = Iterator;
             using difference_type = iterator_difference_type_t<Iterator>;
@@ -613,7 +613,7 @@ namespace stdext
         class delimited_forward_iterator_range
         {
         public:
-            using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
+            using range_category = _private::iterator_range_category_map_t<iterator_category<Iterator>>;
             using value_type = iterator_value_type_t<Iterator>;
             using position = Iterator;
             using difference_type = iterator_difference_type_t<Iterator>;
@@ -707,7 +707,7 @@ namespace stdext
         class counted_forward_iterator_range
         {
         public:
-            using range_category = detail::iterator_range_category_map_t<iterator_category<Iterator>>;
+            using range_category = _private::iterator_range_category_map_t<iterator_category<Iterator>>;
             using value_type = iterator_value_type_t<Iterator>;
             using difference_type = iterator_difference_type_t<Iterator>;
             using reference = iterator_reference_type_t<Iterator>;
@@ -824,7 +824,7 @@ namespace stdext
         class multi_pass_range_iterator
         {
         public:
-            using iterator_category = detail::range_iterator_category_map<range_category<Range>>;
+            using iterator_category = _private::range_iterator_category_map<range_category<Range>>;
             using value_type = stdext::range_value_type_t<Range>;
             using difference_type = stdext::range_difference_type_t<Range>;
             using pointer = value_type*;

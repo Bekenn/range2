@@ -3,14 +3,14 @@
 //  stdext
 //
 //  Created by James Touton on 7/21/18.
-//  Copyright © 2018 James Touton. All rights reserved.
+//  Copyright ï¿½ 2018 James Touton. All rights reserved.
 //
 
 #ifndef STDEXT_PLATFORM_INCLUDED
 #define STDEXT_PLATFORM_INCLUDED
 #pragma once
 
-#include <stdext/detail/config.h>
+#include <stdext/_impl/config.h>
 
 
 namespace stdext

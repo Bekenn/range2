@@ -171,7 +171,7 @@ namespace stdext
         t{(func(stdext::forward<Args>(args)), 0)...};
     }
 
-    namespace detail
+    namespace _private
     {
         template <class... Ranges, size_t... indices>
         std::tuple<std::tuple<const Ranges&, range_position_type_t<Ranges>&>...>
@@ -185,7 +185,7 @@ namespace stdext
     std::tuple<range_position_type_t<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
     {
         std::tuple<range_position_type_t<Ranges>...> positions(ranges.begin_pos()...);
-        auto args = detail::make_range_pos_pairs(std::make_tuple(std::ref(ranges)...), positions, iota_list_t<sizeof...(Ranges), size_t>());
+        auto args = _private::make_range_pos_pairs(std::make_tuple(std::ref(ranges)...), positions, iota_list_t<sizeof...(Ranges), size_t>());
         std::apply([&](auto&... rp)
         {
             for (; !multi_or(std::get<0>(rp).is_end_pos(std::get<1>(rp))...); for_each_argument([](auto& rp) { std::get<0>(rp).inc_pos(std::get<1>(rp)); }, rp...))
@@ -256,7 +256,7 @@ namespace stdext
         return equal(range1, range2, std::equal_to<>());
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range1, class Range2, class BinaryPredicate>
         bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, false_type counted)
@@ -300,7 +300,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
-        return detail::is_permutation(range1, range2, stdext::forward<BinaryPredicate>(pred),
+        return _private::is_permutation(range1, range2, stdext::forward<BinaryPredicate>(pred),
             std::conditional_t<is_counted_range<Range1>::value && is_counted_range<Range2>::value,
                 true_type,
                 false_type>());
@@ -668,7 +668,7 @@ namespace stdext
         return range.is_end_pos(pos);
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Predicate>
         range_position_type_t<Range> partition(const Range& range, Predicate&& pred, multi_pass_range_tag)
@@ -716,10 +716,10 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> partition(const Range& range, Predicate&& pred)
     {
-        return detail::partition(range, pred, range_category<Range>());
+        return _private::partition(range, pred, range_category<Range>());
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Predicate>
         range_position_type_t<Range> fast_stable_partition(const Range& range, Predicate&& pred, std::vector<range_value_type_t<Range>>& buf)
@@ -793,7 +793,7 @@ namespace stdext
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred)
     {
-        return detail::stable_partition(range, stdext::forward<Predicate>(pred), is_counted_range<Range>());
+        return _private::stable_partition(range, stdext::forward<Predicate>(pred), is_counted_range<Range>());
     }
 
     template <class Range, class OutputRange1, class OutputRange2, class Predicate>
@@ -824,7 +824,7 @@ namespace stdext
         return make_tuple(pos, out1, out2);
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Predicate>
         range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred, random_access_range_tag)
@@ -891,7 +891,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred)
     {
-        return detail::partition_point(range, pred, range_category<Range>());
+        return _private::partition_point(range, pred, range_category<Range>());
     }
 
     template <class Range, class Compare,
@@ -921,7 +921,7 @@ namespace stdext
         return push_heap(range, std::less<>());
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Compare>
         void heap_rebalance_root(const Range& range, Compare&& comp)
@@ -968,7 +968,7 @@ namespace stdext
         range.dec_pos(last);
 
         swap(range.at_pos(first), range.at_pos(last));
-        detail::heap_rebalance_root(subrange_to(range, last), comp);
+        _private::heap_rebalance_root(subrange_to(range, last), comp);
     }
 
     template <class Range,
@@ -983,7 +983,7 @@ namespace stdext
     void emplace_heap(const Range& range, T&& value, Compare&& comp)
     {
         range[0] = stdext::forward<T>(value);
-        detail::heap_rebalance_root(range, comp);
+        _private::heap_rebalance_root(range, comp);
     }
 
     template <class Range, class T,
@@ -1097,7 +1097,7 @@ namespace stdext
         return range.is_end_pos(is_heap_until(range, std::less<>()));
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Compare>
         range_position_type_t<Range> choose_pivot(const Range& range, Compare&& comp)
@@ -1131,7 +1131,7 @@ namespace stdext
         template <class Range, class Compare>
         range_position_type_t<Range> pivot_partition(const Range& range, Compare&& comp)
         {
-            auto pivot = detail::choose_pivot(range, comp);
+            auto pivot = _private::choose_pivot(range, comp);
             if (range.is_end_pos(pivot))
                 return pivot;
 
@@ -1161,7 +1161,7 @@ namespace stdext
         if (range.is_end_pos(nth))
             return;
 
-        auto pivot = detail::pivot_partition(range, comp);
+        auto pivot = _private::pivot_partition(range, comp);
         auto dist = range.distance(pivot, nth);
         if (dist < 0)
             nth_element(subrange_to(range, pivot), nth, comp);
@@ -1183,7 +1183,7 @@ namespace stdext
         if (range.size() <= 1)
             return;
 
-        auto pivot = detail::pivot_partition(range, comp);
+        auto pivot = _private::pivot_partition(range, comp);
         if (range.is_end_pos(pivot))
             return;
 
@@ -1198,7 +1198,7 @@ namespace stdext
         sort(range, std::less<>());
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Compare>
         void fast_stable_sort(const Range& range, Compare&& comp, std::vector<range_value_type_t<Range>>& buf)
@@ -1269,11 +1269,11 @@ namespace stdext
         }
         catch (const std::bad_alloc&)
         {
-            detail::slow_stable_sort(range, comp);
+            _private::slow_stable_sort(range, comp);
             return;
         }
 
-        detail::fast_stable_sort(range, comp, buf);
+        _private::fast_stable_sort(range, comp, buf);
     }
 
     template <class Range,
@@ -1479,7 +1479,7 @@ namespace stdext
         return merge(range1, range2, result, std::less<>());
     }
 
-    namespace detail
+    namespace _private
     {
         template <class Range, class Compare>
         void fast_inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, std::vector<range_value_type_t<Range>>& buf)
@@ -1545,14 +1545,14 @@ namespace stdext
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     void inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp)
     {
-        detail::inplace_merge(range, middle, comp, is_counted_range<Range>());
+        _private::inplace_merge(range, middle, comp, is_counted_range<Range>());
     }
 
     template <class Range,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     void inplace_merge(const Range& range, range_position_type_t<Range> middle)
     {
-        detail::inplace_merge(range, middle, std::less<>(), is_counted_range<Range>());
+        _private::inplace_merge(range, middle, std::less<>(), is_counted_range<Range>());
     }
 
     template <class Range1, class Range2, class Compare>

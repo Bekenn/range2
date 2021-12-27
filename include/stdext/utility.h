@@ -36,7 +36,7 @@ namespace stdext
 #endif
     }
 
-    namespace detail
+    namespace _private
     {
 #if __cpp_lib_is_nothrow_convertible >= 201806
         using std::is_nothrow_convertible;
@@ -71,7 +71,7 @@ namespace stdext
 
     // copy
     template <class T, STDEXT_REQUIRES(std::is_convertible_v<T, std::decay_t<T>>)>
-    constexpr std::decay_t<T> copy(T&& v) noexcept(detail::is_nothrow_convertible_v<T, std::decay_t<T>>)
+    constexpr std::decay_t<T> copy(T&& v) noexcept(_private::is_nothrow_convertible_v<T, std::decay_t<T>>)
     {
         return stdext::forward<T>(v);
     }

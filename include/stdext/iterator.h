@@ -21,18 +21,18 @@ namespace stdext
     using std::begin;
     using std::end;
 
-    namespace detail
+    namespace _private
     {
         DECLARE_HAS_INNER_TYPE(iterator_category);
     };
     template <class Iterator> struct is_iterator
-        : std::conditional_t<detail::HAS_INNER_TYPE(std::iterator_traits<Iterator>, iterator_category),
+        : std::conditional_t<_private::HAS_INNER_TYPE(std::iterator_traits<Iterator>, iterator_category),
             true_type,
             false_type>
     { };
 
     template <class Iterator> using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
-    namespace detail
+    namespace _private
     {
         template <class Iterator>
         struct value_type_of<Iterator, is_iterator, true>

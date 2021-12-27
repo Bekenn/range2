@@ -118,7 +118,7 @@ namespace stdext
         }
     };
 
-    namespace detail
+    namespace _private
     {
         template <class T, bool empty = std::is_empty_v<T>>
         class compressed_pair_same_type;
@@ -194,9 +194,9 @@ namespace stdext
     }
 
     template <class T>
-    class compressed_pair<T, T> : public detail::compressed_pair_same_type<T>
+    class compressed_pair<T, T> : public _private::compressed_pair_same_type<T>
     {
-        using detail::compressed_pair_same_type<T>::compressed_pair_same_type;
+        using _private::compressed_pair_same_type<T>::compressed_pair_same_type;
     };
 }
 

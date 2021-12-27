@@ -3,7 +3,7 @@
 
 namespace stdext
 {
-    namespace detail
+    namespace _private
     {
         flags<format_options> parse_format_options(string_view& fmt)
         {
@@ -39,7 +39,7 @@ done:
 
         bool write_formatted_character(const std::function<bool (char ch)>& out, string_view fmt, uintmax_t uval, format_type type)
         {
-            auto options = detail::parse_format_options(fmt);
+            auto options = _private::parse_format_options(fmt);
 
             size_t len = 0;
             unsigned width = !fmt.empty() && isdigit(fmt.front()) ? stoi(fmt, &len) : 0;
@@ -94,7 +94,7 @@ done:
                 assert(false);
             }
 
-            if (options.test_any(detail::format_options::left_justified))
+            if (options.test_any(_private::format_options::left_justified))
             {
                 for (; width > 1; --width)
                 {
@@ -108,7 +108,7 @@ done:
 
         bool write_formatted_integer(const std::function<bool (char ch)>& out, string_view fmt, uintmax_t uval, format_type type)
         {
-            auto options = detail::parse_format_options(fmt);
+            auto options = _private::parse_format_options(fmt);
             bool negative = false;
             if (type == format_type::_signed && intmax_t(uval) < 0)
             {
@@ -168,7 +168,7 @@ done:
             for (uintmax_t test = 1, prev = 0; prev < test && test <= uval; prev = test, test *= base)
                 ++len;
 
-            if (options.test_any(detail::format_options::alternative_form) && base == 8 && uval != 0)
+            if (options.test_any(_private::format_options::alternative_form) && base == 8 && uval != 0)
                 ++len;
 
             if (len > precision)
@@ -176,10 +176,10 @@ done:
 
             len = precision;
 
-            if (options.test_any(detail::format_options::alternative_form) && (base == 16 || base == 2))
+            if (options.test_any(_private::format_options::alternative_form) && (base == 16 || base == 2))
                 len += 2;
 
-            if (negative || options.test_any(make_flags(detail::format_options::show_sign, detail::format_options::pad_sign)))
+            if (negative || options.test_any(make_flags(_private::format_options::show_sign, _private::format_options::pad_sign)))
                 ++len;
 
             if (len > width)
@@ -194,11 +194,11 @@ done:
                 return true;
             };
 
-            if (!options.test_any(detail::format_options::left_justified))
+            if (!options.test_any(_private::format_options::left_justified))
             {
                 while (width > len)
                 {
-                    if (!put(options.test_any(detail::format_options::zero_pad) ? '0' : ' '))
+                    if (!put(options.test_any(_private::format_options::zero_pad) ? '0' : ' '))
                         return false;
                 }
             }
@@ -208,18 +208,18 @@ done:
                 if (!put('-'))
                     return false;
             }
-            else if (options.test_any(detail::format_options::show_sign))
+            else if (options.test_any(_private::format_options::show_sign))
             {
                 if (!put('+'))
                     return false;
             }
-            else if (options.test_any(detail::format_options::pad_sign))
+            else if (options.test_any(_private::format_options::pad_sign))
             {
                 if (!put(' '))
                     return false;
             }
 
-            if (options.test_any(detail::format_options::alternative_form) && base == 16)
+            if (options.test_any(_private::format_options::alternative_form) && base == 16)
             {
                 if (!put('0'))
                     return false;
@@ -227,7 +227,7 @@ done:
                     return false;
             }
 
-            if (options.test_any(detail::format_options::alternative_form) && base == 2)
+            if (options.test_any(_private::format_options::alternative_form) && base == 2)
             {
                 if (!put('0'))
                     return false;
@@ -248,7 +248,7 @@ done:
                 test /= base;
             }
 
-            if (options.test_any(detail::format_options::left_justified))
+            if (options.test_any(_private::format_options::left_justified))
             {
                 while (width > 0)
                 {
@@ -281,4 +281,3 @@ done:
         }
     }
 }
-

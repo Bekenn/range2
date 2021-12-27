@@ -11,7 +11,7 @@ namespace stdext
 {
     namespace
     {
-        class std_input_stream : public detail::file_input_stream_base<std_input_stream>
+        class std_input_stream : public _private::file_input_stream_base<std_input_stream>
         {
         public:
             explicit std_input_stream(HANDLE handle) : handle(handle) { }
@@ -20,11 +20,11 @@ namespace stdext
             bool is_open() const noexcept { return true; }
 
         private:
-            template <class Stream> friend class detail::file_input_stream_base;
+            template <class Stream> friend class _private::file_input_stream_base;
             file_handle_t handle;
         };
 
-        class std_output_stream : public detail::file_output_stream_base<std_output_stream>
+        class std_output_stream : public _private::file_output_stream_base<std_output_stream>
         {
         public:
             explicit std_output_stream(HANDLE handle) : handle(handle) { }
@@ -33,14 +33,14 @@ namespace stdext
             bool is_open() const noexcept { return true; }
 
         private:
-            template <class Stream> friend class detail::file_output_stream_base;
+            template <class Stream> friend class _private::file_output_stream_base;
             file_handle_t handle;
         };
 
         DWORD creation_disposition(flags<file_open_flags> flags);
     }
 
-    namespace detail
+    namespace _private
     {
         file_stream_base::file_stream_base() : handle(INVALID_HANDLE_VALUE)
         {
