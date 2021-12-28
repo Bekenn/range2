@@ -10,7 +10,7 @@
 #define STDEXT_META_INCLUDED
 #pragma once
 
-#include <stdext/types.h>
+#include <stdext/traits.h>
 
 #include <cstddef>
 

@@ -5,8 +5,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/test)
 find_package(Catch2 CONFIG REQUIRED)
 include(Catch)
 
-set(SOURCES src/stream.cpp src/scope_guard.cpp src/traits.cpp src/utf.cpp src/utility.cpp)
-set(RESOURCES res/UTF-8-test.txt res/UTF-8-post.txt res/UTF-16-post.txt res/UTF-32-post.txt)
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*)
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS res/*)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${RESOURCES})
 
 add_executable(test-stdext ${SOURCES} ${RESOURCES})
