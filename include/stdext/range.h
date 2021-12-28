@@ -90,7 +90,7 @@ namespace stdext
         template <class T>
         struct check_stl_range
         {
-            template <class U> static is_equality_comparable<
+            template <class U> static is_equality_comparable_with<
                 std::decay_t<decltype(begin(declval<U&>()))>,
                 std::decay_t<decltype(end(declval<U&>()))>>
                 test(nullptr_t);

@@ -399,7 +399,7 @@ namespace stdext
     }
 
     template <class Iterator, class Sentinel,
-        STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && is_equality_comparable<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
+        STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && is_equality_comparable_with<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
     auto make_generator(Iterator&& i, Sentinel&& j)
     {
         return delimited_iterator_generator<std::decay_t<Iterator>, std::decay_t<Sentinel>>(stdext::forward<Iterator>(i), stdext::forward<Sentinel>(j));

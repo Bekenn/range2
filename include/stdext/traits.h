@@ -57,30 +57,33 @@ namespace stdext
     namespace _private
     {
         template <class T1, class T2>
-        static true_type test_equality_comparable(decltype(declval<T1>() == declval<T2>() && declval<T1>() != declval<T2>())*);
+        static true_type test_equality_comparable(decltype(
+            declval<T1>() == declval<T2>()
+            && declval<T2>() == declval<T1>()
+            && declval<T1>() != declval<T2>()
+            && declval<T2>() != declval<T1>())*);
         template <class T1, class T2>
         static false_type test_equality_comparable(...);
     }
 
     template <class T1, class T2>
-    struct is_equality_comparable : bool_constant<decltype(_private::test_equality_comparable<T1, T2>(0))::value> { };
+    struct is_equality_comparable_with : bool_constant<decltype(_private::test_equality_comparable<T1, T2>(0))::value> { };
     template <class T1, class T2>
-    constexpr bool is_equality_comparable_v = is_equality_comparable<T1, T2>::value;
+    constexpr bool is_equality_comparable_with_v = is_equality_comparable_with<T1, T2>::value;
+
+    template <class T> struct is_equality_comparable : is_equality_comparable_with<const T&, const T&> { };
+    template <> struct is_equality_comparable<void> : false_type { };
+    template <> struct is_equality_comparable<const void> : false_type { };
+    template <> struct is_equality_comparable<volatile void> : false_type { };
+    template <> struct is_equality_comparable<const volatile void> : false_type { };
+
+    template <class T> constexpr bool is_equality_comparable_v = is_equality_comparable<T>::value;
 
     // Conversion from type From to type possibly-const To, where To is const-qualified if From is const-qualified.
-    template <class From, class To> struct preserve_const;
-    template <class From, class To> using preserve_const_t = typename preserve_const<From, To>::type;
+    template <class From, class To> struct preserve_const { using type = To; };
+    template <class From, class To> struct preserve_const<const From, To> { using type = const To; };
 
-    template <class From, class To>
-    struct preserve_const
-    {
-        using type = To;
-    };
-    template <class From, class To>
-    struct preserve_const<const From, To>
-    {
-        using type = const To;
-    };
+    template <class From, class To> using preserve_const_t = typename preserve_const<From, To>::type;
 
     // Type trait returning one of [u]intN_t based on the size and signedness of T
     template <class T> struct equivalent_sized_type;
@@ -130,10 +133,7 @@ namespace stdext
         };
     }
 
-    template <class T>
-    struct equivalent_sized_type : _private::equivalent_sized_type_base<T>
-    {
-    };
+    template <class T> struct equivalent_sized_type : _private::equivalent_sized_type_base<T> { };
 
     namespace _private
     {

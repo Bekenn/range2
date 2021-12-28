@@ -48,17 +48,25 @@ static_assert(stdext::true_type()() == true);
 // error_value
 // nothing to test
 
+// is_equality_comparable_with
+static_assert(std::is_base_of_v<stdext::true_type, stdext::is_equality_comparable_with<int, int>>);
+static_assert(std::is_base_of_v<stdext::false_type, stdext::is_equality_comparable_with<int, void>>);
+static_assert(std::is_base_of_v<stdext::false_type, stdext::is_equality_comparable_with<void, int>>);
+static_assert(std::is_base_of_v<stdext::true_type, stdext::is_equality_comparable_with<int, short>>);
+
+// is_equality_comparable_with_v
+static_assert(stdext::is_equality_comparable_with_v<int, int>);
+static_assert(!stdext::is_equality_comparable_with_v<int, void>);
+static_assert(!stdext::is_equality_comparable_with_v<void, int>);
+static_assert(stdext::is_equality_comparable_with_v<int, short>);
+
 // is_equality_comparable
-static_assert(std::is_base_of_v<stdext::true_type, stdext::is_equality_comparable<int, int>>);
-static_assert(std::is_base_of_v<stdext::false_type, stdext::is_equality_comparable<int, void>>);
-static_assert(std::is_base_of_v<stdext::false_type, stdext::is_equality_comparable<void, int>>);
-static_assert(std::is_base_of_v<stdext::true_type, stdext::is_equality_comparable<int, short>>);
+static_assert(std::is_base_of_v<stdext::true_type, stdext::is_equality_comparable<int>>);
+static_assert(std::is_base_of_v<stdext::false_type, stdext::is_equality_comparable<void>>);
 
 // is_equality_comparable_v
-static_assert(stdext::is_equality_comparable_v<int, int>);
-static_assert(!stdext::is_equality_comparable_v<int, void>);
-static_assert(!stdext::is_equality_comparable_v<void, int>);
-static_assert(stdext::is_equality_comparable_v<int, short>);
+static_assert(stdext::is_equality_comparable_v<int>);
+static_assert(!stdext::is_equality_comparable_v<void>);
 
 // preserve_const
 static_assert(std::is_same_v<stdext::preserve_const<int, float>::type, float>);

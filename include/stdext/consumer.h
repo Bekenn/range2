@@ -85,7 +85,7 @@ namespace stdext
 
     template <class Elem, class Iterator, class Sentinel,
         STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value
-            && is_equality_comparable<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
+            && is_equality_comparable_with<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)
     {
         return delimited_iterator_consumer<std::decay_t<Iterator>, std::decay_t<Sentinel>>(stdext::forward<Iterator>(i), stdext::forward<Sentinel>(j));
