@@ -131,6 +131,16 @@ namespace stdext
         inline constexpr _swap::impl swap;
     }
 
+    // addressof
+    template <class T>
+    constexpr T* addressof(T& r) noexcept
+    {
+        return __builtin_addressof(r);
+    }
+
+    template<class T>
+    const T* addressof(const T&&) = delete;
+
     // min
     template <class T> constexpr T min(T a) noexcept { return a; }
     template <class T> constexpr T min(T a, T b) noexcept { return b < a ? b : a; }

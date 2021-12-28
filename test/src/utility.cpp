@@ -102,6 +102,17 @@ TEST_CASE("array swap", "[utility]")
     CHECK(y[2] == 2);
 }
 
+TEST_CASE("addressof", "[utility]")
+{
+    int x;
+    CHECK(stdext::addressof(x) == &x);
+
+    struct B { };
+    struct D : B { int operator & () const noexcept { return 5; } } d;
+    CHECK(&d == 5);
+    CHECK(stdext::addressof(d) == static_cast<D*>(&static_cast<B&>(d)));
+}
+
 TEST_CASE("min", "[utility]")
 {
     CHECK(stdext::min(5) == 5);
