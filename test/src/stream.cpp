@@ -11,47 +11,50 @@
 #include <catch2/catch.hpp>
 
 
-const std::byte stuff[] =
+namespace
 {
-    std::byte(0), std::byte(1), std::byte(2), std::byte(3), std::byte(4), std::byte(5), std::byte(6), std::byte(7),
-    std::byte(8), std::byte(9), std::byte(0xa), std::byte(0xb), std::byte(0xc), std::byte(0xd), std::byte(0xe), std::byte(0xf)
-};
-
-template <class POD, size_t size>
-void test(const POD (&data)[size])
-{
-    stdext::memory_input_stream is(stuff, sizeof(stuff));
-    for (auto n : data)
-        REQUIRE(n == is.read<POD>());
-
-    is.reset(stuff, sizeof(stuff));
-    for (auto n : data)
-        REQUIRE(n == is.read<POD>());
-
-    is.seek(stdext::seek_from::begin, 0);
-    for (auto n : data)
-        REQUIRE(n == is.read<POD>());
-
-    is.seek(stdext::seek_from::begin, 0);
-    stdext::input_stream_iterator<POD> i(is);
-    for (auto n : data)
-        REQUIRE(n == *i++);
-    REQUIRE(i == stdext::input_stream_iterator<POD>());
-
-    is.seek(stdext::seek_from::begin, 0);
-    i = stdext::input_stream_iterator<POD>(is);
-    for (auto n : data)
-        REQUIRE(n == *i++);
-    REQUIRE(i == stdext::input_stream_iterator<POD>());
-
-    is.seek(stdext::seek_from::begin, 0);
-    i = stdext::input_stream_iterator<POD>(is);
-    for (auto n : data)
+    const std::byte stuff[] =
     {
-        REQUIRE(n == *i);
-        ++i;
+        std::byte(0), std::byte(1), std::byte(2), std::byte(3), std::byte(4), std::byte(5), std::byte(6), std::byte(7),
+        std::byte(8), std::byte(9), std::byte(0xa), std::byte(0xb), std::byte(0xc), std::byte(0xd), std::byte(0xe), std::byte(0xf)
+    };
+
+    template <class POD, size_t size>
+    void test(const POD (&data)[size])
+    {
+        stdext::memory_input_stream is(stuff, sizeof(stuff));
+        for (auto n : data)
+            REQUIRE(n == is.read<POD>());
+
+        is.reset(stuff, sizeof(stuff));
+        for (auto n : data)
+            REQUIRE(n == is.read<POD>());
+
+        is.seek(stdext::seek_from::begin, 0);
+        for (auto n : data)
+            REQUIRE(n == is.read<POD>());
+
+        is.seek(stdext::seek_from::begin, 0);
+        stdext::input_stream_iterator<POD> i(is);
+        for (auto n : data)
+            REQUIRE(n == *i++);
+        REQUIRE(i == stdext::input_stream_iterator<POD>());
+
+        is.seek(stdext::seek_from::begin, 0);
+        i = stdext::input_stream_iterator<POD>(is);
+        for (auto n : data)
+            REQUIRE(n == *i++);
+        REQUIRE(i == stdext::input_stream_iterator<POD>());
+
+        is.seek(stdext::seek_from::begin, 0);
+        i = stdext::input_stream_iterator<POD>(is);
+        for (auto n : data)
+        {
+            REQUIRE(n == *i);
+            ++i;
+        }
+        REQUIRE(i == stdext::input_stream_iterator<POD>());
     }
-    REQUIRE(i == stdext::input_stream_iterator<POD>());
 }
 
 TEST_CASE("Stream operations", "[stream]")
