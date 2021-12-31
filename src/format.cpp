@@ -179,7 +179,7 @@ done:
             if (options.test_any(_private::format_options::alternative_form) && (base == 16 || base == 2))
                 len += 2;
 
-            if (negative || options.test_any(make_flags(_private::format_options::show_sign, _private::format_options::pad_sign)))
+            if (negative || options.test_any(_private::format_options::show_sign, _private::format_options::pad_sign))
                 ++len;
 
             if (len > width)

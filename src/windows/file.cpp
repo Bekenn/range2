@@ -325,7 +325,7 @@ namespace stdext
 #if STDEXT_COMPILER_MSVC
 #pragma warning(disable:4063)   // case '5' is not a valid value for switch of enum 'stdext::file_open_flags'
 #endif
-            case make_flags(file_open_flags::create, file_open_flags::truncate):
+            case stdext::flags<file_open_flags>(file_open_flags::create, file_open_flags::truncate):
                 return CREATE_ALWAYS;
             }
 

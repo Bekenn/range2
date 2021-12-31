@@ -10,90 +10,106 @@
 #define STDEXT_FLAGS_INCLUDED
 #pragma once
 
-#include <stdext/_impl/config.h>
-
-#include <type_traits>
+#include <stdext/traits.h>
 
 
 namespace stdext
 {
-    template <typename T>
+    template <typename E>
     class flags
     {
-    private:
-        using U = std::underlying_type_t<T>;
+        static_assert(std::is_enum_v<E>);
 
     public:
-        constexpr flags() noexcept : value() { }
-        constexpr flags(T value) noexcept : value(value) { }
-        template <typename... TT>
-        constexpr flags(T value, TT... values) noexcept : value(static_cast<T>(static_cast<U>(value) | static_cast<U>(flags(values...)))) { }
-        constexpr flags& operator = (T value) noexcept { this->value = value; return *this; }
+        using enum_type = E;
+        using underlying_type = std::underlying_type_t<enum_type>;
 
     public:
-        friend constexpr bool operator == (flags a, flags b) noexcept { return a.value == b.value; }
-        friend constexpr bool operator != (flags a, flags b) noexcept { return !(a == b); }
-        friend constexpr bool operator == (flags a, T b) noexcept { return a.value == b; }
-        friend constexpr bool operator != (flags a, T b) noexcept { return !(a == b); }
-        friend constexpr bool operator == (T a, flags b) noexcept { return a == b.value; }
-        friend constexpr bool operator != (T a, flags b) noexcept { return !(a == b); }
+        constexpr flags() noexcept : _value() { }
+        constexpr flags(enum_type value) noexcept : _value(value) { }
+        constexpr flags& operator = (enum_type value) noexcept { _value = value; return *this; }
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr flags(Ts... values) noexcept : _value(enum_type((underlying_type() | ... | underlying_type(enum_type(values))))) { }
+
+        explicit constexpr flags(underlying_type value) noexcept : _value(enum_type(value)) { }
 
     public:
-        constexpr operator T () const noexcept { return value; }
-        explicit constexpr operator U () const noexcept { return static_cast<U>(value); }
+        friend constexpr bool operator == (flags a, flags b) noexcept { return a._value == b._value; }
+        friend constexpr bool operator != (flags a, flags b) noexcept { return a._value != b._value; }
+        friend constexpr bool operator == (flags a, enum_type b) noexcept { return a._value == b; }
+        friend constexpr bool operator != (flags a, enum_type b) noexcept { return a._value != b; }
+        friend constexpr bool operator == (enum_type a, flags b) noexcept { return a == b._value; }
+        friend constexpr bool operator != (enum_type a, flags b) noexcept { return a != b._value; }
+
+    public:
+        constexpr operator enum_type () const noexcept { return _value; }
+        explicit constexpr operator underlying_type () const noexcept { return underlying_type(_value); }
+
+        constexpr enum_type value() const noexcept
+        {
+            return _value;
+        }
 
         constexpr flags& clear() noexcept
         {
-            value = static_cast<T>(0);
-        }
-
-        constexpr flags& set(flags mask) noexcept
-        {
-            value = static_cast<T>(static_cast<U>(value) | static_cast<U>(mask));
+            _value = { };
             return *this;
         }
 
-        constexpr flags& reset(flags mask) noexcept
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr flags& set(Ts... values) noexcept
         {
-            value = static_cast<T>(static_cast<U>(value) & ~static_cast<U>(mask));
+            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+            _value = enum_type(underlying_type(_value) | all_values);
             return *this;
         }
 
-        constexpr flags& flip(flags mask) noexcept
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr flags& reset(Ts... values) noexcept
         {
-            value = static_cast<T>(static_cast<U>(value) ^ static_cast<U>(mask));
+            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+            _value = enum_type(underlying_type(_value) & ~all_values);
             return *this;
         }
 
-        constexpr flags& keep(flags mask) noexcept
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr flags& toggle(Ts... values) noexcept
         {
-            value = static_cast<T>(static_cast<U>(value) & static_cast<U>(mask));
+            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+            _value = enum_type(underlying_type(_value) ^ all_values);
             return *this;
         }
 
-        constexpr bool test_any(flags mask) const noexcept
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr flags& keep(Ts... values) noexcept
         {
-            return (static_cast<U>(value) & static_cast<U>(mask)) != 0;
+            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+            _value = enum_type(underlying_type(_value) & all_values);
+            return *this;
         }
 
-        constexpr bool test_all(flags mask) const noexcept
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr bool test_any(Ts... values) const noexcept
         {
-            return static_cast<T>(static_cast<U>(value) & static_cast<U>(mask)) == mask;
+            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+            return (underlying_type(_value) & all_values) != underlying_type();
         }
 
-        constexpr bool test(flags mask, flags value) const noexcept
+        template <typename... Ts, STDEXT_REQUIRES((... && std::is_convertible_v<Ts, enum_type>))>
+        constexpr bool test_all(Ts... values) const noexcept
         {
-            return static_cast<T>(static_cast<U>(this->value) & static_cast<U>(mask)) == value;
+            underlying_type all_values = (underlying_type() | ... | underlying_type(enum_type(values)));
+            return (underlying_type(_value) & all_values) == all_values;
+        }
+
+        constexpr bool test(flags mask, flags values) const noexcept
+        {
+            return (underlying_type(_value) & underlying_type(mask)) == (underlying_type(values) & underlying_type(mask));
         }
 
     private:
-        T value;
+        enum_type _value;
     };
-
-    template <typename T, typename... Ts>
-    constexpr flags<T> make_flags(T value, Ts... values) noexcept
-    {
-        return { value, values... };
-    }
 }
+
 #endif

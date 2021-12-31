@@ -280,7 +280,7 @@ namespace stdext
                 return O_CREAT | O_EXCL;
             case file_open_flags::truncate:
                 return O_TRUNC;
-            case make_flags(file_open_flags::create, file_open_flags::truncate):
+            case stdext::flags<file_open_flags>(file_open_flags::create, file_open_flags::truncate):
                 return O_CREAT | O_TRUNC;
             }
 
