@@ -28,28 +28,28 @@ namespace stdext
     // range traits
     namespace _private
     {
-        DECLARE_HAS_INNER_TYPE(range_category);
+        STDEXT_DECLARE_HAS_INNER_TYPE(range_category);
     }
     template <typename T> struct is_range
-        : std::conditional_t<_private::HAS_INNER_TYPE(T, range_category),
+        : std::conditional_t<_private::STDEXT_HAS_INNER_TYPE_V(T, range_category),
             true_type,
             false_type>
     { };
 
     namespace _private
     {
-        DECLARE_HAS_METHOD(end_pos);
+        STDEXT_DECLARE_HAS_METHOD(end_pos);
         template <typename T>
         struct check_end_pos_getter
         {
-            template <typename U> static HAS_METHOD_T(U, end_pos) test(void*);
+            template <typename U> static STDEXT_HAS_METHOD(U, end_pos) test(void*);
             template <typename U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
         template <typename T>
         struct check_end_pos_setter
         {
-            template <typename U> static HAS_METHOD_T(U, end_pos, position_type_t<U, is_range>) test(void*);
+            template <typename U> static STDEXT_HAS_METHOD(U, end_pos, position_type_t<U, is_range>) test(void*);
             template <typename U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
@@ -62,19 +62,19 @@ namespace stdext
 
     namespace _private
     {
-        DECLARE_HAS_METHOD(size);
+        STDEXT_DECLARE_HAS_METHOD(size);
         template <typename T>
         struct check_has_size
         {
-            template <typename U> static HAS_METHOD_T(U, size) test(void*);
+            template <typename U> static STDEXT_HAS_METHOD(U, size) test(void*);
             template <typename U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
-        DECLARE_HAS_METHOD(resize);
+        STDEXT_DECLARE_HAS_METHOD(resize);
         template <typename T>
         struct check_has_resize
         {
-            template <typename U> static HAS_METHOD_T(U, resize, size_type_t<T, is_range>) test(void*);
+            template <typename U> static STDEXT_HAS_METHOD(U, resize, size_type_t<T, is_range>) test(void*);
             template <typename U> static false_type test(...);
             static constexpr bool value = decltype(test<T>(nullptr))::value;
         };
@@ -133,7 +133,7 @@ namespace stdext
         template <typename Range>
         struct reference_type_of<Range, is_range, true> { using type = typename Range::reference; };
 
-        DECLARE_HAS_INNER_TYPE(size_type);
+        STDEXT_DECLARE_HAS_INNER_TYPE(size_type);
         template <typename T, bool has_inner_size_type>
         struct check_range_inner_size_type
         {
@@ -146,7 +146,7 @@ namespace stdext
         };
 
         template <typename Range>
-        struct size_type_of<Range, is_range, true> { using type = typename check_range_inner_size_type<Range, HAS_INNER_TYPE(Range, size_type)>::type; };
+        struct size_type_of<Range, is_range, true> { using type = typename check_range_inner_size_type<Range, STDEXT_HAS_INNER_TYPE_V(Range, size_type)>::type; };
     }
 
     template <typename Range> using range_value_type = value_type<Range, is_range>;

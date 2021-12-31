@@ -18,25 +18,26 @@
 #define STDEXT_REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), ::stdext::nullptr_t>
 #define STDEXT_REQUIRES(...) STDEXT_REQUIRED(__VA_ARGS__) = nullptr
 
-#define DECLARE_HAS_INNER_TYPE(Inner)                                   \
-template <typename T> struct has_inner_type_##Inner                     \
-{                                                                       \
-    template <typename U> static true_type test(typename U::Inner*);    \
-    template <typename U> static false_type test(...);                  \
-    static constexpr bool value = decltype(test<T>(nullptr))::value;    \
+#define STDEXT_DECLARE_HAS_INNER_TYPE(Inner)                                    \
+template <typename T> struct has_inner_type_##Inner                             \
+{                                                                               \
+    template <typename U> static ::stdext::true_type test(typename U::Inner*);  \
+    template <typename U> static ::stdext::false_type test(...);                \
+    static constexpr bool value = decltype(test<T>(nullptr))::value;            \
 }
-#define HAS_INNER_TYPE_T(T, Inner) has_inner_type_##Inner<T>
-#define HAS_INNER_TYPE(T, Inner) HAS_INNER_TYPE_T(T, Inner)::value
+#define STDEXT_HAS_INNER_TYPE(T, Inner) has_inner_type_##Inner<T>
+#define STDEXT_HAS_INNER_TYPE_V(T, Inner) STDEXT_HAS_INNER_TYPE(T, Inner)::value
 
-#define DECLARE_HAS_METHOD(MethodName)                                                                          \
-template <typename T, typename... ArgTypes> struct has_method_##MethodName                                      \
-{                                                                                                               \
-    template <typename U> static true_type test(decltype(declval<U>().MethodName(declval<ArgTypes>()...))*);    \
-    template <typename U> static false_type test(...);                                                          \
-    static constexpr bool value = decltype(test<T>(nullptr))::value;                                            \
+#define STDEXT_DECLARE_HAS_METHOD(MethodName)                                                   \
+template <typename T, typename... ArgTypes> struct has_method_##MethodName                      \
+{                                                                                               \
+    template <typename U> static ::stdext::true_type                                            \
+        test(decltype(::stdext::declval<U>().MethodName(::stdext::declval<ArgTypes>()...))*);   \
+    template <typename U> static ::stdext::false_type test(...);                                \
+    static constexpr bool value = decltype(test<T>(nullptr))::value;                            \
 }
-#define HAS_METHOD_T(T, MethodName, ...) has_method_##MethodName<T, ## __VA_ARGS__>
-#define HAS_METHOD(T, MethodName, ...) HAS_METHOD_T(T, MethodName, ## __VA_ARGS__)::value
+#define STDEXT_HAS_METHOD(T, MethodName, ...) has_method_##MethodName<T, ## __VA_ARGS__>
+#define STDEXT_HAS_METHOD_V(T, MethodName, ...) STDEXT_HAS_METHOD(T, MethodName, ## __VA_ARGS__)::value
 
 namespace stdext
 {

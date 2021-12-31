@@ -1,6 +1,41 @@
 #include <stdext/traits.h>
 
 
+namespace
+{
+    STDEXT_DECLARE_HAS_INNER_TYPE(type);
+    STDEXT_DECLARE_HAS_METHOD(foo);
+
+    struct s1 { };
+    struct s2 { using type = int; };
+    struct s3 { void foo(); };
+    struct s4 { void foo(int); };
+}
+
+// STDEXT_HAS_INNER_TYPE
+static_assert(!STDEXT_HAS_INNER_TYPE(s1, type)::value);
+static_assert(STDEXT_HAS_INNER_TYPE(s2, type)::value);
+
+// STDEXT_HAS_INNER_TYPE_V
+static_assert(!STDEXT_HAS_INNER_TYPE_V(s1, type));
+static_assert(STDEXT_HAS_INNER_TYPE_V(s2, type));
+
+// STDEXT_HAS_METHOD
+static_assert(!STDEXT_HAS_METHOD(s1, foo)::value);
+static_assert(!STDEXT_HAS_METHOD(s1, foo, int)::value);
+static_assert(STDEXT_HAS_METHOD(s3, foo)::value);
+static_assert(!STDEXT_HAS_METHOD(s3, foo, int)::value);
+static_assert(!STDEXT_HAS_METHOD(s4, foo)::value);
+static_assert(STDEXT_HAS_METHOD(s4, foo, int)::value);
+
+// STDEXT_HAS_METHOD_V
+static_assert(!STDEXT_HAS_METHOD_V(s1, foo));
+static_assert(!STDEXT_HAS_METHOD_V(s1, foo, int));
+static_assert(STDEXT_HAS_METHOD_V(s3, foo));
+static_assert(!STDEXT_HAS_METHOD_V(s3, foo, int));
+static_assert(!STDEXT_HAS_METHOD_V(s4, foo));
+static_assert(STDEXT_HAS_METHOD_V(s4, foo, int));
+
 // declval
 static_assert(std::is_same_v<decltype(stdext::declval<int>()), int&&>);
 static_assert(std::is_same_v<decltype(stdext::declval<int&>()), int&>);
