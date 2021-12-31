@@ -8,7 +8,7 @@ namespace stdext
 {
     namespace
     {
-        template <class Int>
+        template <typename Int>
         Int ston(string_view str, size_t* idx, int base)
         {
             using UInt = std::make_unsigned_t<Int>;
@@ -97,7 +97,7 @@ namespace stdext
         }
 
 #if 0
-        template <class Float>
+        template <typename Float>
         Float stox(string_view str, size_t* idx)
         {
         }

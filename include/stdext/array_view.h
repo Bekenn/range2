@@ -17,7 +17,7 @@
 
 namespace stdext
 {
-    template <class T>
+    template <typename T>
     class array_view : public delimited_iterator_range<T*>
     {
     public:
@@ -29,17 +29,17 @@ namespace stdext
 
     public:
         constexpr array_view() noexcept = default;
-        template <class U, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
+        template <typename U, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
         constexpr array_view(const array_view<U>& other) noexcept : delimited_iterator_range<T*>(other.begin(), other.end()) { }
-        template <class U, size_t size, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
+        template <typename U, size_t size, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
         constexpr array_view(U (&a)[size]) noexcept : delimited_iterator_range<T*>(a, a + size) { }
-        template <class U, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
+        template <typename U, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
         constexpr array_view(U* p, size_type size) noexcept : delimited_iterator_range<T*>(p, p + size) { }
 
     public:
-        template <class U, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
+        template <typename U, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
         constexpr array_view& operator = (const array_view<U>& other) noexcept { this->begin_pos(other.begin()); this->end_pos(other.end()); return *this; }
-        template <class U, size_t size, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
+        template <typename U, size_t size, STDEXT_REQUIRES(std::is_convertible_v<U (*)[], T (*)[]>)>
         constexpr array_view& operator = (U (&a)[size]) { this->begin_pos(a); this->end_pos(a + size); return *this; }
         constexpr auto data() const noexcept { return this->begin(); }
         constexpr bool empty() const noexcept { return this->begin() == this->end(); }

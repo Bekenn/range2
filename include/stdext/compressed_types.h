@@ -17,13 +17,13 @@
 
 namespace stdext
 {
-    template <class T, bool inheritable = std::is_class_v<T> && !std::is_final_v<T>>
+    template <typename T, bool inheritable = std::is_class_v<T> && !std::is_final_v<T>>
     class compressed_base;
 
-    template <class T1, class T2>
+    template <typename T1, typename T2>
     class compressed_pair;
 
-    template <class T>
+    template <typename T>
     class compressed_base<T, false>
     {
     public:
@@ -53,7 +53,7 @@ namespace stdext
         T value;
     };
 
-    template <class T>
+    template <typename T>
     class compressed_base<T, true> : private T
     {
     public:
@@ -80,7 +80,7 @@ namespace stdext
         constexpr const T&& get() const && noexcept { return static_cast<const T&&>(*this); }
     };
 
-    template <class T1, class T2>
+    template <typename T1, typename T2>
     class compressed_pair : compressed_base<T1>, compressed_base<T2>
     {
     public:
@@ -120,10 +120,10 @@ namespace stdext
 
     namespace _private
     {
-        template <class T, bool empty = std::is_empty_v<T>>
+        template <typename T, bool empty = std::is_empty_v<T>>
         class compressed_pair_same_type;
 
-        template <class T>
+        template <typename T>
         class compressed_pair_same_type<T, false>
         {
         public:
@@ -163,7 +163,7 @@ namespace stdext
             T v2_;
         };
 
-        template <class T>
+        template <typename T>
         class compressed_pair_same_type<T, true> : compressed_base<T>
         {
         public:
@@ -193,7 +193,7 @@ namespace stdext
         };
     }
 
-    template <class T>
+    template <typename T>
     class compressed_pair<T, T> : public _private::compressed_pair_same_type<T>
     {
         using _private::compressed_pair_same_type<T>::compressed_pair_same_type;

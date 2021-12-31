@@ -30,7 +30,7 @@ namespace stdext
         native_endian = STDEXT_BYTE_ORDER_NATIVE
     };
 
-    template <class T, byte_order ByteOrder, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <typename T, byte_order ByteOrder, STDEXT_REQUIRES(std::is_integral_v<T>)>
     class endian_int;
 
     using int8_le = endian_int<int8_t, byte_order::little_endian>;
@@ -65,10 +65,10 @@ namespace stdext
 
     namespace _private
     {
-        template <byte_order order, class T> struct endian;
+        template <byte_order order, typename T> struct endian;
     }
 
-    template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
     constexpr T swap(T v) noexcept
     {
         if constexpr (order == byte_order::native_endian)
@@ -78,14 +78,14 @@ namespace stdext
         return T(_private::endian<order, sized_t>::swap(sized_t(v)));
     }
 
-    template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
     T read(input_stream& s)
     {
         using sized_t = equivalent_sized_type_t<T>;
         return T(swap<order>(s.read<sized_t>()));
     }
 
-    template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
     size_t read(input_stream& s, T* buffer, size_t count)
     {
         count = s.read(buffer, count);
@@ -97,20 +97,20 @@ namespace stdext
         return count;
     }
 
-    template <byte_order order, class T, size_t length, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, size_t length, STDEXT_REQUIRES(std::is_integral_v<T>)>
     size_t read(input_stream& s, T (&buffer)[length])
     {
         using sized_t = equivalent_sized_type_t<T>;
         return _private::endian<order, sized_t>::read(s, buffer, length);
     }
 
-    template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
     void write(output_stream& s, T v)
     {
         s.write(swap<order>(v));
     }
 
-    template <byte_order order, class T, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, STDEXT_REQUIRES(std::is_integral_v<T>)>
     size_t write(output_stream& s, const T* buffer, size_t count)
     {
         if constexpr (order == byte_order::native_endian)
@@ -126,7 +126,7 @@ namespace stdext
         return n;
     }
 
-    template <byte_order order, class T, size_t length, STDEXT_REQUIRES(std::is_integral_v<T>)>
+    template <byte_order order, typename T, size_t length, STDEXT_REQUIRES(std::is_integral_v<T>)>
     size_t write(output_stream& s, const T (&buffer)[length])
     {
         return write(s, buffer, length);
@@ -134,7 +134,7 @@ namespace stdext
 
     namespace _private
     {
-        template <byte_order order, class T>
+        template <byte_order order, typename T>
         struct endian
         {
             static constexpr T swap(T v)
@@ -143,7 +143,7 @@ namespace stdext
             }
         };
 
-        template <class T>
+        template <typename T>
         struct endian<byte_order::native_endian, T>
         {
             static constexpr T swap(T v)
@@ -425,7 +425,7 @@ namespace stdext
 #endif
     }
 
-    template <class T, byte_order ByteOrder, STDEXT_REQUIRED(std::is_integral_v<T>)>
+    template <typename T, byte_order ByteOrder, STDEXT_REQUIRED(std::is_integral_v<T>)>
     class endian_int
     {
     public:

@@ -27,26 +27,26 @@ namespace stdext
     class seekable;
     class peekable;
 
-    template <class POD>
+    template <typename POD>
     class input_stream_iterator;
-    template <class POD>
+    template <typename POD>
     class output_stream_iterator;
 
-    template <class POD>
+    template <typename POD>
     class stream_generator;
-    template <class POD>
+    template <typename POD>
     class stream_consumer;
 
-    template <class CharT, class Traits = std::char_traits<CharT>>
+    template <typename CharT, typename Traits = std::char_traits<CharT>>
     class basic_string_stream_consumer;
     using string_stream_consumer = basic_string_stream_consumer<char>;
     using wstring_stream_consumer = basic_string_stream_consumer<wchar_t>;
     using u16string_stream_consumer = basic_string_stream_consumer<char16_t>;
     using u32string_stream_consumer = basic_string_stream_consumer<char32_t>;
 
-    template <class Pointer> class memory_stream_base;
-    template <class Stream> class memory_input_stream_base;
-    template <class Stream> class memory_output_stream_base;
+    template <typename Pointer> class memory_stream_base;
+    template <typename Stream> class memory_input_stream_base;
+    template <typename Stream> class memory_output_stream_base;
     class memory_input_stream;
     class memory_output_stream;
     class memory_stream;
@@ -77,7 +77,7 @@ namespace stdext
         virtual ~input_stream();
 
     public:
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] POD read()
         {
             POD value;
@@ -86,7 +86,7 @@ namespace stdext
             return value;
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t read(POD* buffer, size_t count)
         {
             auto size = do_read(reinterpret_cast<byte*>(buffer), count * sizeof(POD));
@@ -95,13 +95,13 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t read(POD (&buffer)[length])
         {
             return read(buffer, length);
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void read_all(POD* buffer, size_t count)
         {
             auto size = do_read(reinterpret_cast<byte*>(buffer), count * sizeof(POD));
@@ -109,13 +109,13 @@ namespace stdext
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void read_all(POD (&buffer)[length])
         {
             read_all(buffer, length);
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void skip()
         {
             auto size = do_skip(sizeof(POD));
@@ -123,7 +123,7 @@ namespace stdext
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t skip(size_t count)
         {
             auto size = do_skip(count * sizeof(POD));
@@ -132,7 +132,7 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void skip_all(size_t count)
         {
             auto size = do_skip(count * sizeof(POD));
@@ -152,14 +152,14 @@ namespace stdext
         virtual ~output_stream();
 
     public:
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void write(const POD& value)
         {
             if (do_write(reinterpret_cast<const byte*>(&value), sizeof(POD)) != sizeof(POD))
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t write(const POD* buffer, size_t count)
         {
             auto size = do_write(reinterpret_cast<const byte*>(buffer), count * sizeof(POD));
@@ -168,13 +168,13 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t write(const POD (&buffer)[length])
         {
             return write(buffer, length);
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void write_all(const POD* buffer, size_t count)
         {
             auto size = do_write(reinterpret_cast<const byte*>(buffer), count * sizeof(POD));
@@ -182,7 +182,7 @@ namespace stdext
                 throw stream_error("premature end of stream");
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         void write_all(const POD(&buffer)[length])
         {
             write_all(buffer, length);
@@ -229,7 +229,7 @@ namespace stdext
         virtual ~peekable();
 
     public:
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] POD peek()
         {
             POD value;
@@ -238,7 +238,7 @@ namespace stdext
             return value;
         }
 
-        template <class POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t peek(POD* buffer, size_t count)
         {
             auto size = do_peek(reinterpret_cast<byte*>(buffer), count * sizeof(POD));
@@ -247,7 +247,7 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <class POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
         [[nodiscard]] size_t peek(POD (&buffer)[length])
         {
             return peek(buffer, length);
@@ -276,7 +276,7 @@ namespace stdext
         [[nodiscard]] virtual size_t direct_write(std::function<size_t (byte* buffer, size_t size)> write) = 0;
     };
 
-    template <class POD>
+    template <typename POD>
     class input_stream_iterator
     {
         static_assert(std::is_default_constructible_v<POD>);
@@ -330,7 +330,7 @@ namespace stdext
     };
 
 
-    template <class POD>
+    template <typename POD>
     class output_stream_iterator
     {
         static_assert(std::is_trivially_copyable_v<POD>);
@@ -361,7 +361,7 @@ namespace stdext
     };
 
 
-    template <class POD>
+    template <typename POD>
     class stream_generator
     {
         static_assert(std::is_default_constructible_v<POD>);
@@ -428,7 +428,7 @@ namespace stdext
     };
 
 
-    template <class POD>
+    template <typename POD>
     class stream_consumer
     {
         static_assert(std::is_trivially_copyable_v<POD>);
@@ -461,7 +461,7 @@ namespace stdext
     };
 
 
-    template <class CharT, class Traits>
+    template <typename CharT, typename Traits>
     class basic_string_stream_consumer
     {
     public:
@@ -499,7 +499,7 @@ namespace stdext
     };
 
 
-    template <class Pointer>
+    template <typename Pointer>
     class memory_stream_base : public seekable
     {
     private:
@@ -545,8 +545,8 @@ namespace stdext
         }
 
     private:
-        template <class Stream> friend class memory_input_stream_base;
-        template <class Stream> friend class memory_output_stream_base;
+        template <typename Stream> friend class memory_input_stream_base;
+        template <typename Stream> friend class memory_output_stream_base;
         Pointer _current = nullptr;
         Pointer _first = nullptr;
         Pointer _last = nullptr;
@@ -556,7 +556,7 @@ namespace stdext
     template <> memory_stream_base<byte*>::~memory_stream_base();
 
 
-    template <class Stream>
+    template <typename Stream>
     class memory_input_stream_base : public peekable, public direct_readable
     {
     protected:
@@ -600,7 +600,7 @@ namespace stdext
     };
 
 
-    template <class Stream>
+    template <typename Stream>
     class memory_output_stream_base : public direct_writable
     {
     protected:

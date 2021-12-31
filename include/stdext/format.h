@@ -28,29 +28,29 @@
 
 namespace stdext
 {
-    template <class Consumer, class... Args, STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>(char)>)>
+    template <typename Consumer, typename... Args, STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>(char)>)>
     bool format(Consumer&& out, string_view fmt, Args&&... args);
 
-    template <class... Args>
+    template <typename... Args>
     std::string format_string(string_view fmt, Args&&... args);
 
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
     bool format_arg(Consumer& out, string_view fmt, Arg arg);
 
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 #if STDEXT_HAS_C_UNICODE
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 #endif
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
-    template <class Consumer, class Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 
     class format_error : public std::logic_error
@@ -60,19 +60,19 @@ namespace stdext
 
     namespace _private
     {
-        template <class Consumer, class Arg>
+        template <typename Consumer, typename Arg>
         bool format_dispatch(Consumer& out, string_view fmt, Arg&& arg)
         {
             return format_arg(out, fmt, stdext::forward<Arg>(arg));
         }
 
-        template <size_t Index, class Consumer, class DispatchTuple, class ArgsTuple, class... Args>
+        template <size_t Index, typename Consumer, typename DispatchTuple, typename ArgsTuple, typename... Args>
         bool format_dispatch(Consumer& out, string_view fmt, const DispatchTuple& dispatch, const ArgsTuple& args, type_list<Args...>)
         {
             return std::get<Index>(dispatch)(out, fmt, stdext::forward<list_element_t<type_list<Args...>, Index>>(std::get<Index>(args)));
         }
 
-        template <size_t... Indices, class Consumer, class DispatchTuple, class ArgsTuple, class... Args>
+        template <size_t... Indices, typename Consumer, typename DispatchTuple, typename ArgsTuple, typename... Args>
         bool format_dispatch(size_t index, std::index_sequence<Indices...>, Consumer& out, string_view fmt, const DispatchTuple& dispatch, const ArgsTuple& args, type_list<Args...>)
         {
             using array_type = std::array<bool (*)(Consumer&, string_view, const DispatchTuple&, const ArgsTuple&, type_list<Args...>), sizeof...(Indices)>;
@@ -83,7 +83,7 @@ namespace stdext
         }
     }
 
-    template <class Consumer, class... Args, STDEXT_REQUIRED(is_consumer_v<std::decay_t<Consumer>(char)>)>
+    template <typename Consumer, typename... Args, STDEXT_REQUIRED(is_consumer_v<std::decay_t<Consumer>(char)>)>
     bool format(Consumer&& out, string_view fmt, Args&&... args)
     {
         std::tuple<Args&...> arglist = { args... };
@@ -144,7 +144,7 @@ namespace stdext
         return true;
     }
 
-    template <class... Args>
+    template <typename... Args>
     std::string format_string(string_view fmt, Args&&... args)
     {
         stringbuf buf;
@@ -182,7 +182,7 @@ namespace stdext
         bool format_integer(const std::function<bool (char ch)>& out, string_view fmt, uintmax_t uval, format_type type);
     }
 
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
     bool format_arg(Consumer& out, string_view fmt, Arg arg)
     {
         auto type = std::is_same_v<Arg, char> ? _private::format_type::_char
@@ -196,7 +196,7 @@ namespace stdext
         return _private::format_integer(std::ref(out), fmt, arg, type);
     }
 
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -210,7 +210,7 @@ namespace stdext
     }
 
 #if STDEXT_HAS_C_UNICODE
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -221,7 +221,7 @@ namespace stdext
         return generator >> to_multibyte() >> out;
     }
 
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -233,7 +233,7 @@ namespace stdext
     }
 #endif
 
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -244,7 +244,7 @@ namespace stdext
         return generator >> to_multibyte() >> out;
     }
 
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -252,7 +252,7 @@ namespace stdext
         return std::invoke(stdext::forward<Arg>(arg), out);
     }
 
-    template <class Consumer, class Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         return std::invoke(stdext::forward<Arg>(arg), out, fmt);

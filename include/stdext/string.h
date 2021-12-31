@@ -27,14 +27,14 @@
 
 namespace stdext
 {
-    template <class charT, class traits = std::char_traits<charT>, class Allocator = std::allocator<charT>>
+    template <typename charT, typename traits = std::char_traits<charT>, typename Allocator = std::allocator<charT>>
     class basic_stringbuf;
     using stringbuf = basic_stringbuf<char>;
     using wstringbuf = basic_stringbuf<wchar_t>;
     using u16stringbuf = basic_stringbuf<char16_t>;
     using u32stringbuf = basic_stringbuf<char32_t>;
 
-    template <class charT, class traits, class Allocator>
+    template <typename charT, typename traits, typename Allocator>
     class basic_stringbuf
     {
     public:
@@ -68,13 +68,13 @@ namespace stdext
         string_type str;
     };
 
-    template <class Char>
+    template <typename Char>
     bool cstring_termination_predicate(const Char& value)
     {
         return value == Char();
     }
 
-    template <class Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value)>
+    template <typename Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value)>
     auto make_cstring_generator(Iterator&& i)
     {
         return make_terminated_generator(stdext::forward<Iterator>(i),
@@ -105,7 +105,7 @@ namespace stdext
         }
     }
 
-    template <class Generator>
+    template <typename Generator>
     class to_multibyte_generator
     {
     public:
@@ -198,7 +198,7 @@ namespace stdext
         value_type _value[MB_LEN_MAX] = { };
     };
 
-    template <class Generator>
+    template <typename Generator>
     class to_wchar_generator
     {
     public:
@@ -289,13 +289,13 @@ namespace stdext
     inline to_multibyte_tag to_multibyte() { return { }; }
     inline to_wchar_tag to_wchar() { return { }; }
 
-    template <class Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
+    template <typename Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_multibyte_tag)
     {
         return to_multibyte_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(stdext::forward<Generator>(g)));
     }
 
-    template <class Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
+    template <typename Generator, STDEXT_REQUIRES(can_generate<std::decay_t<Generator>>::value)>
     auto operator >> (Generator&& g, to_wchar_tag)
     {
         return to_wchar_generator<generator_type_t<std::decay_t<Generator>, can_generate>>(as_generator(stdext::forward<Generator>(g)));

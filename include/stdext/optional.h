@@ -27,7 +27,7 @@
 namespace stdext
 {
     // 5.3, optional for object types
-    template <class T> class optional;
+    template <typename T> class optional;
 
     // 5.4, In-place construction
     struct in_place_t { };
@@ -44,7 +44,7 @@ namespace stdext
         bad_optional_access() : logic_error("attempted to access empty optional") { }
     };
 
-    template <class T, bool TriviallyDestructible>
+    template <typename T, bool TriviallyDestructible>
     struct optional_base
     {
         ~optional_base()
@@ -60,7 +60,7 @@ namespace stdext
         };
         bool initialized;
     };
-    template <class T>
+    template <typename T>
     struct optional_base<T, true>
     {
         union
@@ -71,7 +71,7 @@ namespace stdext
         bool initialized;
     };
 
-    template <class T>
+    template <typename T>
     class optional : private optional_base<T, std::is_trivially_destructible<T>::value>
     {
         using optional_base<T, std::is_trivially_destructible<T>::value>::initialized;
@@ -103,13 +103,13 @@ namespace stdext
             initialized = true;
             construct(stdext::move(v));
         }
-        template <class... Args>
+        template <typename... Args>
         constexpr explicit optional(in_place_t, Args&&... args)
         {
             initialized = true;
             construct(stdext::forward<Args>(args)...);
         }
-        template <class U, class... Args, STDEXT_REQUIRES(std::is_constructible<T, std::initializer_list<U>, Args&&...>::value)>
+        template <typename U, typename... Args, STDEXT_REQUIRES(std::is_constructible<T, std::initializer_list<U>, Args&&...>::value)>
         constexpr explicit optional(in_place_t, std::initializer_list<U> il, Args&&... args)
         {
             initialized = true;
@@ -165,7 +165,7 @@ namespace stdext
             return *this;
         }
 
-        template <class U> optional& operator=(U&& rhs)
+        template <typename U> optional& operator=(U&& rhs)
         {
             if (initialized)
                 value() = stdext::move(rhs);
@@ -176,7 +176,7 @@ namespace stdext
             }
         }
 
-        template <class... Args> void emplace(Args&&... args)
+        template <typename... Args> void emplace(Args&&... args)
         {
             if (initialized)
                 destroy();
@@ -184,7 +184,7 @@ namespace stdext
             initialized = true;
         }
 
-        template <class U, class... Args>
+        template <typename U, typename... Args>
         void emplace(std::initializer_list<U> il, Args&&... args)
         {
             emplace(il, stdext::forward<Args>(args)...);
@@ -240,12 +240,12 @@ namespace stdext
                 throw bad_optional_access();
             return stdext::move(this->object);
         }
-        template <class U, STDEXT_REQUIRES(std::is_copy_constructible<T>::value && std::is_convertible<U&&, T>::value)>
+        template <typename U, STDEXT_REQUIRES(std::is_copy_constructible<T>::value && std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) const &
         {
             return initialized ? this->object : static_cast<T>(stdext::forward<U>(v));
         }
-        template <class U, STDEXT_REQUIRES(std::is_move_constructible<T>::value && std::is_convertible<U&&, T>::value)>
+        template <typename U, STDEXT_REQUIRES(std::is_move_constructible<T>::value && std::is_convertible<U&&, T>::value)>
         constexpr T value_or(U&& v) &&
         {
             return initialized ? stdext::move(this->object) : static_cast<T>(stdext::forward<U>(v));
@@ -390,7 +390,7 @@ namespace stdext
         }
 
     private:
-        template <class... Args>
+        template <typename... Args>
         void construct(Args&&... args)
         {
             new(&this->object) T(stdext::forward<Args>(args)...);
@@ -402,7 +402,7 @@ namespace stdext
         }
     };
 
-    template <class T>
+    template <typename T>
     constexpr optional<std::decay_t<T>> make_optional(T&& v)
     {
         return optional<std::decay_t<T>>(stdext::forward<T>(v));
@@ -412,7 +412,7 @@ namespace stdext
 namespace std
 {
     // 5.11, Hash support
-    template <class T>
+    template <typename T>
     struct hash<::stdext::optional<T>>
     {
         constexpr size_t operator () (const ::stdext::optional<T>& k) const

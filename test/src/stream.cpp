@@ -19,7 +19,7 @@ namespace
         std::byte(8), std::byte(9), std::byte(0xa), std::byte(0xb), std::byte(0xc), std::byte(0xd), std::byte(0xe), std::byte(0xf)
     };
 
-    template <class POD, size_t size>
+    template <typename POD, size_t size>
     void test(const POD (&data)[size])
     {
         stdext::memory_input_stream is(stuff, sizeof(stuff));

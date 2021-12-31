@@ -18,7 +18,7 @@
 
 namespace stdext
 {
-    template <class Callback>
+    template <typename Callback>
     class scope_guard
     {
     public:
@@ -56,7 +56,7 @@ namespace stdext
         bool _valid;
     };
 
-    template <class Callback>
+    template <typename Callback>
     class scope_success_guard : public scope_guard<Callback>
     {
     public:
@@ -83,7 +83,7 @@ namespace stdext
         int _exception_count;
     };
 
-    template <class Callback>
+    template <typename Callback>
     class scope_error_guard : public scope_guard<Callback>
     {
     public:
@@ -110,28 +110,28 @@ namespace stdext
         int _exception_count;
     };
 
-    template <class Callback>
+    template <typename Callback>
     scope_guard(Callback&&) -> scope_guard<std::decay_t<Callback>>;
 
-    template <class Callback>
+    template <typename Callback>
     scope_success_guard(Callback&&) -> scope_success_guard<std::decay_t<Callback>>;
 
-    template <class Callback>
+    template <typename Callback>
     scope_error_guard(Callback&&) -> scope_error_guard<std::decay_t<Callback>>;
 
-    template <class Callback>
+    template <typename Callback>
     auto make_scope_guard(Callback&& cb)
     {
         return scope_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb));
     }
 
-    template <class Callback>
+    template <typename Callback>
     auto make_scope_success_guard(Callback&& cb)
     {
         return scope_success_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb));
     }
 
-    template <class Callback>
+    template <typename Callback>
     auto make_scope_error_guard(Callback&& cb)
     {
         return scope_error_guard<std::decay_t<Callback>>(stdext::forward<Callback>(cb));

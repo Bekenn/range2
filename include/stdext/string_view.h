@@ -25,7 +25,7 @@
 
 namespace stdext
 {
-    template <class charT, class traits = std::char_traits<std::remove_cv_t<charT>>>
+    template <typename charT, typename traits = std::char_traits<std::remove_cv_t<charT>>>
     class basic_string_view;
 
     using string_view = basic_string_view<char>;
@@ -46,7 +46,7 @@ namespace stdext
     double stod(string_view str, size_t* idx = nullptr);
     long double stold(string_view str, size_t* idx = nullptr);
 
-    template <class charT, class traits>
+    template <typename charT, typename traits>
     class basic_string_view : public array_view<const charT>
     {
     public:
@@ -55,7 +55,7 @@ namespace stdext
         using reverse_iterator = typename array_view<const charT>::reverse_iterator;
         using size_type = typename array_view<const charT>::size_type;
         using traits_type = traits;
-        template <class Allocator = std::allocator<std::remove_cv_t<value_type>>>
+        template <typename Allocator = std::allocator<std::remove_cv_t<value_type>>>
         using string_type = std::basic_string<std::remove_cv_t<value_type>, traits_type, Allocator>;
         using const_pointer = const value_type*;
 
@@ -69,7 +69,7 @@ namespace stdext
         constexpr basic_string_view(const basic_string_view& str, size_type pos, size_type n = npos) noexcept
             : array_view<const charT>(str.data() + pos, std::min(n, str.length()) - pos) { }
 
-        template <class Allocator>
+        template <typename Allocator>
         basic_string_view(const string_type<Allocator>& str) noexcept
             : array_view<const charT>(str.data(), str.length()) { }
 
@@ -82,7 +82,7 @@ namespace stdext
         constexpr basic_string_view(pointer begin, pointer end) noexcept
             : array_view<const charT>(begin, std::distance(begin, end)) { }
 
-        template <class Allocator>
+        template <typename Allocator>
         auto& operator = (const string_type<Allocator>& str) noexcept
         {
             auto p = str.data();

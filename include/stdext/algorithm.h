@@ -24,7 +24,7 @@ namespace stdext
     {
         return true;
     }
-    template <class Bool, class... Bools>
+    template <typename Bool, typename... Bools>
     constexpr bool multi_and(Bool v, Bools... vs) noexcept
     {
         return v && multi_and(vs...);
@@ -34,13 +34,13 @@ namespace stdext
     {
         return false;
     }
-    template <class Bool, class... Bools>
+    template <typename Bool, typename... Bools>
     constexpr bool multi_or(Bool v, Bools... vs) noexcept
     {
         return v || multi_or(vs...);
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> find_if(const Range& range, Predicate&& pred)
     {
@@ -54,7 +54,7 @@ namespace stdext
         return pos;
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> find_if_not(const Range& range, Predicate&& pred)
     {
@@ -68,7 +68,7 @@ namespace stdext
         return pos;
     }
 
-    template <class Range, class Predicate>
+    template <typename Range, typename Predicate>
     range_position_type_t<Range> find_pos(const Range& range, Predicate&& pred)
     {
         auto pos = range.begin_pos();
@@ -81,35 +81,35 @@ namespace stdext
         return pos;
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> find(const Range& range, const T& value)
     {
         return find_if(range, [&value](const auto& x) { return x == value; });
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     bool all_of(const Range& range, Predicate&& pred)
     {
         return find_if_not(range, pred) == range.end_pos();
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     bool none_of(const Range& range, Predicate&& pred)
     {
         return find_if(range, pred) == range.end_pos();
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     bool any_of(const Range& range, Predicate&& pred)
     {
         return !none_of(range, pred);
     }
 
-    template <class Range1, class Range2, class BinaryPredicate,
+    template <typename Range1, typename Range2, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     range_position_type_t<Range1> find_first_of(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
@@ -122,14 +122,14 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2,
+    template <typename Range1, typename Range2,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     range_position_type_t<Range1> find_first_of(const Range1& range1, const Range2& range2)
     {
         return find_first_of(range1, range2, std::equal_to<>());
     }
 
-    template <class Range, class BinaryPredicate,
+    template <typename Range, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> adjacent_find(const Range& range, BinaryPredicate&& pred)
     {
@@ -151,20 +151,20 @@ namespace stdext
         }
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> adjacent_find(const Range& range)
     {
         return adjacent_find(range, std::equal_to<>());
     }
 
-    template <class Function>
+    template <typename Function>
     void for_each_argument(Function&& func)
     {
         discard(func);
     }
 
-    template <class Function, class... Args>
+    template <typename Function, typename... Args>
     void for_each_argument(Function&& func, Args&&... args)
     {
         using t = int[sizeof...(Args)];
@@ -173,14 +173,14 @@ namespace stdext
 
     namespace _private
     {
-        template <class... Ranges, size_t... indices>
+        template <typename... Ranges, size_t... indices>
         std::tuple<std::tuple<const Ranges&, range_position_type_t<Ranges>&>...>
             make_range_pos_pairs(std::tuple<const Ranges&...> ranges, std::tuple<range_position_type_t<Ranges>...>& positions, value_list<indices...>)
         {
             return std::make_tuple(std::make_tuple(std::ref(std::get<indices>(ranges)), std::ref(std::get<indices>(positions)))...);
         }
     }
-    template <class Function, class... Ranges,
+    template <typename Function, typename... Ranges,
         STDEXT_REQUIRES(const_and<is_multi_pass_range<Ranges>::value...>::value)>
     std::tuple<range_position_type_t<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
     {
@@ -194,7 +194,7 @@ namespace stdext
         return positions;
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_size_type_t<Range> count_if(const Range& range, Predicate&& pred)
     {
@@ -207,7 +207,7 @@ namespace stdext
         return n;
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_size_type_t<Range> count(const Range& range, const T& value)
     {
@@ -217,7 +217,7 @@ namespace stdext
         });
     }
 
-    template <class Range1, class Range2, class BinaryPredicate,
+    template <typename Range1, typename Range2, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
         mismatch(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
@@ -233,7 +233,7 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2,
+    template <typename Range1, typename Range2,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
         mismatch(const Range1& range1, const Range2& range2)
@@ -241,7 +241,7 @@ namespace stdext
         return mismatch(range1, range2, std::equal_to<>());
     }
 
-    template <class Range1, class Range2, class BinaryPredicate,
+    template <typename Range1, typename Range2, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
@@ -249,7 +249,7 @@ namespace stdext
         return range1.is_end_pos(pos.first) && range2.is_end_pos(pos.second);
     }
 
-    template <class Range1, class Range2,
+    template <typename Range1, typename Range2,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool equal(const Range1& range1, const Range2& range2)
     {
@@ -258,7 +258,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range1, class Range2, class BinaryPredicate>
+        template <typename Range1, typename Range2, typename BinaryPredicate>
         bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, false_type counted)
         {
             auto pos = mismatch(range1, range2, pred);
@@ -287,7 +287,7 @@ namespace stdext
             return true;
         }
 
-        template <class Range1, class Range2, class BinaryPredicate>
+        template <typename Range1, typename Range2, typename BinaryPredicate>
         bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, true_type counted)
         {
             if (range1.size() != range2.size())
@@ -296,7 +296,7 @@ namespace stdext
         }
     }
 
-    template <class Range1, class Range2, class BinaryPredicate,
+    template <typename Range1, typename Range2, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
@@ -306,14 +306,14 @@ namespace stdext
                 false_type>());
     }
 
-    template <class Range1, class Range2,
+    template <typename Range1, typename Range2,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     bool is_permutation(const Range1& range1, const Range2& range2)
     {
         return is_permutation(range1, range2, std::equal_to<>());
     }
 
-    template <class Range1, class Range2, class BinaryPredicate,
+    template <typename Range1, typename Range2, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     range_position_type_t<Range1> search(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
@@ -328,14 +328,14 @@ namespace stdext
         return pos.first;
     }
 
-    template <class Range1, class Range2,
+    template <typename Range1, typename Range2,
         STDEXT_REQUIRES(is_multi_pass_range<Range1>::value && is_multi_pass_range<Range2>::value)>
     range_position_type_t<Range1> search(const Range1& range1, const Range2& range2)
     {
         return search(range1, range2, std::equal_to<>());
     }
 
-    template <class Range, class Size, class T, class BinaryPredicate,
+    template <typename Range, typename Size, typename T, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && std::is_integral<Size>::value)>
     range_position_type_t<Range> search_n(const Range& range, Size count, const T& value, BinaryPredicate&& pred)
     {
@@ -354,14 +354,14 @@ namespace stdext
         }
     }
 
-    template <class Range, class OutputRange>
+    template <typename Range, typename OutputRange>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy(const Range& range, const OutputRange& result)
     {
         return for_each([](const auto& from, auto& to) { to = from; }, range, result);
     }
 
-    template <class Range, class Size, class OutputRange>
+    template <typename Range, typename Size, typename OutputRange>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy_n(const Range& range, Size n, const OutputRange& result)
     {
@@ -370,7 +370,7 @@ namespace stdext
         return { counted.base_pos(pos.first), pos.second };
     }
 
-    template <class Range, class OutputRange, class Predicate>
+    template <typename Range, typename OutputRange, typename Predicate>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
@@ -383,7 +383,7 @@ namespace stdext
         return pos;
     }
 
-    template <class Range, class OutputRange,
+    template <typename Range, typename OutputRange,
         STDEXT_REQUIRES(is_bidirectional_range<OutputRange>::value && is_delimited_range<OutputRange>::value)>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         copy_backward(const Range& range, const OutputRange& result)
@@ -393,14 +393,14 @@ namespace stdext
         return { pos.first, rev.base_pos(pos.second) };
     }
 
-    template <class Range, class OutputRange>
+    template <typename Range, typename OutputRange>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         move(const Range& range, const OutputRange& result)
     {
         return for_each([](auto& from, auto& to) { to = stdext::move(from); }, range, result);
     }
 
-    template <class Range, class OutputRange,
+    template <typename Range, typename OutputRange,
         STDEXT_REQUIRES(is_bidirectional_range<OutputRange>::value && is_delimited_range<OutputRange>::value)>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         move_backward(const Range& range, const OutputRange& result)
@@ -410,62 +410,62 @@ namespace stdext
         return { pos.first, rev.base_pos(pos.second) };
     }
 
-    template <class Range1, class Range2>
+    template <typename Range1, typename Range2>
     std::pair<range_position_type_t<Range1>, range_position_type_t<Range2>>
         swap_ranges(const Range1& range1, const Range2& range2)
     {
         return for_each([](auto& from, auto& to) { swap(from, to); }, range1, range2);
     }
 
-    template <class Range, class OutputRange, class UnaryOperation>
+    template <typename Range, typename OutputRange, typename UnaryOperation>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         transform(const Range& range, const OutputRange& result, UnaryOperation&& op)
     {
         return for_each([&](const auto& from, auto& to) { to = op(from); }, range, result);
     }
 
-    template <class Range1, class Range2, class OutputRange, class BinaryOperation>
+    template <typename Range1, typename Range2, typename OutputRange, typename BinaryOperation>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         transform(const Range1& range1, const Range2& range2, const OutputRange& result, BinaryOperation&& op)
     {
         return for_each([&](const auto& from1, const auto& from2, auto& to) { to = op(from1, from2); }, range1, range2, result);
     }
 
-    template <class Range, class Predicate, class T,
+    template <typename Range, typename Predicate, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> replace_if(const Range& range, Predicate&& pred, const T& new_value)
     {
         return std::get<0>(for_each([&](auto& value) { if (pred(value)) value = new_value; }, range));
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> replace(const Range& range, const T& old_value, const T& new_value)
     {
         return replace_if(range, [&](const auto& value) { return value == old_value; }, new_value);
     }
 
-    template <class Range, class OutputRange, class Predicate, class T>
+    template <typename Range, typename OutputRange, typename Predicate, typename T>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         replace_copy_if(const Range& range, const OutputRange& result, Predicate&& pred, const T& new_value)
     {
         return for_each([&](const auto& from, auto& to) { to = pred(from) ? new_value : from; }, range, result);
     }
 
-    template <class Range, class OutputRange, class T>
+    template <typename Range, typename OutputRange, typename T>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         replace_copy(const Range& range, const OutputRange& result, const T& old_value, const T& new_value)
     {
         return replace_copy_if(range, result, [&](const auto& value) { return value == old_value; }, new_value);
     }
 
-    template <class Range, class T>
+    template <typename Range, typename T>
     range_position_type_t<Range> fill(const Range& range, const T& value)
     {
         return std::get<0>(for_each([&](auto& v) { v = value; }));
     }
 
-    template <class Range, class Size, class T>
+    template <typename Range, typename Size, typename T>
     range_position_type_t<Range> fill_n(const Range& range, Size n, const T& value)
     {
         auto counted = make_counted_range(range, n);
@@ -473,13 +473,13 @@ namespace stdext
         return counted.base_pos(pos);
     }
 
-    template <class Range, class Function>
+    template <typename Range, typename Function>
     range_position_type_t<Range> generate(const Range& range, Function&& func)
     {
         return std::get<0>(for_each([&](auto& value) { value = func(); }, range));
     }
 
-    template <class Range, class Size, class Function>
+    template <typename Range, typename Size, typename Function>
     range_position_type_t<Range> generate_n(const Range& range, Size n, Function&& func)
     {
         auto counted = make_counted_range(range, n);
@@ -487,7 +487,7 @@ namespace stdext
         return counted.base_pos(pos);
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> remove_if(const Range& range, Predicate&& pred)
     {
@@ -505,28 +505,28 @@ namespace stdext
         return pos;
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> remove(const Range& range, const T& value)
     {
         return remove_if(range, [&](const auto& v) { return v == value; });
     }
 
-    template <class Range, class OutputRange, class Predicate>
+    template <typename Range, typename OutputRange, typename Predicate>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         remove_copy_if(const Range& range, const OutputRange& result, Predicate&& pred)
     {
         return copy_if(range, result, [&](const auto& v) { return !pred(v); });
     }
 
-    template <class Range, class OutputRange, class T>
+    template <typename Range, typename OutputRange, typename T>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         remove_copy(const Range& range, const OutputRange& result, const T& value)
     {
         return remove_copy_if(range, result, [&](const auto& v) { return v == value; });
     }
 
-    template <class Range, class BinaryPredicate,
+    template <typename Range, typename BinaryPredicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> unique(const Range& range, BinaryPredicate&& pred)
     {
@@ -559,14 +559,14 @@ namespace stdext
         return write_pos;
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> unique(const Range& range)
     {
         return unique(range, std::equal_to<>());
     }
 
-    template <class Range, class OutputRange, class BinaryPredicate>
+    template <typename Range, typename OutputRange, typename BinaryPredicate>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         unique_copy(const Range& range, const OutputRange& result, BinaryPredicate&& pred)
     {
@@ -582,14 +582,14 @@ namespace stdext
         return std::make_pair(from, to);
     }
 
-    template <class Range, class OutputRange>
+    template <typename Range, typename OutputRange>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         unique_copy(const Range& range, const OutputRange& result)
     {
         return unique_copy(range, result, std::equal_to<>());
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     void reverse(Range range)
     {
@@ -605,7 +605,7 @@ namespace stdext
         }
     }
 
-    template <class Range, class OutputRange,
+    template <typename Range, typename OutputRange,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         reverse_copy(const Range& range, const OutputRange& result)
@@ -615,7 +615,7 @@ namespace stdext
         return std::make_pair(rng.base_pos(pos.first), pos.second);
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> rotate(const Range& range, range_position_type_t<Range> middle)
     {
@@ -632,7 +632,7 @@ namespace stdext
         return std::get<0>(pos);
     }
 
-    template <class Range, class OutputRange,
+    template <typename Range, typename OutputRange,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     std::pair<range_position_type_t<Range>, range_position_type_t<OutputRange>>
         rotate_copy(const Range& range, range_position_type_t<Range> middle, const OutputRange& result)
@@ -641,7 +641,7 @@ namespace stdext
         return for_each([](const auto& from, auto& to) { to = from; }, subrange_to(range, middle), subrange_from(result, pos.second));
     }
 
-    template <class Range, class UniformRandomNumberGenerator,
+    template <typename Range, typename UniformRandomNumberGenerator,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void shuffle(const Range& range, UniformRandomNumberGenerator&& g)
     {
@@ -660,7 +660,7 @@ namespace stdext
         }
     }
 
-    template <class Range, class Predicate>
+    template <typename Range, typename Predicate>
     bool is_partitioned(const Range& range, Predicate&& pred)
     {
         auto pos = find_if_not(range, pred);
@@ -670,7 +670,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> partition(const Range& range, Predicate&& pred, multi_pass_range_tag)
         {
             auto p1 = find_if_not(range, pred);
@@ -688,7 +688,7 @@ namespace stdext
             }
         }
 
-        template <class Range, class Predicate,
+        template <typename Range, typename Predicate,
             STDEXT_REQUIRES(is_delimited_range<Range>::value)>
         range_position_type_t<Range> partition(const Range& range, Predicate&& pred, bidirectional_range_tag)
         {
@@ -712,7 +712,7 @@ namespace stdext
         }
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> partition(const Range& range, Predicate&& pred)
     {
@@ -721,7 +721,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> fast_stable_partition(const Range& range, Predicate&& pred, std::vector<range_value_type_t<Range>>& buf)
         {
             auto l = find_if_not(range, pred);
@@ -746,7 +746,7 @@ namespace stdext
             }
         }
 
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> slow_stable_partition(const Range& range, Predicate&& pred)
         {
             auto l = find_if_not(range, pred);
@@ -766,13 +766,13 @@ namespace stdext
             }
         }
 
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred, false_type /* is_counted */)
         {
             return slow_stable_partition(range, stdext::forward<Predicate>(pred));
         }
 
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred, true_type /* is_counted */)
         {
             std::vector<range_value_type_t<Range>> buf;
@@ -789,14 +789,14 @@ namespace stdext
         }
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     range_position_type_t<Range> stable_partition(const Range& range, Predicate&& pred)
     {
         return _private::stable_partition(range, stdext::forward<Predicate>(pred), is_counted_range<Range>());
     }
 
-    template <class Range, class OutputRange1, class OutputRange2, class Predicate>
+    template <typename Range, typename OutputRange1, typename OutputRange2, typename Predicate>
     std::tuple<range_position_type_t<Range>, range_position_type_t<OutputRange1>, range_position_type_t<OutputRange2>>
         partition_copy(const Range& range, const OutputRange1& out_true, const OutputRange2& out_false, Predicate&& pred)
     {
@@ -826,7 +826,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred, random_access_range_tag)
         {
             auto l = range_size_type_t<Range>(0);
@@ -844,7 +844,7 @@ namespace stdext
             return range.advance_pos(pos, r);
         }
 
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred, true_type /* is_counted */)
         {
             auto size = range.size();
@@ -871,7 +871,7 @@ namespace stdext
             return l.first;
         }
 
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred, false_type /* is_counted */)
         {
             auto size = range_size_type_t<Range>(distance(range, range.begin_pos(), range.end_pos()));
@@ -880,21 +880,21 @@ namespace stdext
             return counted.base_pos(pos);
         }
 
-        template <class Range, class Predicate>
+        template <typename Range, typename Predicate>
         range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred, multi_pass_range_tag)
         {
             return partition_point(range, pred, is_counted_range<Range>());
         }
     }
 
-    template <class Range, class Predicate,
+    template <typename Range, typename Predicate,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     range_position_type_t<Range> partition_point(const Range& range, Predicate&& pred)
     {
         return _private::partition_point(range, pred, range_category<Range>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void push_heap(const Range& range, Compare&& comp)
     {
@@ -914,7 +914,7 @@ namespace stdext
         }
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void push_heap(const Range& range)
     {
@@ -923,7 +923,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void heap_rebalance_root(const Range& range, Compare&& comp)
         {
             auto size = range.size();
@@ -956,7 +956,7 @@ namespace stdext
         }
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void pop_heap(const Range& range, Compare&& comp)
     {
@@ -971,14 +971,14 @@ namespace stdext
         _private::heap_rebalance_root(subrange_to(range, last), comp);
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void pop_heap(const Range& range)
     {
         pop_heap(range, std::less<>());
     }
 
-    template <class Range, class T, class Compare,
+    template <typename Range, typename T, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void emplace_heap(const Range& range, T&& value, Compare&& comp)
     {
@@ -986,14 +986,14 @@ namespace stdext
         _private::heap_rebalance_root(range, comp);
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void emplace_heap(const Range& range, T&& value)
     {
         emplace_heap(range, stdext::forward<T>(value), std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void make_heap(const Range& range, Compare&& comp)
     {
@@ -1025,14 +1025,14 @@ namespace stdext
         }
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void make_heap(const Range& range)
     {
         make_heap(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void sort_heap(const Range& range, Compare&& comp)
     {
@@ -1047,14 +1047,14 @@ namespace stdext
         }
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void sort_heap(const Range& range)
     {
         sort_heap(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     range_position_type_t<Range> is_heap_until(const Range& range, Compare&& comp)
     {
@@ -1076,21 +1076,21 @@ namespace stdext
         return range.end_pos();
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     range_position_type_t<Range> is_heap_until(const Range& range)
     {
         return is_heap_until(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     bool is_heap(const Range& range, Compare&& comp)
     {
         return range.is_end_pos(is_heap_until(range, comp));
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     bool is_heap(const Range& range)
     {
@@ -1099,7 +1099,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         range_position_type_t<Range> choose_pivot(const Range& range, Compare&& comp)
         {
             if (range.size() == 0)
@@ -1128,7 +1128,7 @@ namespace stdext
             return comp(range.at_pos(p2), range.at_pos(p3)) ? p2 : p3;
         }
 
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         range_position_type_t<Range> pivot_partition(const Range& range, Compare&& comp)
         {
             auto pivot = _private::choose_pivot(range, comp);
@@ -1154,7 +1154,7 @@ namespace stdext
         }
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void nth_element(const Range& range, range_position_type_t<Range> nth, Compare&& comp)
     {
@@ -1169,14 +1169,14 @@ namespace stdext
             nth_element(subrange_from(range, next_pos(range, pivot)), nth, comp);
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void nth_element(const Range& range, range_position_type_t<Range> nth)
     {
         nth_element(range, nth, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void sort(const Range& range, Compare&& comp)
     {
@@ -1191,7 +1191,7 @@ namespace stdext
         sort(subrange_from(range, next_pos(range, pivot)), comp);
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void sort(const Range& range)
     {
@@ -1200,7 +1200,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void fast_stable_sort(const Range& range, Compare&& comp, std::vector<range_value_type_t<Range>>& buf)
         {
             if (range.size() <= 1)
@@ -1231,7 +1231,7 @@ namespace stdext
             fast_stable_sort(subrange_from(range, next_pos(range, l)), comp, buf);
         }
 
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void slow_stable_sort(const Range& range, Compare&& comp)
         {
             if (range.size() <= 1)
@@ -1258,7 +1258,7 @@ namespace stdext
         }
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void stable_sort(const Range& range, Compare&& comp)
     {
@@ -1276,14 +1276,14 @@ namespace stdext
         _private::fast_stable_sort(range, comp, buf);
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_counted_range<Range>::value)>
     void stable_sort(const Range& range)
     {
         stable_sort(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_delimited_range<Range>::value)>
     void partial_sort(const Range& range, range_position_type_t<Range> middle, Compare&& comp)
     {
@@ -1291,14 +1291,14 @@ namespace stdext
         sort(subrange_to(range, middle), comp);
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_random_access_range<Range>::value && is_delimited_range<Range>::value)>
     void partial_sort(const Range& range, range_position_type_t<Range> middle)
     {
         partial_sort(range, middle, std::less<>());
     }
 
-    template <class Range, class OutputRange, class Compare,
+    template <typename Range, typename OutputRange, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && is_random_access_range<OutputRange>::value && is_counted_range<OutputRange>::value)>
     range_position_type_t<OutputRange> partial_sort_copy(const Range& range, const OutputRange& out, Compare&& comp)
     {
@@ -1329,14 +1329,14 @@ namespace stdext
         return heap.end_pos();
     }
 
-    template <class Range, class OutputRange,
+    template <typename Range, typename OutputRange,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && is_random_access_range<OutputRange>::value && is_counted_range<OutputRange>::value)>
     range_position_type_t<OutputRange> partial_sort_copy(const Range& range, const OutputRange& out)
     {
         return partial_sort_copy(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> is_sorted_until(const Range& range, Compare&& comp)
     {
@@ -1357,56 +1357,56 @@ namespace stdext
         return next;
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> is_sorted_until(const Range& range)
     {
         return is_sorted_until(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     bool is_sorted(const Range& range, Compare&& comp)
     {
         return range.is_end_pos(is_sorted_until(range, comp));
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     bool is_sorted(const Range& range)
     {
         return range.is_end_pos(is_sorted_until(range, std::less<>()));
     }
 
-    template <class Range, class T, class Compare,
+    template <typename Range, typename T, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     range_position_type_t<Range> lower_bound(const Range& range, const T& value, Compare&& comp)
     {
         return partition_point(range, [&](const auto& v) { return comp(v, value); });
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
         range_position_type_t<Range> lower_bound(const Range& range, const T& value)
     {
         return partition_point(range, [&](const auto& v) { return v < value; });
     }
 
-    template <class Range, class T, class Compare,
+    template <typename Range, typename T, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     range_position_type_t<Range> upper_bound(const Range& range, const T& value, Compare&& comp)
     {
         return partition_point(range, [&](const auto& v) { return !comp(v, value); });
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     range_position_type_t<Range> upper_bound(const Range& range, const T& value)
     {
         return partition_point(range, [&](const auto& v) { return !(v < value); });
     }
 
-    template <class Range, class T, class Compare,
+    template <typename Range, typename T, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     delimited_range<Range> equal_range(const Range& range, const T& value, Compare&& comp)
     {
@@ -1415,14 +1415,14 @@ namespace stdext
         return make_range(range, l, upper_bound(remainder, value, comp));
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     delimited_range<Range> equal_range(const Range& range, const T& value)
     {
         return equal_range(range, value, std::less<>());
     }
 
-    template <class Range, class T, class Compare,
+    template <typename Range, typename T, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     bool binary_search(const Range& range, const T& value, Compare&& comp)
     {
@@ -1433,14 +1433,14 @@ namespace stdext
         return !comp(value, range.at_pos(pos));
     }
 
-    template <class Range, class T,
+    template <typename Range, typename T,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && (is_counted_range<Range>::value || is_delimited_range<Range>::value))>
     bool binary_search(const Range& range, const T& value)
     {
         return binary_search(range, value, std::less<>());
     }
 
-    template <class Range1, class Range2, class OutputRange, class Compare>
+    template <typename Range1, typename Range2, typename OutputRange, typename Compare>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         merge(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
@@ -1472,7 +1472,7 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2, class OutputRange>
+    template <typename Range1, typename Range2, typename OutputRange>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         merge(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
@@ -1481,7 +1481,7 @@ namespace stdext
 
     namespace _private
     {
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void fast_inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, std::vector<range_value_type_t<Range>>& buf)
         {
             auto l = range.begin_pos();
@@ -1501,7 +1501,7 @@ namespace stdext
             }
         }
 
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void slow_inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp)
         {
             auto l = range.begin_pos();
@@ -1517,13 +1517,13 @@ namespace stdext
             }
         }
 
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, false_type /* is_counted */)
         {
             slow_inplace_merge(range, middle, comp);
         }
 
-        template <class Range, class Compare>
+        template <typename Range, typename Compare>
         void inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp, true_type /* is_counted */)
         {
             std::vector<range_value_type_t<Range>> buf;
@@ -1541,21 +1541,21 @@ namespace stdext
         }
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     void inplace_merge(const Range& range, range_position_type_t<Range> middle, Compare&& comp)
     {
         _private::inplace_merge(range, middle, comp, is_counted_range<Range>());
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value)>
     void inplace_merge(const Range& range, range_position_type_t<Range> middle)
     {
         _private::inplace_merge(range, middle, std::less<>(), is_counted_range<Range>());
     }
 
-    template <class Range1, class Range2, class Compare>
+    template <typename Range1, typename Range2, typename Compare>
     bool includes(const Range1& range1, const Range2& range2, Compare&& comp)
     {
         auto pos1 = range1.begin_pos();
@@ -1567,13 +1567,13 @@ namespace stdext
         return !range2.is_end_pos(pos2);
     }
 
-    template <class Range1, class Range2>
+    template <typename Range1, typename Range2>
     bool includes(const Range1& range1, const Range2& range2)
     {
         return includes(range1, range2, std::less<>());
     }
 
-    template <class Range1, class Range2, class OutputRange, class Compare>
+    template <typename Range1, typename Range2, typename OutputRange, typename Compare>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_union(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
@@ -1596,14 +1596,14 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2, class OutputRange>
+    template <typename Range1, typename Range2, typename OutputRange>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_union(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
         return set_union(range1, range2, result, std::less<>());
     }
 
-    template <class Range1, class Range2, class OutputRange, class Compare>
+    template <typename Range1, typename Range2, typename OutputRange, typename Compare>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_intersection(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
@@ -1624,14 +1624,14 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2, class OutputRange>
+    template <typename Range1, typename Range2, typename OutputRange>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_intersection(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
         return set_intersection(range1, range2, result, std::less<>());
     }
 
-    template <class Range1, class Range2, class OutputRange, class Compare>
+    template <typename Range1, typename Range2, typename OutputRange, typename Compare>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_difference(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
@@ -1653,7 +1653,7 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2, class OutputRange>
+    template <typename Range1, typename Range2, typename OutputRange>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_difference(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
@@ -1661,7 +1661,7 @@ namespace stdext
     }
 
 
-    template <class Range1, class Range2, class OutputRange, class Compare>
+    template <typename Range1, typename Range2, typename OutputRange, typename Compare>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_symmetric_difference(const Range1& range1, const Range2& range2, const OutputRange& result, Compare&& comp)
     {
@@ -1684,14 +1684,14 @@ namespace stdext
         return pos;
     }
 
-    template <class Range1, class Range2, class OutputRange>
+    template <typename Range1, typename Range2, typename OutputRange>
     std::tuple<range_position_type_t<Range1>, range_position_type_t<Range2>, range_position_type_t<OutputRange>>
         set_symmetric_difference(const Range1& range1, const Range2& range2, const OutputRange& result)
     {
         return set_symmetric_difference(range1, range2, result, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> min_element(const Range& range, Compare&& comp)
     {
@@ -1712,14 +1712,14 @@ namespace stdext
         }
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> min_element(const Range& range)
     {
         return min_element(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> max_element(const Range& range, Compare&& comp)
     {
@@ -1740,14 +1740,14 @@ namespace stdext
         }
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     range_position_type_t<Range> max_element(const Range& range)
     {
         return max_element(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     std::pair<range_position_type_t<Range>, range_position_type_t<Range>>
         minmax_element(const Range& range, Compare&& comp)
@@ -1769,7 +1769,7 @@ namespace stdext
         return best;
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value)>
     std::pair<range_position_type_t<Range>, range_position_type_t<Range>>
         minmax_element(const Range& range)
@@ -1777,7 +1777,7 @@ namespace stdext
         return minmax_element(range, std::less<>());
     }
 
-    template <class Range1, class Range2, class Compare>
+    template <typename Range1, typename Range2, typename Compare>
     bool lexicographical_compare(const Range1& range1, const Range2& range2, Compare&& comp)
     {
         auto pos1 = range1.begin_pos();
@@ -1794,13 +1794,13 @@ namespace stdext
         return !range2.is_end_pos(pos2);
     }
 
-    template <class Range1, class Range2>
+    template <typename Range1, typename Range2>
     bool lexicographical_compare(const Range1& range1, const Range2& range2)
     {
         return lexicographical_compare(range1, range2, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     bool next_permutation(const Range& range, Compare&& comp)
     {
@@ -1818,21 +1818,21 @@ namespace stdext
         reverse(subrange_from(range, pos));
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     bool next_permutation(const Range& range)
     {
         return next_permutation(range, std::less<>());
     }
 
-    template <class Range, class Compare,
+    template <typename Range, typename Compare,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     bool prev_permutation(const Range& range, Compare&& comp)
     {
         return next_permutation(range, [&](const auto& v1, const auto& v2) { return comp(v2, v1); });
     }
 
-    template <class Range,
+    template <typename Range,
         STDEXT_REQUIRES(is_bidirectional_range<Range>::value && is_delimited_range<Range>::value)>
     bool prev_permutation(const Range& range)
     {

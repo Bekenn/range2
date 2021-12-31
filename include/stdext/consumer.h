@@ -15,16 +15,16 @@
 
 namespace stdext
 {
-    template <class T> struct is_consumer : false_type { };
-    template <class T> constexpr auto is_consumer_v = is_consumer<T>::value;
-    template <class T, class Elem>
+    template <typename T> struct is_consumer : false_type { };
+    template <typename T> constexpr auto is_consumer_v = is_consumer<T>::value;
+    template <typename T, typename Elem>
     struct is_consumer<T(Elem)> : std::is_invocable_r<bool, T, Elem> { };
 
     // I would love to add is_consumer_adaptable, as_consumer, and can_consume, but I can't
     // because there's no way to force is_consumer_adaptable to see make_consumer<Elem> as
     // a dependent function template.  C++20 will do this by default!
 
-    template <class Iterator>
+    template <typename Iterator>
     class iterator_consumer
     {
     public:
@@ -36,7 +36,7 @@ namespace stdext
         explicit iterator_consumer(iterator&& i) : i(stdext::move(i)) { }
 
     public:
-        template <class T>
+        template <typename T>
         bool operator () (T&& value)
         {
             *i++ = stdext::forward<T>(value);
@@ -47,7 +47,7 @@ namespace stdext
         iterator i;
     };
 
-    template <class Iterator, class Sentinel>
+    template <typename Iterator, typename Sentinel>
     class delimited_iterator_consumer
     {
     public:
@@ -62,7 +62,7 @@ namespace stdext
         delimited_iterator_consumer(iterator&& i, sentinel&& j) : i(stdext::move(i)), j(stdext::move(j)) { }
 
     public:
-        template <class T>
+        template <typename T>
         bool operator () (T&& value)
         {
             if (i == j)
@@ -76,14 +76,14 @@ namespace stdext
         Sentinel j;
     };
 
-    template <class Elem, class Iterator,
+    template <typename Elem, typename Iterator,
         STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value)>
     auto make_consumer(Iterator&& i)
     {
         return iterator_consumer<std::decay_t<Iterator>>(stdext::forward<Iterator>(i));
     }
 
-    template <class Elem, class Iterator, class Sentinel,
+    template <typename Elem, typename Iterator, typename Sentinel,
         STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value
             && is_equality_comparable_with<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
     auto make_consumer(Iterator&& i, Sentinel&& j)

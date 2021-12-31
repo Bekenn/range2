@@ -20,7 +20,7 @@ namespace stdext
             bool is_open() const noexcept { return true; }
 
         private:
-            template <class Stream> friend class _private::file_input_stream_base;
+            template <typename Stream> friend class _private::file_input_stream_base;
             file_handle_t handle;
         };
 
@@ -33,7 +33,7 @@ namespace stdext
             bool is_open() const noexcept { return true; }
 
         private:
-            template <class Stream> friend class _private::file_output_stream_base;
+            template <typename Stream> friend class _private::file_output_stream_base;
             file_handle_t handle;
         };
 
@@ -117,7 +117,7 @@ namespace stdext
                 throw std::system_error(::GetLastError(), std::system_category());
         }
 
-        template <class Stream>
+        template <typename Stream>
         size_t file_input_stream_base<Stream>::do_read(byte* buffer, size_t size)
         {
             assert(self().is_open());
@@ -142,7 +142,7 @@ namespace stdext
             return bytes;
         }
 
-        template <class Stream>
+        template <typename Stream>
         size_t file_input_stream_base<Stream>::do_skip(size_t size)
         {
             assert(self().is_open());
@@ -162,7 +162,7 @@ namespace stdext
             return static_cast<size_t>(distance.QuadPart);
         }
 
-        template <class Stream>
+        template <typename Stream>
         size_t file_output_stream_base<Stream>::do_write(const byte* buffer, size_t size)
         {
             assert(self().is_open());

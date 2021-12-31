@@ -53,25 +53,25 @@ namespace stdext
     };
 
     // Identity metafunction.
-    template <class T> struct identity_type;
-    template <class T> using identity_type_t = typename identity_type<T>::type;
-    template <class T>
+    template <typename T> struct identity_type;
+    template <typename T> using identity_type_t = typename identity_type<T>::type;
+    template <typename T>
     struct identity_type
     {
         using type = T;
     };
 
     // A list of types.
-    template <class...> struct type_list { };
+    template <typename...> struct type_list { };
 
     // A list of values.
     template <auto...> struct value_list { };
 
     // Retrieve the first element from a list.
-    template <class List> struct list_head;
-    template <class List> using list_head_t = typename list_head<List>::type;
-    template <class List> constexpr auto list_head_v = list_head<List>::value;
-    template <class T, class... Ts>
+    template <typename List> struct list_head;
+    template <typename List> using list_head_t = typename list_head<List>::type;
+    template <typename List> constexpr auto list_head_v = list_head<List>::value;
+    template <typename T, typename... Ts>
     struct list_head<type_list<T, Ts...>>
     {
         using type = T;
@@ -83,9 +83,9 @@ namespace stdext
     };
 
     // Retrieve the list of all elements except the first from a list.
-    template <class List> struct list_tail;
-    template <class List> using list_tail_t = typename list_head<List>::type;
-    template <class T, class... Ts>
+    template <typename List> struct list_tail;
+    template <typename List> using list_tail_t = typename list_head<List>::type;
+    template <typename T, typename... Ts>
     struct list_tail<type_list<T, Ts...>>
     {
         using type = type_list<Ts...>;
@@ -97,9 +97,9 @@ namespace stdext
     };
 
     // Retrieve the length of a list.
-    template <class List> struct list_length;
-    template <class List> constexpr auto list_length_v = list_length<List>::value;
-    template <class... Ts>
+    template <typename List> struct list_length;
+    template <typename List> constexpr auto list_length_v = list_length<List>::value;
+    template <typename... Ts>
     struct list_length<type_list<Ts...>>
     {
         static constexpr size_t value = sizeof...(Ts);
@@ -111,15 +111,15 @@ namespace stdext
     };
 
     // Retrieve the nth element from a list.
-    template <class List, size_t n> struct list_element;
-    template <class List, size_t n> using list_element_t = typename list_element<List, n>::type;
-    template <class List, size_t n> constexpr auto list_element_v = list_element<List, n>::value;
-    template <class T, class... Ts, size_t n>
+    template <typename List, size_t n> struct list_element;
+    template <typename List, size_t n> using list_element_t = typename list_element<List, n>::type;
+    template <typename List, size_t n> constexpr auto list_element_v = list_element<List, n>::value;
+    template <typename T, typename... Ts, size_t n>
     struct list_element<type_list<T, Ts...>, n>
     {
         using type = list_element_t<type_list<Ts...>, n - 1>;
     };
-    template <class T, class... Ts>
+    template <typename T, typename... Ts>
     struct list_element<type_list<T, Ts...>, 0>
     {
         using type = T;
@@ -136,19 +136,19 @@ namespace stdext
     };
 
     // Find the index of an element in the list; returns list_length<List> if the element can't be found.
-    template <class List, class T> struct list_index_of;
-    template <class List, class T> constexpr auto list_index_of_v = list_index_of<List, T>::value;
-    template <class T0, class... Ts, class T>
+    template <typename List, typename T> struct list_index_of;
+    template <typename List, typename T> constexpr auto list_index_of_v = list_index_of<List, T>::value;
+    template <typename T0, typename... Ts, typename T>
     struct list_index_of<type_list<T0, Ts...>, T>
     {
         static constexpr auto value = list_index_of_v<type_list<Ts...>, T> + 1;
     };
-    template <class T, class... Ts>
+    template <typename T, typename... Ts>
     struct list_index_of<type_list<T, Ts...>, T>
     {
         static constexpr size_t value = 0;
     };
-    template <class... Ts, class T>
+    template <typename... Ts, typename T>
     struct list_index_of<type_list<Ts...>, T>
     {
         static constexpr auto value = sizeof...(Ts);
@@ -170,9 +170,9 @@ namespace stdext
     };
 
     // Add a new element to the front of a list.
-    template <class List, class T> struct list_prepend;
-    template <class List, class T> using list_prepend_t = typename list_prepend<List, T>::type;
-    template <class... Ts, class T>
+    template <typename List, typename T> struct list_prepend;
+    template <typename List, typename T> using list_prepend_t = typename list_prepend<List, T>::type;
+    template <typename... Ts, typename T>
     struct list_prepend<type_list<Ts...>, T>
     {
         using type = type_list<T, Ts...>;
@@ -184,9 +184,9 @@ namespace stdext
     };
 
     // Add a new element to the back of alist.
-    template <class T, class List> struct list_append;
-    template <class List, class T> using list_append_t = typename list_append<List, T>::type;
-    template <class... Ts, class T>
+    template <typename T, typename List> struct list_append;
+    template <typename List, typename T> using list_append_t = typename list_append<List, T>::type;
+    template <typename... Ts, typename T>
     struct list_append<type_list<Ts...>, T>
     {
         using type = type_list<Ts..., T>;
@@ -198,19 +198,19 @@ namespace stdext
     };
 
     // Construct a list containing all of the elements of several other lists.
-    template <class... Lists> struct list_concat;
-    template <class... Lists> using list_concat_t = typename list_concat<Lists...>::type;
-    template <class... Ts, class... Us, class... Lists>
+    template <typename... Lists> struct list_concat;
+    template <typename... Lists> using list_concat_t = typename list_concat<Lists...>::type;
+    template <typename... Ts, typename... Us, typename... Lists>
     struct list_concat<type_list<Ts...>, type_list<Us...>, Lists...>
     {
         using type = typename list_concat<type_list<Ts..., Us...>, Lists...>::type;
     };
-    template <class... Ts>
+    template <typename... Ts>
     struct list_concat<type_list<Ts...>>
     {
         using type = type_list<Ts...>;
     };
-    template <auto... vs, auto... ws, class... Lists>
+    template <auto... vs, auto... ws, typename... Lists>
     struct list_concat<value_list<vs...>, value_list<ws...>, Lists...>
     {
         using type = typename list_concat<value_list<vs..., ws...>, Lists...>::type;
@@ -222,14 +222,14 @@ namespace stdext
     };
 
     // Retrieve the list of the first n elements in a list.
-    template <class List, size_t n> struct list_take;
-    template <class List, size_t n> using list_take_t = typename list_take<List, n>::type;
-    template <class T0, class... Ts, size_t n>
+    template <typename List, size_t n> struct list_take;
+    template <typename List, size_t n> using list_take_t = typename list_take<List, n>::type;
+    template <typename T0, typename... Ts, size_t n>
     struct list_take<type_list<T0, Ts...>, n>
     {
         using type = list_prepend_t<list_take_t<type_list<Ts...>, n - 1>, T0>;
     };
-    template <class... Ts>
+    template <typename... Ts>
     struct list_take<type_list<Ts...>, 0>
     {
         using type = type_list<>;
@@ -246,14 +246,14 @@ namespace stdext
     };
 
     // Retrieve the list of all elements after the first n elements in a list.
-    template <class List, size_t n> struct list_drop;
-    template <class List, size_t n> using list_drop_t = typename list_drop<List, n>::type;
-    template <class T0, class... Ts, size_t n>
+    template <typename List, size_t n> struct list_drop;
+    template <typename List, size_t n> using list_drop_t = typename list_drop<List, n>::type;
+    template <typename T0, typename... Ts, size_t n>
     struct list_drop<type_list<T0, Ts...>, n>
     {
         using type = list_drop_t<type_list<Ts...>, n - 1>;
     };
-    template <class... Ts>
+    template <typename... Ts>
     struct list_drop<type_list<Ts...>, 0>
     {
         using type = type_list<Ts...>;
@@ -270,9 +270,9 @@ namespace stdext
     };
 
     // Insert the given element into a list at the given location.
-    template <class List, size_t n, class T> struct list_insert_element;
-    template <class List, size_t n, class T> using list_insert_element_t = typename list_insert_element<List, n, T>::type;
-    template <class... Ts, size_t n, class T>
+    template <typename List, size_t n, typename T> struct list_insert_element;
+    template <typename List, size_t n, typename T> using list_insert_element_t = typename list_insert_element<List, n, T>::type;
+    template <typename... Ts, size_t n, typename T>
     struct list_insert_element<type_list<Ts...>, n, T>
     {
         using type = list_concat_t<list_take_t<type_list<Ts...>, n>, type_list<T>, list_drop_t<type_list<Ts...>, n>>;
@@ -284,182 +284,182 @@ namespace stdext
     };
 
     // Insert the given elements into a list at the given locations.
-    template <size_t n, class T> struct list_insert_elements_arg { };
-    template <class List, class... Args> struct list_insert_elements;
-    template <class List, class... Args> using list_insert_elements_t = typename list_insert_elements<List, Args...>::type;
-    template <class List, size_t n0, class T0, size_t... ns, class... Ts>
+    template <size_t n, typename T> struct list_insert_elements_arg { };
+    template <typename List, typename... Args> struct list_insert_elements;
+    template <typename List, typename... Args> using list_insert_elements_t = typename list_insert_elements<List, Args...>::type;
+    template <typename List, size_t n0, typename T0, size_t... ns, typename... Ts>
     struct list_insert_elements<List, list_insert_elements_arg<n0, T0>, list_insert_elements_arg<ns, Ts>...>
     {
         using type = list_insert_elements_t<list_insert_element_t<List, n0, T0>, list_insert_elements_arg<ns < n0 ? ns : ns + 1, Ts>...>;
     };
-    template <class List>
+    template <typename List>
     struct list_insert_elements<List>
     {
         using type = List;
     };
 
     // Given a list of lists and a list of values, construct a list of lists, each constructed by prepending a value onto its corresponding list.
-    template <class Lists, class List> struct list_prepend_lists;
-    template <class Lists, class List> using list_prepend_lists_t = typename list_prepend_lists<Lists, List>::type;
-    template <class... Lists, class... Ts>
+    template <typename Lists, typename List> struct list_prepend_lists;
+    template <typename Lists, typename List> using list_prepend_lists_t = typename list_prepend_lists<Lists, List>::type;
+    template <typename... Lists, typename... Ts>
     struct list_prepend_lists<type_list<Lists...>, type_list<Ts...>>
     {
         using type = type_list<list_prepend_t<Lists, Ts>...>;
     };
-    template <class... Lists, auto... vs>
+    template <typename... Lists, auto... vs>
     struct list_prepend_lists<type_list<Lists...>, value_list<vs...>>
     {
         using type = type_list<list_prepend_t<Lists, constant<vs>>...>;
     };
 
     // Given a list of lists and a list of values, construct a list of lists, each constructed by appending a value onto its corresponding list.
-    template <class Lists, class List> struct list_append_lists;
-    template <class Lists, class List> using list_append_lists_t = typename list_append_lists<Lists, List>::type;
-    template <class... Lists, class... Ts>
+    template <typename Lists, typename List> struct list_append_lists;
+    template <typename Lists, typename List> using list_append_lists_t = typename list_append_lists<Lists, List>::type;
+    template <typename... Lists, typename... Ts>
     struct list_append_lists<type_list<Lists...>, type_list<Ts...>>
     {
         using type = type_list<list_append_t<Lists, Ts>...>;
     };
-    template <class... Lists, auto... vs>
+    template <typename... Lists, auto... vs>
     struct list_append_lists<type_list<Lists...>, value_list<vs...>>
     {
         using type = type_list<list_append_t<Lists, constant<vs>>...>;
     };
 
     // Given several lists of lists, construct a list of lists, each constructed by concatenating corresponding lists.
-    template <class... Listss> struct list_concat_lists;
-    template <class... Listss> using list_concat_lists_t = typename list_concat_lists<Listss...>::type;
-    template <class... Lists>
+    template <typename... Listss> struct list_concat_lists;
+    template <typename... Listss> using list_concat_lists_t = typename list_concat_lists<Listss...>::type;
+    template <typename... Lists>
     struct list_concat_lists<type_list<Lists...>>
     {
         using type = type_list<Lists...>;
     };
-    template <class... Lists1, class... Lists2, class... Listss>
+    template <typename... Lists1, typename... Lists2, typename... Listss>
     struct list_concat_lists<type_list<Lists1...>, type_list<Lists2...>, Listss...>
     {
         using type = list_concat_lists_t<type_list<list_concat_t<Lists1, Lists2>...>, Listss...>;
     };
 
     // Given a list of lists, construct a list of lists, each constructed with corresponding elements from all lists.
-    template <class Lists> struct list_transpose;
-    template <class Lists> using list_transpose_t = typename list_transpose<Lists>::type;
+    template <typename Lists> struct list_transpose;
+    template <typename Lists> using list_transpose_t = typename list_transpose<Lists>::type;
     template <>
     struct list_transpose<type_list<>>
     {
         using type = type_list<>;
     };
-    template <class... Ts, class... Lists>
+    template <typename... Ts, typename... Lists>
     struct list_transpose<type_list<type_list<Ts...>, Lists...>>
     {
         using type = list_concat_lists_t<type_list<type_list<Ts>...>, list_transpose_t<type_list<Lists...>>>;
     };
 
     // Given several lists, construct a list of lists, each constructed with corresponding elements from all lists.
-    template <class... Lists> struct list_zip;
-    template <class... Lists> using list_zip_t = typename list_zip<Lists...>::type;
-    template <class... Lists>
+    template <typename... Lists> struct list_zip;
+    template <typename... Lists> using list_zip_t = typename list_zip<Lists...>::type;
+    template <typename... Lists>
     struct list_zip
     {
         using type = list_transpose_t<type_list<Lists...>>;
     };
 
     // Given a template taking variadic type arguments, instantiate that template with types from a list.
-    template <template <class...> class Templ, class List> struct list_apply;
-    template <template <class...> class Templ, class List> using list_apply_t = typename list_apply<Templ, List>::type;
-    template <template <class...> class Templ, class... Ts>
+    template <template <typename...> typename Templ, typename List> struct list_apply;
+    template <template <typename...> typename Templ, typename List> using list_apply_t = typename list_apply<Templ, List>::type;
+    template <template <typename...> typename Templ, typename... Ts>
     struct list_apply<Templ, type_list<Ts...>>
     {
         using type = Templ<Ts...>;
     };
 
     // Given a template taking variadic type arguments and a list of types, conditionally invoke list_apply.
-    template <bool condition, template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList> struct list_conditional_apply;
-    template <bool condition, template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList> using list_conditional_apply_t = typename list_conditional_apply<condition, TrueTempl, TrueList, FalseTempl, FalseList>::type;
-    template <bool condition, template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList>
+    template <bool condition, template <typename...> typename TrueTempl, typename TrueList, template <typename...> typename FalseTempl, typename FalseList> struct list_conditional_apply;
+    template <bool condition, template <typename...> typename TrueTempl, typename TrueList, template <typename...> typename FalseTempl, typename FalseList> using list_conditional_apply_t = typename list_conditional_apply<condition, TrueTempl, TrueList, FalseTempl, FalseList>::type;
+    template <bool condition, template <typename...> typename TrueTempl, typename TrueList, template <typename...> typename FalseTempl, typename FalseList>
     struct list_conditional_apply
     {
         using type = list_apply_t<FalseTempl, FalseList>;
     };
-    template <template <class...> class TrueTempl, class TrueList, template <class...> class FalseTempl, class FalseList>
+    template <template <typename...> typename TrueTempl, typename TrueList, template <typename...> typename FalseTempl, typename FalseList>
     struct list_conditional_apply<true, TrueTempl, TrueList, FalseTempl, FalseList>
     {
         using type = list_apply_t<TrueTempl, TrueList>;
     };
 
     // Given a list of types and a boolean type trait, returns whether the trait is true for all types.
-    template <class List, template <class> class Trait> struct list_all_of;
-    template <class List, template <class> class Trait> constexpr auto list_all_of_v = list_all_of<List, Trait>::value;
-    template <class T0, class... Ts, template <class> class Trait>
+    template <typename List, template <typename> typename Trait> struct list_all_of;
+    template <typename List, template <typename> typename Trait> constexpr auto list_all_of_v = list_all_of<List, Trait>::value;
+    template <typename T0, typename... Ts, template <typename> typename Trait>
     struct list_all_of<type_list<T0, Ts...>, Trait>
     {
         static constexpr auto value = Trait<T0>::value && list_all_of<type_list<Ts...>, Trait>::value;
     };
-    template <template <class> class Trait>
+    template <template <typename> typename Trait>
     struct list_all_of<type_list<>, Trait>
     {
         static constexpr auto value = true;
     };
 
     // Given a list of types and a boolean type trait, returns whether the trait is true for any type.
-    template <class List, template <class> class Trait> struct list_any_of;
-    template <class List, template <class> class Trait> constexpr auto list_any_of_v = list_any_of<List, Trait>::value;
-    template <class T0, class... Ts, template <class> class Trait>
+    template <typename List, template <typename> typename Trait> struct list_any_of;
+    template <typename List, template <typename> typename Trait> constexpr auto list_any_of_v = list_any_of<List, Trait>::value;
+    template <typename T0, typename... Ts, template <typename> typename Trait>
     struct list_any_of<type_list<T0, Ts...>, Trait>
     {
         static constexpr auto value = Trait<T0>::value || list_any_of<type_list<Ts...>, Trait>::value;
     };
-    template <template <class> class Trait>
+    template <template <typename> typename Trait>
     struct list_any_of<type_list<>, Trait>
     {
         static constexpr auto value = false;
     };
 
     // Given a list of types and a boolean type trait, returns whether the trait is true for no type.
-    template <class List, template <class> class Trait> struct list_none_of;
-    template <class List, template <class> class Trait> constexpr auto list_none_of_v = list_none_of<List, Trait>::value;
-    template <class List, template <class> class Trait>
+    template <typename List, template <typename> typename Trait> struct list_none_of;
+    template <typename List, template <typename> typename Trait> constexpr auto list_none_of_v = list_none_of<List, Trait>::value;
+    template <typename List, template <typename> typename Trait>
     struct list_none_of
     {
         static constexpr auto value = !list_any_of<List, Trait>::value;
     };
 
     // Given a list of types and a boolean type trait, returns the number of types for which the trait is true.
-    template <class List, template <class> class Trait> struct list_count_fulfilling;
-    template <class List, template <class> class Trait> constexpr auto list_count_fulfilling_v = list_count_fulfilling<List, Trait>::value;
-    template <class T0, class... Ts, template <class> class Trait>
+    template <typename List, template <typename> typename Trait> struct list_count_fulfilling;
+    template <typename List, template <typename> typename Trait> constexpr auto list_count_fulfilling_v = list_count_fulfilling<List, Trait>::value;
+    template <typename T0, typename... Ts, template <typename> typename Trait>
     struct list_count_fulfilling<type_list<T0, Ts...>, Trait>
     {
         static constexpr auto value = list_count_fulfilling<type_list<Ts...>, Trait>::value + (Trait<T0>::value ? 1 : 0);
     };
-    template <template <class> class Trait>
+    template <template <typename> typename Trait>
     struct list_count_fulfilling<type_list<>, Trait>
     {
         static constexpr size_t value = 0;
     };
 
     // Given a list of types and a boolean type trait, returns the first type for which the trait is true.
-    template <class List, template <class> class Trait> struct list_find_first_fulfilling;
-    template <class List, template <class> class Trait> using list_find_first_fulfilling_t = typename list_find_first_fulfilling<List, Trait>::type;
-    template <class T0, class... Ts, template <class> class Trait>
+    template <typename List, template <typename> typename Trait> struct list_find_first_fulfilling;
+    template <typename List, template <typename> typename Trait> using list_find_first_fulfilling_t = typename list_find_first_fulfilling<List, Trait>::type;
+    template <typename T0, typename... Ts, template <typename> typename Trait>
     struct list_find_first_fulfilling<type_list<T0, Ts...>, Trait>
         : std::conditional_t<Trait<T0>::value, identity_type<T0>, list_find_first_fulfilling<type_list<Ts...>, Trait>>
     {
     };
-    template <template <class> class Trait>
+    template <template <typename> typename Trait>
     struct list_find_first_fulfilling<type_list<>, Trait>
     {
         // empty
     };
 
     // Construct a list of monotonically increasing constants with a given length and starting value.
-    template <size_t length, class T = int, T start = 0> struct iota_list;
-    template <size_t length, class T = int, T start = 0> using iota_list_t = typename iota_list<length, T, start>::type;
-    template <class T, T start>
+    template <size_t length, typename T = int, T start = 0> struct iota_list;
+    template <size_t length, typename T = int, T start = 0> using iota_list_t = typename iota_list<length, T, start>::type;
+    template <typename T, T start>
     struct iota_list<0, T, start>
     {
         using type = value_list<>;
     };
-    template <size_t length, class T, T start>
+    template <size_t length, typename T, T start>
     struct iota_list
     {
         using type = list_prepend_t<iota_list_t<length - 1, T, start + 1>, constant<start>>;

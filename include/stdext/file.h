@@ -64,13 +64,13 @@ namespace stdext
             void set_position(stream_position position) override;
 
         protected:
-            template <class Stream> friend class file_input_stream_base;
-            template <class Stream> friend class file_output_stream_base;
+            template <typename Stream> friend class file_input_stream_base;
+            template <typename Stream> friend class file_output_stream_base;
 
             file_handle_t handle;
         };
 
-        template <class Stream>
+        template <typename Stream>
         class file_input_stream_base : public input_stream
         {
         private:
@@ -82,7 +82,7 @@ namespace stdext
             const Stream& self() const noexcept { return static_cast<const Stream&>(*this); }
         };
 
-        template <class Stream>
+        template <typename Stream>
         class file_output_stream_base : public output_stream
         {
         private:
