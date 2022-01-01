@@ -10,15 +10,24 @@ namespace
     struct s2 { using type = int; };
     struct s3 { void foo(); };
     struct s4 { void foo(int); };
+
+    template <typename, typename>
+    struct s5
+    {
+        using type = int;
+        void foo();
+    };
 }
 
 // STDEXT_HAS_INNER_TYPE
 static_assert(!STDEXT_HAS_INNER_TYPE(s1, type)::value);
 static_assert(STDEXT_HAS_INNER_TYPE(s2, type)::value);
+static_assert(STDEXT_HAS_INNER_TYPE((s5<float, double>), type)::value);
 
 // STDEXT_HAS_INNER_TYPE_V
 static_assert(!STDEXT_HAS_INNER_TYPE_V(s1, type));
 static_assert(STDEXT_HAS_INNER_TYPE_V(s2, type));
+static_assert(STDEXT_HAS_INNER_TYPE_V((s5<float, double>), type));
 
 // STDEXT_HAS_METHOD
 static_assert(!STDEXT_HAS_METHOD(s1, foo)::value);
@@ -27,6 +36,7 @@ static_assert(STDEXT_HAS_METHOD(s3, foo)::value);
 static_assert(!STDEXT_HAS_METHOD(s3, foo, int)::value);
 static_assert(!STDEXT_HAS_METHOD(s4, foo)::value);
 static_assert(STDEXT_HAS_METHOD(s4, foo, int)::value);
+static_assert(STDEXT_HAS_METHOD((s5<float, double>), foo)::value);
 
 // STDEXT_HAS_METHOD_V
 static_assert(!STDEXT_HAS_METHOD_V(s1, foo));
@@ -35,6 +45,7 @@ static_assert(STDEXT_HAS_METHOD_V(s3, foo));
 static_assert(!STDEXT_HAS_METHOD_V(s3, foo, int));
 static_assert(!STDEXT_HAS_METHOD_V(s4, foo));
 static_assert(STDEXT_HAS_METHOD_V(s4, foo, int));
+static_assert(STDEXT_HAS_METHOD_V((s5<float, double>), foo));
 
 // declval
 static_assert(std::is_same_v<decltype(stdext::declval<int>()), int&&>);

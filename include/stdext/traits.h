@@ -10,6 +10,7 @@
 #define STDEXT_TRAITS_INCLUDED
 #pragma once
 
+#include <stdext/preprocessor.h>
 #include <stdext/types.h>
 
 #include <type_traits>
@@ -25,7 +26,7 @@ template <typename T> struct has_inner_type_##Inner                             
     template <typename U> static ::stdext::false_type test(...);                \
     static constexpr bool value = decltype(test<T>(nullptr))::value;            \
 }
-#define STDEXT_HAS_INNER_TYPE(T, Inner) has_inner_type_##Inner<T>
+#define STDEXT_HAS_INNER_TYPE(T, Inner) has_inner_type_##Inner<STDEXT_PP_DEPAREN(T)>
 #define STDEXT_HAS_INNER_TYPE_V(T, Inner) STDEXT_HAS_INNER_TYPE(T, Inner)::value
 
 #define STDEXT_DECLARE_HAS_METHOD(MethodName)                                                   \
@@ -36,7 +37,7 @@ template <typename T, typename... ArgTypes> struct has_method_##MethodName      
     template <typename U> static ::stdext::false_type test(...);                                \
     static constexpr bool value = decltype(test<T>(nullptr))::value;                            \
 }
-#define STDEXT_HAS_METHOD(T, MethodName, ...) has_method_##MethodName<T, ## __VA_ARGS__>
+#define STDEXT_HAS_METHOD(T, MethodName, ...) has_method_##MethodName<STDEXT_PP_DEPAREN(T), ## __VA_ARGS__>
 #define STDEXT_HAS_METHOD_V(T, MethodName, ...) STDEXT_HAS_METHOD(T, MethodName, ## __VA_ARGS__)::value
 
 namespace stdext
