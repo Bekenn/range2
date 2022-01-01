@@ -17,33 +17,6 @@
 
 namespace stdext
 {
-    // Compile-time variadic boolean comparisons.
-    template <bool... vs> struct const_and;
-    template <bool... vs> constexpr auto const_and_v = const_and<vs...>::value;
-    template <>
-    struct const_and<>
-    {
-        static constexpr bool value = true;
-    };
-    template <bool v, bool... vs>
-    struct const_and<v, vs...>
-    {
-        static constexpr bool value = v && const_and<vs...>::value;
-    };
-
-    template <bool... vs> struct const_or;
-    template <bool... vs> constexpr auto const_or_v = const_or<vs...>::value;
-    template <>
-    struct const_or<>
-    {
-        static constexpr bool value = false;
-    };
-    template <bool v, bool... vs>
-    struct const_or<v, vs...>
-    {
-        static constexpr bool value = v || const_or<vs...>::value;
-    };
-
     // A constant value.
     template <auto v>
     struct constant
@@ -84,7 +57,7 @@ namespace stdext
 
     // Retrieve the list of all elements except the first from a list.
     template <typename List> struct list_tail;
-    template <typename List> using list_tail_t = typename list_head<List>::type;
+    template <typename List> using list_tail_t = typename list_tail<List>::type;
     template <typename T, typename... Ts>
     struct list_tail<type_list<T, Ts...>>
     {
@@ -141,32 +114,32 @@ namespace stdext
     template <typename T0, typename... Ts, typename T>
     struct list_index_of<type_list<T0, Ts...>, T>
     {
-        static constexpr auto value = list_index_of_v<type_list<Ts...>, T> + 1;
+        static constexpr size_t value = list_index_of_v<type_list<Ts...>, T> + 1;
     };
     template <typename T, typename... Ts>
     struct list_index_of<type_list<T, Ts...>, T>
     {
         static constexpr size_t value = 0;
     };
-    template <typename... Ts, typename T>
-    struct list_index_of<type_list<Ts...>, T>
+    template <typename T>
+    struct list_index_of<type_list<>, T>
     {
-        static constexpr auto value = sizeof...(Ts);
+        static constexpr size_t value = 0;
     };
     template <auto v0, auto... vs, auto v>
     struct list_index_of<value_list<v0, vs...>, constant<v>>
     {
-        static constexpr auto value = list_index_of_v<value_list<vs...>, constant<v>> + 1;
+        static constexpr size_t value = list_index_of_v<value_list<vs...>, constant<v>> + 1;
     };
     template <auto v, auto... vs>
     struct list_index_of<value_list<v, vs...>, constant<v>>
     {
         static constexpr size_t value = 0;
     };
-    template <auto... vs, auto v>
-    struct list_index_of<value_list<vs...>, constant<v>>
+    template <auto v>
+    struct list_index_of<value_list<>, constant<v>>
     {
-        static constexpr auto value = sizeof...(vs);
+        static constexpr size_t value = 0;
     };
 
     // Add a new element to the front of a list.
@@ -229,8 +202,13 @@ namespace stdext
     {
         using type = list_prepend_t<list_take_t<type_list<Ts...>, n - 1>, T0>;
     };
-    template <typename... Ts>
-    struct list_take<type_list<Ts...>, 0>
+    template <typename T0, typename... Ts>
+    struct list_take<type_list<T0, Ts...>, 0>
+    {
+        using type = type_list<>;
+    };
+    template <>
+    struct list_take<type_list<>, 0>
     {
         using type = type_list<>;
     };
@@ -239,8 +217,13 @@ namespace stdext
     {
         using type = list_prepend_t<list_take_t<value_list<vs...>, n - 1>, constant<v0>>;
     };
-    template <auto... vs>
-    struct list_take<value_list<vs...>, 0>
+    template <auto v0, auto... vs>
+    struct list_take<value_list<v0, vs...>, 0>
+    {
+        using type = value_list<>;
+    };
+    template <>
+    struct list_take<value_list<>, 0>
     {
         using type = value_list<>;
     };
@@ -253,20 +236,30 @@ namespace stdext
     {
         using type = list_drop_t<type_list<Ts...>, n - 1>;
     };
-    template <typename... Ts>
-    struct list_drop<type_list<Ts...>, 0>
+    template <typename T0, typename... Ts>
+    struct list_drop<type_list<T0, Ts...>, 0>
     {
-        using type = type_list<Ts...>;
+        using type = type_list<T0, Ts...>;
+    };
+    template <>
+    struct list_drop<type_list<>, 0>
+    {
+        using type = type_list<>;
     };
     template <auto v0, auto... vs, size_t n>
     struct list_drop<value_list<v0, vs...>, n>
     {
         using type = list_drop_t<value_list<vs...>, n - 1>;
     };
-    template <auto... vs>
-    struct list_drop<value_list<vs...>, 0>
+    template <auto v0, auto... vs>
+    struct list_drop<value_list<v0, vs...>, 0>
     {
-        using type = value_list<vs...>;
+        using type = value_list<v0, vs...>;
+    };
+    template <>
+    struct list_drop<value_list<>, 0>
+    {
+        using type = value_list<>;
     };
 
     // Insert the given element into a list at the given location.
@@ -343,15 +336,35 @@ namespace stdext
     // Given a list of lists, construct a list of lists, each constructed with corresponding elements from all lists.
     template <typename Lists> struct list_transpose;
     template <typename Lists> using list_transpose_t = typename list_transpose<Lists>::type;
-    template <>
-    struct list_transpose<type_list<>>
+
+    namespace _private
     {
-        using type = type_list<>;
-    };
-    template <typename... Ts, typename... Lists>
-    struct list_transpose<type_list<type_list<Ts...>, Lists...>>
+        template <typename Lists, size_t length> struct list_transpose;
+        template <typename Lists, size_t length> using list_transpose_t = typename list_transpose<Lists, length>::type;
+        template <typename... Lists, size_t length>
+        struct list_transpose<type_list<Lists...>, length>
+        {
+            static_assert((... && (list_length_v<Lists> == length)));
+            using type = list_concat_t<type_list<list_concat_t<list_take_t<Lists, 1>...>>, list_transpose_t<type_list<list_drop_t<Lists, 1>...>, length - 1>>;
+        };
+        template <typename... Lists>
+        struct list_transpose<type_list<Lists...>, 1>
+        {
+            static_assert((... && (list_length_v<Lists> == 1)));
+            using type = type_list<list_concat_t<Lists...>>;
+        };
+        template <typename List>
+        struct list_transpose<type_list<List>, 0>
+        {
+            static_assert(list_length_v<List> == 0);
+            using type = type_list<List>;
+        };
+    }
+
+    template <typename List, typename... Lists>
+    struct list_transpose<type_list<List, Lists...>>
     {
-        using type = list_concat_lists_t<type_list<type_list<Ts>...>, list_transpose_t<type_list<Lists...>>>;
+        using type = _private::list_transpose_t<type_list<List, Lists...>, list_length_v<List>>;
     };
 
     // Given several lists, construct a list of lists, each constructed with corresponding elements from all lists.

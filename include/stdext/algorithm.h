@@ -181,7 +181,7 @@ namespace stdext
         }
     }
     template <typename Function, typename... Ranges,
-        STDEXT_REQUIRES(const_and<is_multi_pass_range<Ranges>::value...>::value)>
+        STDEXT_REQUIRES((... && is_multi_pass_range<Ranges>::value))>
     std::tuple<range_position_type_t<Ranges>...> for_each(Function&& f, const Ranges&... ranges)
     {
         std::tuple<range_position_type_t<Ranges>...> positions(ranges.begin_pos()...);
