@@ -95,10 +95,10 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
-        [[nodiscard]] size_t read(POD (&buffer)[length])
+        template <typename POD, size_t Length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t read(POD (&buffer)[Length])
         {
-            return read(buffer, length);
+            return read(buffer, Length);
         }
 
         template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
@@ -109,10 +109,10 @@ namespace stdext
                 throw stream_error("premature end of stream");
         }
 
-        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
-        void read_all(POD (&buffer)[length])
+        template <typename POD, size_t Length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void read_all(POD (&buffer)[Length])
         {
-            read_all(buffer, length);
+            read_all(buffer, Length);
         }
 
         template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
@@ -168,10 +168,10 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
-        [[nodiscard]] size_t write(const POD (&buffer)[length])
+        template <typename POD, size_t Length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t write(const POD (&buffer)[Length])
         {
-            return write(buffer, length);
+            return write(buffer, Length);
         }
 
         template <typename POD, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
@@ -182,10 +182,10 @@ namespace stdext
                 throw stream_error("premature end of stream");
         }
 
-        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
-        void write_all(const POD(&buffer)[length])
+        template <typename POD, size_t Length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        void write_all(const POD(&buffer)[Length])
         {
-            write_all(buffer, length);
+            write_all(buffer, Length);
         }
 
     private:
@@ -247,10 +247,10 @@ namespace stdext
             return size / sizeof(POD);
         }
 
-        template <typename POD, size_t length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
-        [[nodiscard]] size_t peek(POD (&buffer)[length])
+        template <typename POD, size_t Length, STDEXT_REQUIRES(std::is_trivially_copyable_v<POD>)>
+        [[nodiscard]] size_t peek(POD (&buffer)[Length])
         {
-            return peek(buffer, length);
+            return peek(buffer, Length);
         }
 
     private:

@@ -50,11 +50,11 @@ namespace stdext
             return arg;
         }
 
-        template <size_t N, typename... Tuples, size_t... tuple_indices>
-        constexpr auto zip_element(const std::tuple<Tuples&...>& tuples, value_list<tuple_indices...>)
+        template <size_t N, typename... Tuples, size_t... TupleIndices>
+        constexpr auto zip_element(const std::tuple<Tuples&...>& tuples, value_list<TupleIndices...>)
         {
             using element_type_list = type_list<std::tuple_element_t<N, Tuples>...>;
-            return std::make_tuple(wrap<list_element_t<element_type_list, tuple_indices>>(std::get<N>(std::get<tuple_indices>(tuples)))...);
+            return std::make_tuple(wrap<list_element_t<element_type_list, TupleIndices>>(std::get<N>(std::get<TupleIndices>(tuples)))...);
         }
 
         template <typename Tuples, size_t... ElementIndices>

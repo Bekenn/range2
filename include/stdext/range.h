@@ -134,7 +134,7 @@ namespace stdext
         struct reference_type_of<Range, is_range, true> { using type = typename Range::reference; };
 
         STDEXT_DECLARE_HAS_INNER_TYPE(size_type);
-        template <typename T, bool has_inner_size_type>
+        template <typename T, bool HasInnerSizeType>
         struct check_range_inner_size_type
         {
             using type = std::make_unsigned_t<difference_type_t<T, is_range>>;

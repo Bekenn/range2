@@ -89,7 +89,7 @@ namespace stdext
         {
         }
 
-        template <size_t count = sizeof...(Interfaces), STDEXT_REQUIRES(count > 1)>
+        template <size_t Count = sizeof...(Interfaces), STDEXT_REQUIRES(Count > 1)>
         explicit constexpr multi_ref(Interfaces&... refs) noexcept : _interfaces(addressof(refs)...)
         {
         }
@@ -159,7 +159,7 @@ namespace stdext
         {
         }
 
-        template <size_t count = sizeof...(Interfaces), STDEXT_REQUIRES(count > 1)>
+        template <size_t Count = sizeof...(Interfaces), STDEXT_REQUIRES(Count > 1)>
         explicit constexpr multi_ptr(Interfaces*... ps) noexcept : _interfaces(ps...)
         {
             assert(((... && (ps == nullptr)) || (... && (ps != nullptr))));

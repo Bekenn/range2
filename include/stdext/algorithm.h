@@ -173,11 +173,11 @@ namespace stdext
 
     namespace _private
     {
-        template <typename... Ranges, size_t... indices>
+        template <typename... Ranges, size_t... Indices>
         std::tuple<std::tuple<const Ranges&, range_position_type_t<Ranges>&>...>
-            make_range_pos_pairs(std::tuple<const Ranges&...> ranges, std::tuple<range_position_type_t<Ranges>...>& positions, value_list<indices...>)
+            make_range_pos_pairs(std::tuple<const Ranges&...> ranges, std::tuple<range_position_type_t<Ranges>...>& positions, value_list<Indices...>)
         {
-            return std::make_tuple(std::make_tuple(std::ref(std::get<indices>(ranges)), std::ref(std::get<indices>(positions)))...);
+            return std::make_tuple(std::make_tuple(std::ref(std::get<Indices>(ranges)), std::ref(std::get<Indices>(positions)))...);
         }
     }
     template <typename Function, typename... Ranges,

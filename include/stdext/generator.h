@@ -418,7 +418,7 @@ namespace stdext
     }
 
     template <typename Iterator, typename TerminationPredicate,
-    STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && std::is_invocable_r_v<bool, std::decay_t<TerminationPredicate>, iterator_value_type_t<std::decay_t<Iterator>>>)>
+        STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && std::is_invocable_r_v<bool, std::decay_t<TerminationPredicate>, iterator_value_type_t<std::decay_t<Iterator>>>)>
     auto make_terminated_generator(Iterator&& i, TerminationPredicate&& term)
     {
         return terminated_generator<std::decay_t<Iterator>, std::decay_t<TerminationPredicate>>

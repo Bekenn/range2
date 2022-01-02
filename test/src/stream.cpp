@@ -21,8 +21,8 @@ namespace test
             std::byte(8), std::byte(9), std::byte(0xa), std::byte(0xb), std::byte(0xc), std::byte(0xd), std::byte(0xe), std::byte(0xf)
         };
 
-        template <typename POD, size_t size>
-        void test(const POD (&data)[size])
+        template <typename POD, size_t Size>
+        void test(const POD (&data)[Size])
         {
             stdext::memory_input_stream is(stuff, sizeof(stuff));
             for (auto n : data)

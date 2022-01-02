@@ -17,7 +17,7 @@
 
 namespace stdext
 {
-    template <typename T, bool inheritable = std::is_class_v<T> && !std::is_final_v<T>>
+    template <typename T, bool Inheritable = std::is_class_v<T> && !std::is_final_v<T>>
     class compressed_base;
 
     template <typename T1, typename T2>
@@ -120,7 +120,7 @@ namespace stdext
 
     namespace _private
     {
-        template <typename T, bool empty = std::is_empty_v<T>>
+        template <typename T, bool Empty = std::is_empty_v<T>>
         class compressed_pair_same_type;
 
         template <typename T>
