@@ -19,17 +19,18 @@
 
 namespace stdext
 {
-    template <typename Tuple> struct tuple_element_list;
-    template <typename Tuple> using tuple_element_list_t = typename tuple_element_list<Tuple>::type;
-    template <typename... Ts>
-    struct tuple_element_list<std::tuple<Ts...>>
+    template <typename T, typename IndexList = stdext::index_list_t<std::tuple_size_v<T>>> struct tuple_element_list;
+    template <typename T> using tuple_element_list_t = typename tuple_element_list<T>::type;
+    template <typename T, size_t... Indices>
+    struct tuple_element_list<T, stdext::value_list<Indices...>>
     {
-        using type = type_list<Ts...>;
+        using type = stdext::type_list<std::tuple_element_t<Indices, T>...>;
     };
 
     namespace _private
     {
         template <typename... Tuples> struct tuples_size;
+        template <typename... Tuples> constexpr size_t tuples_size_v = tuples_size<Tuples...>::value;
         template <typename Tuple>
         struct tuples_size<Tuple>
         {
@@ -38,35 +39,35 @@ namespace stdext
         template <typename Tuple, typename... Tuples>
         struct tuples_size<Tuple, Tuples...>
         {
-            static constexpr std::enable_if_t<std::tuple_size<Tuple>::value == tuples_size<Tuples...>::value, size_t>
-                value = std::tuple_size<Tuple>::value;
+            static constexpr std::enable_if_t<std::tuple_size_v<Tuple> == tuples_size_v<Tuples...>, size_t>
+                value = std::tuple_size_v<Tuple>;
         };
 
         template <typename T>
-        std::conditional_t<std::is_reference<T>::value, std::reference_wrapper<std::remove_reference_t<T>>, T&>
-            wrap(std::remove_reference_t<T>& arg)
+        constexpr std::conditional_t<std::is_reference_v<T>, std::reference_wrapper<std::remove_reference_t<T>>, T&>
+            wrap(std::remove_reference_t<T>& arg) noexcept
         {
             return arg;
         }
 
-        template <size_t n, typename... Tuples, size_t... tuple_indices>
-        auto zip_element(const std::tuple<Tuples&...>& tuples, value_list<tuple_indices...>)
+        template <size_t N, typename... Tuples, size_t... tuple_indices>
+        constexpr auto zip_element(const std::tuple<Tuples&...>& tuples, value_list<tuple_indices...>)
         {
-            using element_type_list = type_list<std::tuple_element_t<n, Tuples>...>;
-            return std::make_tuple(wrap<list_element_t<element_type_list, tuple_indices>>(std::get<n>(std::get<tuple_indices>(tuples)))...);
+            using element_type_list = type_list<std::tuple_element_t<N, Tuples>...>;
+            return std::make_tuple(wrap<list_element_t<element_type_list, tuple_indices>>(std::get<N>(std::get<tuple_indices>(tuples)))...);
         }
 
-        template <typename Tuples, size_t... element_indices>
-        auto zip(const Tuples& tuples, value_list<element_indices...>)
+        template <typename Tuples, size_t... ElementIndices>
+        constexpr auto zip(const Tuples& tuples, value_list<ElementIndices...>)
         {
-            return std::make_tuple(zip_element<element_indices>(tuples, iota_list_t<std::tuple_size<Tuples>::value, size_t>())...);
+            return std::make_tuple(zip_element<ElementIndices>(tuples, index_list_t<std::tuple_size_v<Tuples>>())...);
         }
     }
 
     template <typename... Tuples>
-    auto zip(const Tuples&... tuples)
+    constexpr auto zip(const Tuples&... tuples)
     {
-        return _private::zip(std::tuple<Tuples&...>(tuples...), iota_list<_private::tuples_size<Tuples...>::value, size_t>());
+        return _private::zip(std::tuple<const Tuples&...>(tuples...), index_list_t<_private::tuples_size<Tuples...>::value>());
     }
 }
 
