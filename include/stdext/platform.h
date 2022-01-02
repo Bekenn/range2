@@ -17,12 +17,12 @@ namespace stdext
 {
 #if STDEXT_PLATFORM_WINDOWS
     using path_char = wchar_t;
-    constexpr path_char directory_separator = L'\\';
+    inline constexpr path_char directory_separator = L'\\';
 #define PATH_STR_(s) L ## s
 #define PATH_STR(s) PATH_STR_(s)
 #else
     using path_char = char;
-    constexpr path_char directory_separator = '/';
+    inline constexpr path_char directory_separator = '/';
 #define PATH_STR(s) s
 #endif
 }
