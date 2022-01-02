@@ -434,3 +434,11 @@ static_assert(std::is_same_v<stdext::iota_list<3, unsigned, 7>::type, stdext::va
 static_assert(std::is_same_v<stdext::iota_list_t<5>, stdext::value_list<0, 1, 2, 3, 4>>);
 static_assert(std::is_same_v<stdext::iota_list_t<5, unsigned>, stdext::value_list<0u, 1u, 2u, 3u, 4u>>);
 static_assert(std::is_same_v<stdext::iota_list_t<3, unsigned, 7>, stdext::value_list<7u, 8u, 9u>>);
+
+// index_list
+static_assert(std::is_same_v<stdext::index_list<5>::type, stdext::value_list<std::size_t(0), std::size_t(1), std::size_t(2), std::size_t(3), std::size_t(4)>>);
+static_assert(std::is_same_v<stdext::index_list<3, 7>::type, stdext::value_list<std::size_t(7), std::size_t(8), std::size_t(9)>>);
+
+// index_list_t
+static_assert(std::is_same_v<stdext::index_list_t<5>, stdext::value_list<std::size_t(0), std::size_t(1), std::size_t(2), std::size_t(3), std::size_t(4)>>);
+static_assert(std::is_same_v<stdext::index_list_t<3, 7>, stdext::value_list<std::size_t(7), std::size_t(8), std::size_t(9)>>);

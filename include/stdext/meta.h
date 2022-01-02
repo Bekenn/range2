@@ -477,6 +477,10 @@ namespace stdext
     {
         using type = list_prepend_t<iota_list_t<length - 1, T, start + 1>, constant<start>>;
     };
+
+    // Construct a list of monotonically increasing indices with a given length and starting value
+    template <size_t length, size_t start = 0> using index_list = iota_list<length, size_t, start>;
+    template <size_t length, size_t start = 0> using index_list_t = iota_list_t<length, size_t, start>;
 }
 
 #endif
