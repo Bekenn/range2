@@ -114,6 +114,62 @@ static_assert(std::is_base_of_v<stdext::false_type, stdext::is_equality_comparab
 static_assert(stdext::is_equality_comparable_v<int>);
 static_assert(!stdext::is_equality_comparable_v<void>);
 
+// remove_cvref
+static_assert(std::is_same_v<stdext::remove_cvref<void>::type, void>);
+static_assert(std::is_same_v<stdext::remove_cvref<const void>::type, void>);
+static_assert(std::is_same_v<stdext::remove_cvref<volatile void>::type, void>);
+static_assert(std::is_same_v<stdext::remove_cvref<const volatile void>::type, void>);
+static_assert(std::is_same_v<stdext::remove_cvref<int>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<const int>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<volatile int>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<const volatile int>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<int&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<const int&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<volatile int&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<const volatile int&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<int&&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<const int&&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<volatile int&&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<const volatile int&&>::type, int>);
+static_assert(std::is_same_v<stdext::remove_cvref<int[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<const int[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<volatile int[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<const volatile int[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<int (&)[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<const int (&)[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<volatile int (&)[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<const volatile int (&)[]>::type, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref<void ()>::type, void ()>);
+static_assert(std::is_same_v<stdext::remove_cvref<void (&)()>::type, void ()>);
+
+// remove_cvref_t
+static_assert(std::is_same_v<stdext::remove_cvref_t<void>, void>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const void>, void>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<volatile void>, void>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile void>, void>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<int>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const int>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<volatile int>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile int>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<int&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const int&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<volatile int&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile int&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<int&&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const int&&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<volatile int&&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile int&&>, int>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<int[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const int[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<volatile int[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile int[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<int (&)[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const int (&)[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<volatile int (&)[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile int (&)[]>, int[]>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<void ()>, void ()>);
+static_assert(std::is_same_v<stdext::remove_cvref_t<void (&)()>, void ()>);
+
 // preserve_const
 static_assert(std::is_same_v<stdext::preserve_const<int, float>::type, float>);
 static_assert(std::is_same_v<stdext::preserve_const<const int, float>::type, const float>);

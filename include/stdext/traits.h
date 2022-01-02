@@ -81,6 +81,10 @@ namespace stdext
 
     template <typename T> constexpr bool is_equality_comparable_v = is_equality_comparable<T>::value;
 
+    // Strip top-level reference and cv qualifiers
+    template <typename T> using remove_cvref = std::remove_cv<std::remove_reference_t<T>>;
+    template <typename T> using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
     // Conversion from type From to type possibly-const To, where To is const-qualified if From is const-qualified.
     template <typename From, typename To> struct preserve_const { using type = To; };
     template <typename From, typename To> struct preserve_const<const From, To> { using type = const To; };
