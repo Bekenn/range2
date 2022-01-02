@@ -15,10 +15,8 @@
 
 namespace stdext
 {
-    template <typename T> struct is_consumer : false_type { };
-    template <typename T> constexpr auto is_consumer_v = is_consumer<T>::value;
-    template <typename T, typename Elem>
-    struct is_consumer<T(Elem)> : std::is_invocable_r<bool, T, Elem> { };
+    template <typename T, typename Elem> struct is_consumer : std::is_invocable_r<bool, T, Elem> { };
+    template <typename T, typename Elem> constexpr auto is_consumer_v = is_consumer<T, Elem>::value;
 
     // I would love to add is_consumer_adaptable, as_consumer, and can_consume, but I can't
     // because there's no way to force is_consumer_adaptable to see make_consumer<Elem> as
@@ -31,64 +29,74 @@ namespace stdext
         using iterator = Iterator;
 
     public:
-        iterator_consumer() : i() { }
-        explicit iterator_consumer(const iterator& i) : i(i) { }
-        explicit iterator_consumer(iterator&& i) : i(stdext::move(i)) { }
+        constexpr iterator_consumer() = default;
+        explicit constexpr iterator_consumer(const iterator& i) : _i(i) { }
+        explicit constexpr iterator_consumer(iterator&& i) noexcept : _i(stdext::move(i)) { }
 
     public:
-        template <typename T>
-        bool operator () (T&& value)
+        template <typename T, STDEXT_REQUIRES(std::is_assignable_v<decltype(*declval<iterator&>()), T>)>
+        constexpr bool operator () (T&& value) noexcept(std::is_nothrow_assignable_v<decltype(*declval<iterator&>()), T>)
         {
-            *i++ = stdext::forward<T>(value);
+            *_i = stdext::forward<T>(value);
+            ++_i;
             return true;
         }
 
     private:
-        iterator i;
+        iterator _i;
     };
 
-    template <typename Iterator, typename Sentinel>
+    template <typename Iterator>
+    iterator_consumer(Iterator&&) -> iterator_consumer<remove_cvref_t<Iterator>>;
+
+    template <typename Iterator, typename Sentinel = Iterator>
     class delimited_iterator_consumer
     {
+        static_assert(is_equality_comparable_with_v<Iterator&, Sentinel&>);
+
     public:
         using iterator = Iterator;
         using sentinel = Sentinel;
 
     public:
-        delimited_iterator_consumer() : i(), j() { }
-        delimited_iterator_consumer(const iterator& i, const sentinel& j) : i(i), j(j) { }
-        delimited_iterator_consumer(const iterator& i, sentinel&& j) : i(i), j(stdext::move(j)) { }
-        delimited_iterator_consumer(iterator&& i, const sentinel& j) : i(stdext::move(i)), j(j) { }
-        delimited_iterator_consumer(iterator&& i, sentinel&& j) : i(stdext::move(i)), j(stdext::move(j)) { }
+        constexpr delimited_iterator_consumer() = default;
+        explicit constexpr delimited_iterator_consumer(const iterator& i, const sentinel& j) : _i(i), _j(j) { }
+        explicit constexpr delimited_iterator_consumer(const iterator& i, sentinel&& j) : _i(i), _j(stdext::move(j)) { }
+        explicit constexpr delimited_iterator_consumer(iterator&& i, const sentinel& j) : _i(stdext::move(i)), _j(j) { }
+        explicit constexpr delimited_iterator_consumer(iterator&& i, sentinel&& j) noexcept : _i(stdext::move(i)), _j(stdext::move(j)) { }
 
     public:
-        template <typename T>
-        bool operator () (T&& value)
+        template <typename T, STDEXT_REQUIRES(std::is_assignable_v<decltype(*declval<iterator&>()), T>)>
+        constexpr bool operator () (T&& value) noexcept(std::is_nothrow_assignable_v<decltype(*declval<iterator&>()), T>)
         {
-            if (i == j)
+            if (_i == _j)
                 return false;
-            *i++ = stdext::forward<T>(value);
+            *_i = stdext::forward<T>(value);
+            ++_i;
             return true;
         }
 
     private:
-        Iterator i;
-        Sentinel j;
+        iterator _i;
+        sentinel _j;
     };
 
+    template <typename Iterator, typename Sentinel>
+    delimited_iterator_consumer(Iterator&&, Sentinel&&) -> delimited_iterator_consumer<remove_cvref_t<Iterator>, remove_cvref_t<Sentinel>>;
+
     template <typename Elem, typename Iterator,
-        STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value)>
-    auto make_consumer(Iterator&& i)
+        STDEXT_REQUIRES(std::is_assignable_v<decltype(*std::declval<remove_cvref_t<Iterator>>()), Elem>)>
+    constexpr auto make_consumer(Iterator&& i)
     {
-        return iterator_consumer<std::decay_t<Iterator>>(stdext::forward<Iterator>(i));
+        return iterator_consumer<remove_cvref_t<Iterator>>(stdext::forward<Iterator>(i));
     }
 
     template <typename Elem, typename Iterator, typename Sentinel,
-        STDEXT_REQUIRES(std::is_assignable<decltype(*std::declval<std::decay_t<Iterator>>()), Elem>::value
-            && is_equality_comparable_with<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
-    auto make_consumer(Iterator&& i, Sentinel&& j)
+        STDEXT_REQUIRES(std::is_assignable_v<decltype(*std::declval<remove_cvref_t<Iterator>>()), Elem>
+            && is_equality_comparable_with_v<remove_cvref_t<Iterator>&, remove_cvref_t<Sentinel>&>)>
+    constexpr auto make_consumer(Iterator&& i, Sentinel&& j)
     {
-        return delimited_iterator_consumer<std::decay_t<Iterator>, std::decay_t<Sentinel>>(stdext::forward<Iterator>(i), stdext::forward<Sentinel>(j));
+        return delimited_iterator_consumer<remove_cvref_t<Iterator>, remove_cvref_t<Sentinel>>(stdext::forward<Iterator>(i), stdext::forward<Sentinel>(j));
     }
 }
 

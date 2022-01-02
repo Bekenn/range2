@@ -109,7 +109,7 @@ namespace stdext
     template <typename Generator> using generator_reference_type = generator_type<Generator, is_generator>;
     template <typename Generator> using generator_reference_type_t = generator_type_t<Generator, is_generator>;
 
-    template <typename Generator, typename Consumer, STDEXT_REQUIRES(is_consumer<std::decay_t<Consumer>(value_type_t<std::decay_t<Generator>, can_generate>)>::value)>
+    template <typename Generator, typename Consumer, STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>, value_type_t<std::decay_t<Generator>, can_generate>>)>
     bool operator >> (Generator&& g, Consumer&& c)
     {
         for (decltype(auto) gen = as_generator(stdext::forward<Generator>(g)); gen; ++gen)

@@ -28,29 +28,29 @@
 
 namespace stdext
 {
-    template <typename Consumer, typename... Args, STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>(char)>)>
+    template <typename Consumer, typename... Args, STDEXT_REQUIRES(is_consumer_v<std::decay_t<Consumer>, char>)>
     bool format(Consumer&& out, string_view fmt, Args&&... args);
 
     template <typename... Args>
     std::string format_string(string_view fmt, Args&&... args);
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_integral_v<Arg>)>
     bool format_arg(Consumer& out, string_view fmt, Arg arg);
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 #if STDEXT_HAS_C_UNICODE
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 #endif
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
-    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRES(is_consumer_v<Consumer, char> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg);
 
     class format_error : public std::logic_error
@@ -83,7 +83,7 @@ namespace stdext
         }
     }
 
-    template <typename Consumer, typename... Args, STDEXT_REQUIRED(is_consumer_v<std::decay_t<Consumer>(char)>)>
+    template <typename Consumer, typename... Args, STDEXT_REQUIRED(is_consumer_v<std::decay_t<Consumer>, char>)>
     bool format(Consumer&& out, string_view fmt, Args&&... args)
     {
         std::tuple<Args&...> arglist = { args... };
@@ -182,7 +182,7 @@ namespace stdext
         bool format_integer(const std::function<bool (char ch)>& out, string_view fmt, uintmax_t uval, format_type type);
     }
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_integral_v<Arg>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_integral_v<Arg>)>
     bool format_arg(Consumer& out, string_view fmt, Arg arg)
     {
         auto type = std::is_same_v<Arg, char> ? _private::format_type::_char
@@ -196,21 +196,21 @@ namespace stdext
         return _private::format_integer(std::ref(out), fmt, arg, type);
     }
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
             throw format_error("Unrecognized format for string_view");
 
         auto sv = string_view(stdext::forward<Arg>(arg));
-        if constexpr (is_consumer_v<std::decay_t<Consumer>(string_view)>)
+        if constexpr (is_consumer_v<std::decay_t<Consumer>, string_view>)
             return out(sv);
         else
             return sv >> out;
     }
 
 #if STDEXT_HAS_C_UNICODE
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, u16string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -221,7 +221,7 @@ namespace stdext
         return generator >> to_multibyte() >> out;
     }
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -233,7 +233,7 @@ namespace stdext
     }
 #endif
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, wstring_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -244,7 +244,7 @@ namespace stdext
         return generator >> to_multibyte() >> out;
     }
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_invocable_r_v<bool, Arg, Consumer&>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         if (!fmt.empty())
@@ -252,7 +252,7 @@ namespace stdext
         return std::invoke(stdext::forward<Arg>(arg), out);
     }
 
-    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer(char)> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
+    template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_invocable_r_v<bool, Arg, Consumer&, string_view>)>
     bool format_arg(Consumer& out, string_view fmt, Arg&& arg)
     {
         return std::invoke(stdext::forward<Arg>(arg), out, fmt);
