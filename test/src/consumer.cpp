@@ -66,7 +66,7 @@ namespace test
         CHECK(a[0] == 0);
         CHECK(a[1] == 1);
         CHECK(a[2] == 1729);
-        CHECK(!consume(420));
+        CHECK_FALSE(consume(420));
     }
 
     // make_consumer

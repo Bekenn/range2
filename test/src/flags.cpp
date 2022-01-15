@@ -98,16 +98,16 @@ namespace test
         const stdext::flags<test_flags> b = test_flags::flag0;
         CHECK(a == b);
         CHECK(b == a);
-        CHECK(!(a != b));
-        CHECK(!(b != a));
+        CHECK_FALSE(a != b);
+        CHECK_FALSE(b != a);
     }
 
     TEST_CASE("flags instances with unequal values compare as unequal", "[flags]")
     {
         const stdext::flags<test_flags> a = test_flags::flag0;
         const stdext::flags<test_flags> b = test_flags::flag1;
-        CHECK(!(a == b));
-        CHECK(!(b == a));
+        CHECK_FALSE(a == b);
+        CHECK_FALSE(b == a);
         CHECK(a != b);
         CHECK(b != a);
     }
@@ -117,15 +117,15 @@ namespace test
         const stdext::flags<test_flags> a = test_flags::flag0;
         CHECK(a == test_flags::flag0);
         CHECK(test_flags::flag0 == a);
-        CHECK(!(a != test_flags::flag0));
-        CHECK(!(test_flags::flag0 != a));
+        CHECK_FALSE(a != test_flags::flag0);
+        CHECK_FALSE(test_flags::flag0 != a);
     }
 
     TEST_CASE("flags compares unequal with unequal enum value", "[flags]")
     {
         const stdext::flags<test_flags> a = test_flags::flag1;
-        CHECK(!(a == test_flags::flag0));
-        CHECK(!(test_flags::flag0 == a));
+        CHECK_FALSE(a == test_flags::flag0);
+        CHECK_FALSE(test_flags::flag0 == a);
         CHECK(a != test_flags::flag0);
         CHECK(test_flags::flag0 != a);
     }
@@ -280,26 +280,26 @@ namespace test
     TEST_CASE("flags::test_any() returns true if any provided value is set", "[flags]")
     {
         const stdext::flags<test_flags> a = { test_flags::flag1, test_flags::flag3 };
-        CHECK(!a.test_any(test_flags::flag0));
+        CHECK_FALSE(a.test_any(test_flags::flag0));
         CHECK(a.test_any(test_flags::flag1));
-        CHECK(!a.test_any(test_flags::flag2));
+        CHECK_FALSE(a.test_any(test_flags::flag2));
         CHECK(a.test_any(test_flags::flag3));
         CHECK(a.test_any(test_flags::flag0, test_flags::flag1));
         CHECK(a.test_any(test_flags::flag2, test_flags::flag3));
-        CHECK(!a.test_any(test_flags::flag0, test_flags::flag2));
+        CHECK_FALSE(a.test_any(test_flags::flag0, test_flags::flag2));
         CHECK(a.test_any(test_flags::flag1, test_flags::flag3));
     }
 
     TEST_CASE("flags::test_any() returns true if all provided values are set", "[flags]")
     {
         const stdext::flags<test_flags> a = { test_flags::flag1, test_flags::flag3 };
-        CHECK(!a.test_all(test_flags::flag0));
+        CHECK_FALSE(a.test_all(test_flags::flag0));
         CHECK(a.test_all(test_flags::flag1));
-        CHECK(!a.test_all(test_flags::flag2));
+        CHECK_FALSE(a.test_all(test_flags::flag2));
         CHECK(a.test_all(test_flags::flag3));
-        CHECK(!a.test_all(test_flags::flag0, test_flags::flag1));
-        CHECK(!a.test_all(test_flags::flag2, test_flags::flag3));
-        CHECK(!a.test_all(test_flags::flag0, test_flags::flag2));
+        CHECK_FALSE(a.test_all(test_flags::flag0, test_flags::flag1));
+        CHECK_FALSE(a.test_all(test_flags::flag2, test_flags::flag3));
+        CHECK_FALSE(a.test_all(test_flags::flag0, test_flags::flag2));
         CHECK(a.test_all(test_flags::flag1, test_flags::flag3));
     }
 
@@ -307,23 +307,23 @@ namespace test
     {
         const stdext::flags<test_flags> a = { test_flags::flag1, test_flags::flag3 };
         CHECK(a.test({ }, { }));
-        CHECK(!a.test({ test_flags::flag1 }, { }));
+        CHECK_FALSE(a.test({ test_flags::flag1 }, { }));
         CHECK(a.test({ test_flags::flag1 }, { test_flags::flag1 }));
-        CHECK(!a.test({ test_flags::flag3 }, { }));
+        CHECK_FALSE(a.test({ test_flags::flag3 }, { }));
         CHECK(a.test({ test_flags::flag3 }, { test_flags::flag3 }));
-        CHECK(!a.test({ test_flags::flag1, test_flags::flag3 }, { }));
-        CHECK(!a.test({ test_flags::flag1, test_flags::flag3 }, { test_flags::flag1 }));
-        CHECK(!a.test({ test_flags::flag1, test_flags::flag3 }, { test_flags::flag3 }));
+        CHECK_FALSE(a.test({ test_flags::flag1, test_flags::flag3 }, { }));
+        CHECK_FALSE(a.test({ test_flags::flag1, test_flags::flag3 }, { test_flags::flag1 }));
+        CHECK_FALSE(a.test({ test_flags::flag1, test_flags::flag3 }, { test_flags::flag3 }));
         CHECK(a.test({ test_flags::flag1, test_flags::flag3 }, { test_flags::flag1, test_flags::flag3 }));
         CHECK(a.test({ test_flags::flag0 }, { }));
-        CHECK(!a.test({ test_flags::flag0 }, { test_flags::flag0 }));
+        CHECK_FALSE(a.test({ test_flags::flag0 }, { test_flags::flag0 }));
         CHECK(a.test({ test_flags::flag2 }, { }));
-        CHECK(!a.test({ test_flags::flag2 }, { test_flags::flag2 }));
+        CHECK_FALSE(a.test({ test_flags::flag2 }, { test_flags::flag2 }));
         CHECK(a.test({ test_flags::flag0, test_flags::flag2 }, { }));
-        CHECK(!a.test({ test_flags::flag0, test_flags::flag2 }, { test_flags::flag0 }));
-        CHECK(!a.test({ test_flags::flag0, test_flags::flag2 }, { test_flags::flag2 }));
-        CHECK(!a.test({ test_flags::flag0, test_flags::flag2 }, { test_flags::flag0, test_flags::flag2 }));
+        CHECK_FALSE(a.test({ test_flags::flag0, test_flags::flag2 }, { test_flags::flag0 }));
+        CHECK_FALSE(a.test({ test_flags::flag0, test_flags::flag2 }, { test_flags::flag2 }));
+        CHECK_FALSE(a.test({ test_flags::flag0, test_flags::flag2 }, { test_flags::flag0, test_flags::flag2 }));
         CHECK(a.test({ test_flags::flag1, test_flags::flag2, test_flags::flag3 }, { test_flags::flag1, test_flags::flag3 }));
-        CHECK(!a.test({ test_flags::flag1, test_flags::flag2, test_flags::flag3 }, { test_flags::flag1, test_flags::flag2, test_flags::flag3 }));
+        CHECK_FALSE(a.test({ test_flags::flag1, test_flags::flag2, test_flags::flag3 }, { test_flags::flag1, test_flags::flag2, test_flags::flag3 }));
     }
 }
