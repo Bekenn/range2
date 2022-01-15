@@ -143,6 +143,9 @@ namespace test
     static_assert(std::is_same_v<stdext::remove_cvref<const volatile int (&)[]>::type, int[]>);
     static_assert(std::is_same_v<stdext::remove_cvref<void ()>::type, void ()>);
     static_assert(std::is_same_v<stdext::remove_cvref<void (&)()>::type, void ()>);
+    static_assert(std::is_same_v<stdext::remove_cvref<int* const&&>::type, int*>);
+    static_assert(std::is_same_v<stdext::remove_cvref<int* const&>::type, int*>);
+    static_assert(std::is_same_v<stdext::remove_cvref<int* const>::type, int*>);
 
     // remove_cvref_t
     static_assert(std::is_same_v<stdext::remove_cvref_t<void>, void>);
@@ -171,6 +174,9 @@ namespace test
     static_assert(std::is_same_v<stdext::remove_cvref_t<const volatile int (&)[]>, int[]>);
     static_assert(std::is_same_v<stdext::remove_cvref_t<void ()>, void ()>);
     static_assert(std::is_same_v<stdext::remove_cvref_t<void (&)()>, void ()>);
+    static_assert(std::is_same_v<stdext::remove_cvref_t<int* const&&>, int*>);
+    static_assert(std::is_same_v<stdext::remove_cvref_t<int* const&>, int*>);
+    static_assert(std::is_same_v<stdext::remove_cvref_t<int* const>, int*>);
 
     // preserve_const
     static_assert(std::is_same_v<stdext::preserve_const<int, float>::type, float>);

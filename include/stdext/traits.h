@@ -58,12 +58,15 @@ namespace stdext
     // Test whether T1() == T2() is well-formed
     namespace _private
     {
-        template <typename T1, typename T2>
+        template <typename T1, typename T2,
+            typename R1 = const std::remove_reference_t<T1>&,
+            typename R2 = const std::remove_reference_t<T2>&>
         static true_type test_equality_comparable(decltype(
-            declval<T1>() == declval<T2>()
-            && declval<T2>() == declval<T1>()
-            && declval<T1>() != declval<T2>()
-            && declval<T2>() != declval<T1>())*);
+            declval<void (&)(bool, bool, bool, bool)>()(
+                declval<R1>() == declval<R2>(),
+                declval<R2>() == declval<R1>(),
+                declval<R1>() != declval<R2>(),
+                declval<R2>() != declval<R1>()))*);
         template <typename T1, typename T2>
         static false_type test_equality_comparable(...);
     }
