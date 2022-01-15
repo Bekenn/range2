@@ -24,14 +24,11 @@ namespace stdext
     namespace _private
     {
         STDEXT_DECLARE_HAS_INNER_TYPE(iterator_category);
-    };
-    template <typename Iterator> struct is_iterator
-        : std::bool_constant<_private::STDEXT_HAS_INNER_TYPE_V(std::iterator_traits<remove_cvref_t<Iterator>>, iterator_category)>
-    { };
-    template <> struct is_iterator<void*> : false_type { };
-    template <> struct is_iterator<const void*> : false_type { };
-    template <> struct is_iterator<volatile void*> : false_type { };
-    template <> struct is_iterator<const volatile void*> : false_type { };
+        template <typename T, bool Allowed = std::is_object_v<std::remove_pointer_t<T>>>
+        struct is_iterator_impl : std::bool_constant<_private::STDEXT_HAS_INNER_TYPE_V(std::iterator_traits<remove_cvref_t<T>>, iterator_category)> { };
+        template <typename T> struct is_iterator_impl<T, false> : false_type { };
+    }
+    template <typename T> struct is_iterator : _private::is_iterator_impl<T> { };
 
     template <typename Iterator> using iterator_category = typename std::iterator_traits<remove_cvref_t<Iterator>>::iterator_category;
     namespace _private
