@@ -5,7 +5,7 @@
 
 namespace test
 {
-    class input_iterator
+    class fixed_input_iterator
     {
     public:
         using difference_type = std::ptrdiff_t;
@@ -15,20 +15,20 @@ namespace test
         using iterator_category = std::input_iterator_tag;
 
     public:
-        friend bool operator == (const input_iterator& a, const input_iterator& b) noexcept { return &a == &b; }
-        friend bool operator != (const input_iterator& a, const input_iterator& b) noexcept { return &a != &b; }
+        static inline int value;
 
     public:
-        reference operator * () const noexcept { return _value; }
-        pointer operator -> () const noexcept { return &_value; }
-        input_iterator& operator ++ () noexcept { ++_value; return *this; }
-        stdext::iterator_proxy<input_iterator> operator ++ (int) noexcept { return _value++; }
+        friend bool operator == (const fixed_input_iterator& a, const fixed_input_iterator& b) noexcept { return true; }
+        friend bool operator != (const fixed_input_iterator& a, const fixed_input_iterator& b) noexcept { return false; }
 
-    private:
-        static inline int _value;
+    public:
+        reference operator * () const noexcept { return value; }
+        pointer operator -> () const noexcept { return &value; }
+        fixed_input_iterator& operator ++ () noexcept { ++value; return *this; }
+        stdext::iterator_proxy<fixed_input_iterator> operator ++ (int) noexcept { return value++; }
     };
 
-    class output_iterator
+    class fixed_output_iterator
     {
     public:
         using difference_type = void;
@@ -42,8 +42,53 @@ namespace test
 
     public:
         int& operator * () const noexcept { return value; }
-        output_iterator& operator ++ () noexcept { return *this; }
-        const output_iterator& operator ++ (int) noexcept { return *this; }
+        fixed_output_iterator& operator ++ () noexcept { return *this; }
+        const fixed_output_iterator& operator ++ (int) noexcept { return *this; }
+    };
+
+    class input_iterator
+    {
+    public:
+        using difference_type = std::ptrdiff_t;
+        using value_type = int;
+        using pointer = const int*;
+        using reference = int;
+        using iterator_category = std::input_iterator_tag;
+
+    public:
+        explicit input_iterator(const int* p) noexcept : _p(p) { }
+        friend bool operator == (const input_iterator& a, const input_iterator& b) noexcept { return a._p == b._p; }
+        friend bool operator != (const input_iterator& a, const input_iterator& b) noexcept { return a._p != b._p; }
+
+    public:
+        reference operator * () const noexcept { return *_p; }
+        pointer operator -> () const noexcept { return _p; }
+        input_iterator& operator ++ () noexcept { ++_p; return *this; }
+        const int* operator ++ (int) noexcept { return _p++; }
+
+    private:
+        const int* _p = nullptr;
+    };
+
+    class output_iterator
+    {
+    public:
+        using difference_type = void;
+        using value_type = void;
+        using pointer = void;
+        using reference = void;
+        using iterator_category = std::output_iterator_tag;
+
+    public:
+        explicit output_iterator(int* p) noexcept : _p(p) { }
+
+    public:
+        int& operator * () const noexcept { return *_p; }
+        output_iterator& operator ++ () noexcept { ++_p; return *this; }
+        output_iterator operator ++ (int) noexcept { return output_iterator(_p++); }
+
+    private:
+        int* _p;
     };
 
     class forward_iterator
@@ -66,7 +111,7 @@ namespace test
         reference operator * () const noexcept { return *_p; }
         pointer operator -> () const noexcept { return _p; }
         forward_iterator& operator ++ () noexcept { ++_p; return *this; }
-        forward_iterator operator ++ (int) noexcept { auto tmp = *this; ++_p; return tmp; }
+        forward_iterator operator ++ (int) noexcept { return forward_iterator(_p++); }
 
     private:
         const int* _p = nullptr;
@@ -92,9 +137,9 @@ namespace test
         reference operator * () const noexcept { return *_p; }
         pointer operator -> () const noexcept { return _p; }
         bidirectional_iterator& operator ++ () noexcept { ++_p; return *this; }
-        bidirectional_iterator operator ++ (int) noexcept { auto tmp = *this; ++_p; return tmp; }
+        bidirectional_iterator operator ++ (int) noexcept { return bidirectional_iterator(_p++); }
         bidirectional_iterator& operator -- () noexcept { --_p; return *this; }
-        bidirectional_iterator operator -- (int) noexcept { auto tmp = *this; --_p; return tmp; }
+        bidirectional_iterator operator -- (int) noexcept { return bidirectional_iterator(_p--); }
 
     private:
         const int* _p = nullptr;
@@ -124,9 +169,9 @@ namespace test
         reference operator * () const noexcept { return *_p; }
         pointer operator -> () const noexcept { return _p; }
         random_access_iterator& operator ++ () noexcept { ++_p; return *this; }
-        random_access_iterator operator ++ (int) noexcept { auto tmp = *this; ++_p; return tmp; }
+        random_access_iterator operator ++ (int) noexcept { return random_access_iterator(_p++); }
         random_access_iterator& operator -- () noexcept { --_p; return *this; }
-        random_access_iterator operator -- (int) noexcept { auto tmp = *this; --_p; return tmp; }
+        random_access_iterator operator -- (int) noexcept { return random_access_iterator(_p--); }
         random_access_iterator& operator += (difference_type n) noexcept { _p += n; return *this; }
         random_access_iterator& operator -= (difference_type n) noexcept { _p += n; return *this; }
         reference operator [] (difference_type n) const noexcept { return _p[n]; }
@@ -140,4 +185,3 @@ namespace test
         const int* _p = nullptr;
     };
 }
-

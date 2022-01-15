@@ -46,13 +46,13 @@ namespace test
     // iterator_consumer
     TEST_CASE("iterator_consumer", "[consumer]")
     {
-        stdext::iterator_consumer consume(output_iterator{});
+        stdext::iterator_consumer consume(fixed_output_iterator{});
         REQUIRE(consume(0));
-        CHECK(output_iterator::value == 0);
+        CHECK(fixed_output_iterator::value == 0);
         REQUIRE(consume(1));
-        CHECK(output_iterator::value == 1);
+        CHECK(fixed_output_iterator::value == 1);
         REQUIRE(consume(1729));
-        CHECK(output_iterator::value == 1729);
+        CHECK(fixed_output_iterator::value == 1729);
     }
 
     // delimited_iterator_consumer
@@ -70,6 +70,6 @@ namespace test
     }
 
     // make_consumer
-    static_assert(std::is_same_v<decltype(stdext::make_consumer<int>(output_iterator())), stdext::iterator_consumer<output_iterator>>);
+    static_assert(std::is_same_v<decltype(stdext::make_consumer<int>(fixed_output_iterator())), stdext::iterator_consumer<fixed_output_iterator>>);
     static_assert(std::is_same_v<decltype(stdext::make_consumer<int>(std::declval<int*>(), std::declval<int*>())), stdext::delimited_iterator_consumer<int*, int*>>);
 }
