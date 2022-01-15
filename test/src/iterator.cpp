@@ -287,6 +287,24 @@ namespace test
     static_assert(!stdext::is_random_access_iterator_v<bidirectional_iterator>);
     static_assert(stdext::is_random_access_iterator_v<random_access_iterator>);
 
+    // is_std_range
+    static_assert(!stdext::is_std_range<void>::value);
+    static_assert(!stdext::is_std_range<const void>::value);
+    static_assert(!stdext::is_std_range<volatile void>::value);
+    static_assert(!stdext::is_std_range<const volatile void>::value);
+    static_assert(!stdext::is_std_range<void*>::value);
+    static_assert(!stdext::is_std_range<int>::value);
+    static_assert(!stdext::is_std_range<int&>::value);
+    static_assert(!stdext::is_std_range<int*>::value);
+    static_assert(!stdext::is_std_range<int*&>::value);
+    static_assert(!stdext::is_std_range<int[]>::value);
+    static_assert(!stdext::is_std_range<int (&)[]>::value);
+    static_assert(!stdext::is_std_range<int (*)[]>::value);
+    static_assert(!stdext::is_std_range<int[5]>::value);
+    static_assert(stdext::is_std_range<int (&)[5]>::value);
+    static_assert(!stdext::is_std_range<int (*)[5]>::value);
+    static_assert(stdext::is_std_range<const int (&)[5]>::value);
+
     // iterator_category
     static_assert(std::is_same_v<stdext::iterator_category<int*>, std::random_access_iterator_tag>);
     static_assert(std::is_same_v<stdext::iterator_category<fixed_input_iterator>, std::input_iterator_tag>);

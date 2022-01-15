@@ -97,6 +97,19 @@ namespace stdext
     template <typename Iterator> constexpr auto is_bidirectional_iterator_v = is_bidirectional_iterator<Iterator>::value;
     template <typename Iterator> constexpr auto is_random_access_iterator_v = is_random_access_iterator<Iterator>::value;
 
+    namespace _private
+    {
+        template <typename T> true_type test_std_range(decltype(begin(declval<T>()))*, decltype(end(declval<T>()))*);
+        template <typename T> false_type test_std_range(...);
+    }
+
+    template <typename T> struct is_std_range : decltype(_private::test_std_range<T>(nullptr, nullptr)) { };
+    template <> struct is_std_range<void> : false_type { };
+    template <> struct is_std_range<const void> : false_type { };
+    template <> struct is_std_range<volatile void> : false_type { };
+    template <> struct is_std_range<const volatile void> : false_type { };
+    template <typename T> constexpr auto is_std_range_v = is_std_range<T>::value;
+
     template <typename Iterator>
     class iterator_proxy
     {
