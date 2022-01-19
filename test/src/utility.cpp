@@ -115,6 +115,26 @@ namespace test
         CHECK(stdext::addressof(d) == static_cast<D*>(&static_cast<B&>(d)));
     }
 
+    // as_const
+    namespace
+    {
+        template <typename T> std::true_type test_as_const_invocable(std::remove_reference_t<decltype(stdext::as_const(std::declval<T>()))>*);
+        template <typename T> std::false_type test_as_const_invocable(...);
+        template <typename T> constexpr bool as_const_is_invocable_with = decltype(test_as_const_invocable<T>(nullptr))::value;
+        constexpr bool test_as_const() noexcept
+        {
+            int x = 0;
+            return &stdext::as_const(x) == &x;
+        }
+    }
+    static_assert(!as_const_is_invocable_with<int>);
+    static_assert(!as_const_is_invocable_with<const int>);
+    static_assert(as_const_is_invocable_with<int&>);
+    static_assert(as_const_is_invocable_with<const int&>);
+    static_assert(std::is_same_v<decltype(stdext::as_const(std::declval<int&>())), const int&>);
+    static_assert(noexcept(stdext::as_const(std::declval<int&>())));
+    static_assert(test_as_const());
+
     TEST_CASE("min", "[utility]")
     {
         CHECK(stdext::min(5) == 5);

@@ -141,6 +141,16 @@ namespace stdext
     template<typename T>
     const T* addressof(const T&&) = delete;
 
+    // as_const
+    template <class T>
+    constexpr std::add_const_t<T>& as_const(T& t) noexcept
+    {
+        return t;
+    }
+
+    template <class T>
+    void as_const(const T&&) = delete;
+
     // min
     template <typename T> constexpr T min(T a) noexcept { return a; }
     template <typename T> constexpr T min(T a, T b) noexcept { return b < a ? b : a; }
