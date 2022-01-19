@@ -1,6 +1,6 @@
 #include <stdext/consumer.h>
 
-#include "test_iterators.h"
+#include "iterators.h"
 
 #include <catch2/catch.hpp>
 
