@@ -6,8 +6,8 @@
 //  Copyright © 2016 James Touton. All rights reserved.
 //
 
-#ifndef STDEXT_CONFIG_INCLUDED
-#define STDEXT_CONFIG_INCLUDED
+#ifndef STDEXT_IMPL_CONFIG_INCLUDED
+#define STDEXT_IMPL_CONFIG_INCLUDED
 #pragma once
 
 // Compiler detection.  Note that these are NOT mutually exclusive
