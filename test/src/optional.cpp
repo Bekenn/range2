@@ -1599,6 +1599,32 @@ namespace test
         }
     }
 
+    // constexpr explicit operator const T& () const &
+    // constexpr explicit operator T& () &
+    // constexpr explicit operator T&& () &&
+    // constexpr explicit operator const T&& () const &&
+    namespace
+    {
+        constexpr bool test_explicit_conversion() noexcept
+        {
+            stdext::optional<int> x(5);
+            return int(x) == 5 && int(stdext::as_const(x)) == 5 && int(stdext::move(x)) == 5 && int(stdext::move(stdext::as_const(x))) == 5;
+        }
+    }
+    static_assert(std::is_constructible_v<int, stdext::optional<int>>);
+    static_assert(std::is_constructible_v<int, const stdext::optional<int>>);
+    static_assert(std::is_constructible_v<int, stdext::optional<int>&>);
+    static_assert(std::is_constructible_v<int, const stdext::optional<int>&>);
+    static_assert(!std::is_convertible_v<stdext::optional<int>, int>);
+    static_assert(!std::is_convertible_v<const stdext::optional<int>, int>);
+    static_assert(!std::is_convertible_v<stdext::optional<int>&, int>);
+    static_assert(!std::is_convertible_v<const stdext::optional<int>&, int>);
+    static_assert(!std::is_assignable_v<int, stdext::optional<int>>);
+    static_assert(!std::is_assignable_v<int, const stdext::optional<int>>);
+    static_assert(!std::is_assignable_v<int, stdext::optional<int>&>);
+    static_assert(!std::is_assignable_v<int, const stdext::optional<int>&>);
+    static_assert(test_explicit_conversion());
+
     // constexpr bool has_value() const noexcept
     static_assert(!stdext::optional<int>().has_value());
     static_assert(stdext::optional<int>(0).has_value());

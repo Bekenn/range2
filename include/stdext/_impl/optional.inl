@@ -85,7 +85,6 @@ namespace stdext
     template <typename U,
         STDEXT_REQUIRED(std::is_constructible_v<T, const U&>
                         && std::is_assignable_v<T&, const U&>
-                        && !_private::is_constructible_from_optional_v<T, U>
                         && !_private::is_convertible_from_optional_v<T, U>
                         && !_private::is_assignable_from_optional_v<T, U>)>
     auto optional<T>::operator=(const optional<U>& rhs) -> optional&
@@ -104,7 +103,6 @@ namespace stdext
     template <typename U,
         STDEXT_REQUIRED(std::is_constructible_v<T, U>
                         && std::is_assignable_v<T&, U>
-                        && !_private::is_constructible_from_optional_v<T, U>
                         && !_private::is_convertible_from_optional_v<T, U>
                         && !_private::is_assignable_from_optional_v<T, U>)>
     auto optional<T>::operator=(optional<U>&& rhs) -> optional&
