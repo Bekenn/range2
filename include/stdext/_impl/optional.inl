@@ -156,6 +156,105 @@ namespace stdext
     }
 
     template <typename T>
+    template <typename U,
+        STDEXT_REQUIRED(std::is_move_constructible_v<U>)>
+    T optional<T>::exchange(nullopt_t)
+    {
+        if (!_storage.has_value)
+            throw bad_optional_access();
+
+        T old_value = stdext::move(_storage.value);
+        _storage.reset();
+        return old_value;
+    }
+
+    template <typename T>
+    template <typename... Args,
+        STDEXT_REQUIRED(std::is_move_constructible_v<T>
+                        && std::is_constructible_v<T, Args...>)>
+    T optional<T>::exchange(in_place_t, Args&&... args)
+    {
+        if (!_storage.has_value)
+            throw bad_optional_access();
+
+        T old_value(stdext::move(_storage.value));
+        _storage.reset();
+        _storage.emplace(stdext::forward<Args>(args)...);
+        return old_value;
+    }
+
+    template <typename T>
+    template <typename U, typename... Args,
+        STDEXT_REQUIRED(std::is_move_constructible_v<T>
+                    && std::is_constructible_v<T, std::initializer_list<U>&, Args...>)>
+    T optional<T>::exchange(in_place_t, std::initializer_list<U> il, Args&&... args)
+    {
+        if (!_storage.has_value)
+            throw bad_optional_access();
+
+        T old_value(stdext::move(_storage.value));
+        _storage.reset();
+        _storage.emplace(il, stdext::forward<Args>(args)...);
+        return old_value;
+    }
+
+    template <typename T>
+    template <typename U,
+        STDEXT_REQUIRED(!std::is_same_v<optional<T>, remove_cvref_t<U>>
+                        && !std::is_same_v<remove_cvref_t<U>, in_place_t>
+                        && std::is_move_constructible_v<T>
+                        && std::is_assignable_v<T&, U>)>
+    T stdext::optional<T>::exchange(U&& v)
+    {
+        if (!_storage.has_value)
+            throw bad_optional_access();
+
+        T old_value = stdext::move(_storage.value);
+        _storage.value = stdext::forward<U>(v);
+        return old_value;
+    }
+
+    template <typename T>
+    template <typename U,
+        STDEXT_REQUIRED(std::is_move_constructible_v<T>
+                        && std::is_assignable_v<T&, const U&>
+                        && !_private::is_convertible_from_optional_v<T, U>
+                        && !_private::is_assignable_from_optional_v<T, U>)>
+    T optional<T>::exchange(const optional<U>& other)
+    {
+        if (!_storage.has_value)
+            throw bad_optional_access();
+
+        T old_value = stdext::move(_storage.value);
+        if (other.has_value())
+            _storage.value = other.value();
+        else
+            _storage.reset();
+
+        return old_value;
+    }
+
+    template <typename T>
+    template <typename U,
+        STDEXT_REQUIRED(std::is_move_constructible_v<T>
+                        && std::is_assignable_v<T&, U>
+                        && !_private::is_convertible_from_optional_v<T, U>
+                        && !_private::is_assignable_from_optional_v<T, U>)>
+    T optional<T>::exchange(optional<U>&& other)
+    {
+        if (!_storage.has_value)
+            throw bad_optional_access();
+
+        T old_value = stdext::move(_storage.value);
+        if (other.has_value())
+            _storage.value = stdext::move(other.value());
+        else
+            _storage.reset();
+
+        return old_value;
+    }
+
+    template <typename T>
     template <typename U>
     constexpr T optional<T>::value_or(U&& v) const &
     {

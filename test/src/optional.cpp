@@ -1599,6 +1599,304 @@ namespace test
         }
     }
 
+    // T exchange(nullopt_t)
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(stdext::nullopt)), int>);
+    TEST_CASE("exchange with nullopt", "[optional]")
+    {
+        SECTION("disengaged throws")
+        {
+            stdext::optional<int> x;
+            REQUIRE(!x.has_value());
+
+            CHECK_THROWS(x.exchange(stdext::nullopt));
+            CHECK(!x.has_value());
+        }
+
+        SECTION("engaged resets and returns prior value")
+        {
+            stdext::optional<int> x(5);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 5);
+
+            CHECK(x.exchange(stdext::nullopt) == 5);
+            CHECK(!x.has_value());
+        }
+    }
+
+    // T exchange(in_place_t, Args&&... args)
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(stdext::in_place)), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(stdext::in_place, std::declval<int>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(stdext::in_place, std::declval<const int>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(stdext::in_place, std::declval<int&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(stdext::in_place, std::declval<const int&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<explicit_int>&>().exchange(stdext::in_place, std::declval<int>())), explicit_int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<explicit_int>&>().exchange(stdext::in_place, std::declval<const int>())), explicit_int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<explicit_int>&>().exchange(stdext::in_place, std::declval<int&>())), explicit_int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<explicit_int>&>().exchange(stdext::in_place, std::declval<const int&>())), explicit_int>);
+    TEST_CASE("exchange in_place")
+    {
+        SECTION("disengaged throws")
+        {
+            stdext::optional<not_assignable> x;
+            REQUIRE(!x.has_value());
+
+            CHECK_THROWS(x.exchange(stdext::in_place, 0));
+            CHECK(!x.has_value());
+        }
+
+        SECTION("in-place default construct")
+        {
+            stdext::optional<not_assignable> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 5);
+
+            CHECK(x.exchange(stdext::in_place) == 5);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 0);
+        }
+
+        SECTION("in-place with arguments")
+        {
+            stdext::optional<not_assignable> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 5);
+
+            CHECK(x.exchange(stdext::in_place, 3) == 5);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 3);
+        }
+
+        SECTION("existing value is destroyed and replaced")
+        {
+            stdext::optional<nontrivial_destructor> x(stdext::in_place);
+            REQUIRE(x.has_value());
+
+            unsigned old_count = nontrivial_destructor::count;
+            nontrivial_destructor y = x.exchange(stdext::in_place);
+            REQUIRE(x.has_value());
+            CHECK(nontrivial_destructor::count == old_count + 1);
+        }
+    }
+
+    // T exchange(in_place_t, std::initializer_list<U> il, Args&&... args)
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<init_list_adder>&>().exchange(stdext::in_place, { 1, 2, 3 })), init_list_adder>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<init_list_adder>&>().exchange(stdext::in_place, { 1, 2, 3 }, 4)), init_list_adder>);
+    TEST_CASE("exchange in_place with initializer_list")
+    {
+        SECTION("disengaged throws")
+        {
+            stdext::optional<init_list_adder> x;
+            REQUIRE(!x.has_value());
+
+            CHECK_THROWS(x.exchange(stdext::in_place, { 1, 2, 3 }, 4));
+            CHECK(!x.has_value());
+        }
+
+        SECTION("engaged")
+        {
+            stdext::optional<init_list_adder> x({ 1, 2, 3 });
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 6);
+
+            init_list_adder y = x.exchange(stdext::in_place, { 1, 2, 3 }, 4);
+            CHECK(y == 6);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 10);
+        }
+    }
+
+    // T exchange(U&& v)
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<int>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const int>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<int&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const int&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<explicit_int>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const explicit_int>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<explicit_int&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const explicit_int&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<stdext::optional<int>>&>().exchange(std::declval<stdext::optional<int>>())), stdext::optional<int>>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<stdext::optional<int>>&>().exchange(std::declval<const stdext::optional<int>>())), stdext::optional<int>>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<stdext::optional<int>>&>().exchange(std::declval<stdext::optional<int>&>())), stdext::optional<int>>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<stdext::optional<int>>&>().exchange(std::declval<const stdext::optional<int>&>())), stdext::optional<int>>);
+    TEST_CASE("exchange with U", "[optional]")
+    {
+        SECTION("disengaged throws")
+        {
+            stdext::optional<int> x;
+            REQUIRE(!x.has_value());
+
+            CHECK_THROWS(x.exchange(0));
+            CHECK(!x.has_value());
+        }
+
+        SECTION("engaged from same type rvalue")
+        {
+            stdext::optional<int> x(0);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 0);
+
+            CHECK(x.exchange(5) == 0);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 5);
+        }
+
+        SECTION("engaged from same type lvalue")
+        {
+            stdext::optional<int> x(0);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 0);
+
+            int y = 5;
+            CHECK(x.exchange(y) == 0);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 5);
+        }
+
+        SECTION("engaged from different type rvalue")
+        {
+            stdext::optional<int> x(0);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 0);
+
+            CHECK(x.exchange(5) == explicit_int(0));
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 5);
+        }
+
+        SECTION("engaged from different type lvalue")
+        {
+            stdext::optional<int> x(0);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 0);
+
+            explicit_int y(5);
+            CHECK(x.exchange(y) == 0);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 5);
+        }
+
+        SECTION("engaged from initializer list")
+        {
+            stdext::optional<init_list_adder> x(stdext::in_place, { 1, 2, 3 });
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 6);
+
+            CHECK(x.exchange({ 1, 1, 2, 3, 5 }) == 6);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 12);
+        };
+
+        SECTION("nested optional")
+        {
+            stdext::optional<stdext::optional<int>> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value().has_value());
+            REQUIRE(x.value().value() == 5);
+
+            auto y = x.exchange(stdext::optional<int>(3));
+            STATIC_REQUIRE(std::is_same_v<decltype(y), stdext::optional<int>>);
+            REQUIRE(y.has_value());
+            CHECK(y.value() == 5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value().has_value());
+            CHECK(x.value().value() == 3);
+        }
+    }
+
+    // T exchange(const optional<U>& other)
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<stdext::optional<int>&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const stdext::optional<int>&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<stdext::optional<explicit_int>&>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const stdext::optional<explicit_int>&>())), int>);
+    TEST_CASE("exchange with optional lvalue", "[optional]")
+    {
+        SECTION("disengaged from disengaged throws")
+        {
+            stdext::optional<int> x;
+            REQUIRE(!x.has_value());
+
+            const stdext::optional<int> y;
+            CHECK_THROWS(x.exchange(y));
+        }
+
+        SECTION("disengaged from engaged throws")
+        {
+            stdext::optional<int> x;
+            REQUIRE(!x.has_value());
+
+            const stdext::optional<int> y(5);
+            CHECK_THROWS(x.exchange(y));
+        }
+
+        SECTION("engaged from disengaged resets")
+        {
+            stdext::optional<int> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 5);
+
+            const stdext::optional<int> y;
+            CHECK(x.exchange(y) == 5);
+            CHECK(!x.has_value());
+        }
+
+        SECTION("engaged from engaged")
+        {
+            stdext::optional<int> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 5);
+
+            const stdext::optional<int> y(3);
+            CHECK(x.exchange(y) == 5);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 3);
+        }
+    }
+
+    // T exchange(optional<U>&& other)
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<stdext::optional<int>>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const stdext::optional<int>>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<stdext::optional<explicit_int>>())), int>);
+    static_assert(std::is_same_v<decltype(std::declval<stdext::optional<int>&>().exchange(std::declval<const stdext::optional<explicit_int>>())), int>);
+    TEST_CASE("exchange with optional rvalue", "[optional]")
+    {
+        SECTION("disengaged from disengaged throws")
+        {
+            stdext::optional<int> x;
+            REQUIRE(!x.has_value());
+
+            CHECK_THROWS(x.exchange(stdext::optional<int>()));
+        }
+
+        SECTION("disengaged from engaged throws")
+        {
+            stdext::optional<int> x;
+            REQUIRE(!x.has_value());
+
+            CHECK_THROWS(x.exchange(stdext::optional<int>(5)));
+        }
+
+        SECTION("engaged from disengaged resets")
+        {
+            stdext::optional<int> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 5);
+
+            CHECK(x.exchange(stdext::optional<int>()) == 5);
+            CHECK(!x.has_value());
+        }
+
+        SECTION("engaged from engaged")
+        {
+            stdext::optional<int> x(5);
+            REQUIRE(x.has_value());
+            REQUIRE(x.value() == 5);
+
+            CHECK(x.exchange(stdext::optional<int>(3)) == 5);
+            REQUIRE(x.has_value());
+            CHECK(x.value() == 3);
+        }
+    }
+
     // constexpr explicit operator const T& () const &
     // constexpr explicit operator T& () &
     // constexpr explicit operator T&& () &&

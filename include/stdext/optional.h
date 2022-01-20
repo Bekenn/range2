@@ -262,6 +262,37 @@ namespace stdext
         // swap
         void swap(optional&) noexcept(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_swappable_v<T>);
 
+        // exchange
+        template <typename U = T,
+            STDEXT_REQUIRES(std::is_move_constructible_v<U>)>
+        T exchange(nullopt_t);
+        template <typename... Args,
+            STDEXT_REQUIRES(std::is_move_constructible_v<T>
+                            && std::is_constructible_v<T, Args...>)>
+        T exchange(in_place_t, Args&&... args);
+        template <typename U, typename... Args,
+            STDEXT_REQUIRES(std::is_move_constructible_v<T>
+                        && std::is_constructible_v<T, std::initializer_list<U>&, Args...>)>
+        T exchange(in_place_t, std::initializer_list<U> il, Args&&... args);
+        template <typename U = T,
+            STDEXT_REQUIRES(!std::is_same_v<optional, remove_cvref_t<U>>
+                            && !std::is_same_v<remove_cvref_t<U>, in_place_t>
+                            && std::is_move_constructible_v<T>
+                            && std::is_assignable_v<T&, U>)>
+        T exchange(U&& v);
+        template <typename U,
+            STDEXT_REQUIRES(std::is_move_constructible_v<T>
+                            && std::is_assignable_v<T&, const U&>
+                            && !_private::is_convertible_from_optional_v<T, U>
+                            && !_private::is_assignable_from_optional_v<T, U>)>
+        T exchange(const optional<U>& other);
+        template <typename U,
+            STDEXT_REQUIRES(std::is_move_constructible_v<T>
+                            && std::is_assignable_v<T&, U>
+                            && !_private::is_convertible_from_optional_v<T, U>
+                            && !_private::is_assignable_from_optional_v<T, U>)>
+        T exchange(optional<U>&& other);
+
         // observers
         constexpr explicit operator const T& () const & { return _storage.has_value ? _storage.value : throw bad_optional_access(); }
         constexpr explicit operator T& () & { return _storage.has_value ? _storage.value : throw bad_optional_access(); }
@@ -333,7 +364,7 @@ namespace stdext
         friend constexpr bool operator>=(const U& v, const optional& x) { return !x.has_value() || v >= x.value(); }
 
         // specialized algorithms
-        template <typename U = T, STDEXT_REQUIRES(std::is_move_constructible_v<U> && std::is_swappable_v<T>)>
+        template <typename U = T, STDEXT_REQUIRES(std::is_move_constructible_v<U> && std::is_swappable_v<U>)>
         friend void swap(optional& x, optional& y) noexcept(noexcept(x.swap(y))) { return x.swap(y); }
 
     private:

@@ -68,8 +68,8 @@ namespace test
     {
         using explicit_int::explicit_int;
         not_move_assignable() = default;
-        explicit not_move_assignable(const not_move_assignable&) = default;
-        explicit not_move_assignable(not_move_assignable&&) = default;
+        not_move_assignable(const not_move_assignable&) = default;
+        not_move_assignable(not_move_assignable&&) = default;
         not_move_assignable& operator = (const not_move_assignable&) = delete;
         not_move_assignable& operator = (not_move_assignable&&) = delete;
     };
@@ -159,7 +159,7 @@ namespace test
         using explicit_int::explicit_int;
         copy_not_move_assignable() = default;
         copy_not_move_assignable(const copy_not_move_assignable&) = default;
-        explicit copy_not_move_assignable(copy_not_move_assignable&&) = default;
+        copy_not_move_assignable(copy_not_move_assignable&&) = default;
         copy_not_move_assignable& operator = (const copy_not_move_assignable&) = default;
         copy_not_move_assignable& operator = (copy_not_move_assignable&&) = delete;
     };
@@ -176,7 +176,7 @@ namespace test
     {
         using explicit_int::explicit_int;
         not_copy_assignable() = default;
-        explicit not_copy_assignable(const not_copy_assignable&) = default;
+        not_copy_assignable(const not_copy_assignable&) = default;
         not_copy_assignable(not_copy_assignable&&) = default;
         not_copy_assignable& operator = (const not_copy_assignable&) = delete;
         not_copy_assignable& operator = (not_copy_assignable&&) = default;
@@ -189,6 +189,24 @@ namespace test
     static_assert(std::is_trivially_destructible_v<not_copy_assignable>);
     static_assert(stdext::is_equality_comparable_v<not_copy_assignable>);
     static_assert(stdext::is_equality_comparable_with_v<not_copy_assignable, int>);
+
+    struct not_assignable : explicit_int
+    {
+        using explicit_int::explicit_int;
+        not_assignable() = default;
+        not_assignable(const not_assignable&) = default;
+        not_assignable(not_assignable&&) = default;
+        not_assignable& operator = (const not_assignable&) = delete;
+        not_assignable& operator = (not_assignable&&) = delete;
+    };
+    static_assert(std::is_trivially_default_constructible_v<not_assignable>);
+    static_assert(std::is_trivially_move_constructible_v<not_assignable>);
+    static_assert(std::is_trivially_copy_constructible_v<not_assignable>);
+    static_assert(!std::is_move_assignable_v<not_assignable>);
+    static_assert(!std::is_copy_assignable_v<not_assignable>);
+    static_assert(std::is_trivially_destructible_v<not_assignable>);
+    static_assert(stdext::is_equality_comparable_v<not_assignable>);
+    static_assert(stdext::is_equality_comparable_with_v<not_assignable, int>);
 
     struct nontrivial_default_construct : explicit_int
     {
