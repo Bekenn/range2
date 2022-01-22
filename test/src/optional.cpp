@@ -1674,7 +1674,8 @@ namespace test
             unsigned old_count = nontrivial_destructor::count;
             nontrivial_destructor y = x.exchange(stdext::in_place);
             REQUIRE(x.has_value());
-            CHECK(nontrivial_destructor::count == old_count + 1);
+            // This isn't a great check, as the exact value depends on NRVO.
+            CHECK(nontrivial_destructor::count != old_count);
         }
     }
 
