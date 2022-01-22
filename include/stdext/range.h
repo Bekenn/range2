@@ -1310,9 +1310,9 @@ namespace stdext
         public:
             reverse_bidirectional_range() : r(nullptr), first(), term() { }
             reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, const TerminationPredicate& term)
-                : r(&range), first(last), term(term) { }
+                : r(&range), first(first), term(term) { }
             reverse_bidirectional_range(const Range& range, range_position_type_t<Range> first, TerminationPredicate&& term)
-                : r(&range), first(last), term(stdext::move(term)) { }
+                : r(&range), first(first), term(stdext::move(term)) { }
 
             friend bool operator == (const reverse_bidirectional_range& a, const reverse_bidirectional_range& b) noexcept
             {
@@ -1669,14 +1669,16 @@ namespace stdext
     }
 
     template <typename Iterator, typename DelegatedPredicate, typename TerminationPredicate>
-    auto make_range(const iterator_range<Iterator, DelegatedPredicate>& range, Iterator pos, TerminationPredicate&& pred)
+    auto make_range(const iterator_range<Iterator, DelegatedPredicate>& range, identity_type_t<Iterator> pos, TerminationPredicate&& pred)
     {
+        discard(range);
         return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(pos, stdext::forward<TerminationPredicate>(pred));
     }
 
     template <typename Iterator, typename TerminationPredicate>
-    auto make_range(const delimited_iterator_range<Iterator>& range, Iterator pos, TerminationPredicate&& pred)
+    auto make_range(const delimited_iterator_range<Iterator>& range, identity_type_t<Iterator> pos, TerminationPredicate&& pred)
     {
+        discard(range);
         return iterator_range<Iterator, std::decay_t<TerminationPredicate>>(pos, stdext::forward<TerminationPredicate>(pred));
     }
 
@@ -1711,14 +1713,16 @@ namespace stdext
     }
 
     template <typename Iterator, typename TerminationPredicate>
-    auto make_range(const iterator_range<Iterator, TerminationPredicate>& range, Iterator p1, Iterator p2)
+    auto make_range(const iterator_range<Iterator, TerminationPredicate>& range, identity_type_t<Iterator> p1, identity_type_t<Iterator> p2)
     {
+        discard(range);
         return delimited_iterator_range<Iterator>(p1, p2);
     }
 
     template <typename Iterator>
-    auto make_range(const delimited_iterator_range<Iterator>& range, Iterator p1, Iterator p2)
+    auto make_range(const delimited_iterator_range<Iterator>& range, identity_type_t<Iterator> p1, identity_type_t<Iterator> p2)
     {
+        discard(range);
         return delimited_iterator_range<Iterator>(p1, p2);
     }
 
@@ -1796,14 +1800,16 @@ namespace stdext
     }
 
     template <typename Iterator, typename TerminationPredicate>
-    auto make_counted_range(const iterator_range<Iterator, TerminationPredicate>& range, Iterator pos, iterator_size_type_t<Iterator> count)
+    auto make_counted_range(const iterator_range<Iterator, TerminationPredicate>& range, identity_type_t<Iterator> pos, iterator_size_type_t<Iterator> count)
     {
+        discard(range);
         return counted_iterator_range<Iterator>(pos, count);
     }
 
     template <typename Iterator>
-    auto make_counted_range(const delimited_iterator_range<Iterator>& range, Iterator pos, iterator_size_type_t<Iterator> count)
+    auto make_counted_range(const delimited_iterator_range<Iterator>& range, identity_type_t<Iterator> pos, iterator_size_type_t<Iterator> count)
     {
+        discard(range);
         return counted_iterator_range<Iterator>(pos, count);
     }
 
@@ -1906,18 +1912,20 @@ namespace stdext
     template <typename Range, STDEXT_REQUIRES(is_range<Range>::value)>
     auto make_iterator(const Range& range, range_position_type_t<Range> pos)
     {
-        return range_iterator<Range>(pos);
+        return range_iterator<Range>(range, pos);
     }
 
     template <typename Iterator, typename TerminationPredicate>
-    auto make_iterator(const iterator_range<Iterator, TerminationPredicate>& range, Iterator pos)
+    auto make_iterator(const iterator_range<Iterator, TerminationPredicate>& range, identity_type_t<Iterator> pos)
     {
+        discard(range);
         return pos;
     }
 
     template <typename Iterator>
-    auto make_iterator(const delimited_iterator_range<Iterator>& range, Iterator pos)
+    auto make_iterator(const delimited_iterator_range<Iterator>& range, identity_type_t<Iterator> pos)
     {
+        discard(range);
         return pos;
     }
 

@@ -50,7 +50,7 @@ namespace test
     {
         const stdext::flags<test_flags> flags = test_flags::flag0;
         const stdext::flags<test_flags> copy = flags;
-        CHECK(flags.value() == test_flags::flag0);
+        CHECK(copy.value() == test_flags::flag0);
     }
 
     TEST_CASE("flags is constructible from multiple flag values (2)", "[flags]")

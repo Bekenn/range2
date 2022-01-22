@@ -174,10 +174,10 @@ namespace stdext
 
         public:
             constexpr compressed_pair_same_type() = default;
-            constexpr compressed_pair_same_type(const T& v1, const T& v2) noexcept(std::is_nothrow_default_constructible_v<T>) { }
-            constexpr compressed_pair_same_type(const T& v1, T&& v2) noexcept(std::is_nothrow_default_constructible_v<T>) { }
-            constexpr compressed_pair_same_type(T&& v1, const T& v2) noexcept(std::is_nothrow_default_constructible_v<T>) { }
-            constexpr compressed_pair_same_type(T&& v1, T&& v2) noexcept(std::is_nothrow_default_constructible_v<T>) { }
+            constexpr compressed_pair_same_type(const T&, const T&) noexcept(std::is_nothrow_default_constructible_v<T>) { }
+            constexpr compressed_pair_same_type(const T&, T&&) noexcept(std::is_nothrow_default_constructible_v<T>) { }
+            constexpr compressed_pair_same_type(T&&, const T&) noexcept(std::is_nothrow_default_constructible_v<T>) { }
+            constexpr compressed_pair_same_type(T&&, T&&) noexcept(std::is_nothrow_default_constructible_v<T>) { }
 
             constexpr T& first() & noexcept { return static_cast<base&>(*this).get(); }
             constexpr const T& first() const & noexcept { return static_cast<const base&>(*this).get(); }
@@ -189,7 +189,7 @@ namespace stdext
             constexpr T& second() && noexcept { return static_cast<base&&>(*this).get(); }
             constexpr const T& second() const && noexcept { return static_cast<const base&&>(*this).get(); }
 
-            constexpr void swap(compressed_pair_same_type& p) noexcept { }
+            constexpr void swap(compressed_pair_same_type&) noexcept { }
         };
     }
 

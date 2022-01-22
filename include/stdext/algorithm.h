@@ -259,7 +259,7 @@ namespace stdext
     namespace _private
     {
         template <typename Range1, typename Range2, typename BinaryPredicate>
-        bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, false_type counted)
+        bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, false_type)
         {
             auto pos = mismatch(range1, range2, pred);
             if (range1.is_end_pos(pos.first))
@@ -288,7 +288,7 @@ namespace stdext
         }
 
         template <typename Range1, typename Range2, typename BinaryPredicate>
-        bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, true_type counted)
+        bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred, true_type)
         {
             if (range1.size() != range2.size())
                 return false;
@@ -301,9 +301,7 @@ namespace stdext
     bool is_permutation(const Range1& range1, const Range2& range2, BinaryPredicate&& pred)
     {
         return _private::is_permutation(range1, range2, stdext::forward<BinaryPredicate>(pred),
-            std::conditional_t<is_counted_range<Range1>::value && is_counted_range<Range2>::value,
-                true_type,
-                false_type>());
+            std::conjunction<is_counted_range<Range1>, is_counted_range<Range2>>());
     }
 
     template <typename Range1, typename Range2,
@@ -462,7 +460,7 @@ namespace stdext
     template <typename Range, typename T>
     range_position_type_t<Range> fill(const Range& range, const T& value)
     {
-        return std::get<0>(for_each([&](auto& v) { v = value; }));
+        return std::get<0>(for_each([&](auto& v) { v = value; }, range));
     }
 
     template <typename Range, typename Size, typename T>
@@ -1333,7 +1331,7 @@ namespace stdext
         STDEXT_REQUIRES(is_multi_pass_range<Range>::value && is_random_access_range<OutputRange>::value && is_counted_range<OutputRange>::value)>
     range_position_type_t<OutputRange> partial_sort_copy(const Range& range, const OutputRange& out)
     {
-        return partial_sort_copy(range, std::less<>());
+        return partial_sort_copy(range, out, std::less<>());
     }
 
     template <typename Range, typename Compare,
