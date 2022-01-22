@@ -170,8 +170,8 @@ namespace stdext
 
     template <typename T>
     template <typename... Args,
-        STDEXT_REQUIRED(std::is_move_constructible_v<T>
-                        && std::is_constructible_v<T, Args...>)>
+        STDEXT_REQUIRED(std::is_constructible_v<T, Args...>
+                        && std::is_move_constructible_v<T>)>
     T optional<T>::exchange(in_place_t, Args&&... args)
     {
         if (!_storage.has_value)
@@ -185,8 +185,8 @@ namespace stdext
 
     template <typename T>
     template <typename U, typename... Args,
-        STDEXT_REQUIRED(std::is_move_constructible_v<T>
-                    && std::is_constructible_v<T, std::initializer_list<U>&, Args...>)>
+        STDEXT_REQUIRED(std::is_constructible_v<T, std::initializer_list<U>&, Args...>
+                        && std::is_move_constructible_v<T>)>
     T optional<T>::exchange(in_place_t, std::initializer_list<U> il, Args&&... args)
     {
         if (!_storage.has_value)
@@ -216,8 +216,8 @@ namespace stdext
 
     template <typename T>
     template <typename U,
-        STDEXT_REQUIRED(std::is_move_constructible_v<T>
-                        && std::is_assignable_v<T&, const U&>
+        STDEXT_REQUIRED(std::is_assignable_v<T&, const U&>
+                        && std::is_move_constructible_v<T>
                         && !_private::is_convertible_from_optional_v<T, U>
                         && !_private::is_assignable_from_optional_v<T, U>)>
     T optional<T>::exchange(const optional<U>& other)
@@ -236,8 +236,8 @@ namespace stdext
 
     template <typename T>
     template <typename U,
-        STDEXT_REQUIRED(std::is_move_constructible_v<T>
-                        && std::is_assignable_v<T&, U>
+        STDEXT_REQUIRED(std::is_assignable_v<T&, U>
+                        && std::is_move_constructible_v<T>
                         && !_private::is_convertible_from_optional_v<T, U>
                         && !_private::is_assignable_from_optional_v<T, U>)>
     T optional<T>::exchange(optional<U>&& other)

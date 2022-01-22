@@ -267,12 +267,12 @@ namespace stdext
             STDEXT_REQUIRES(std::is_move_constructible_v<U>)>
         T exchange(nullopt_t);
         template <typename... Args,
-            STDEXT_REQUIRES(std::is_move_constructible_v<T>
-                            && std::is_constructible_v<T, Args...>)>
+            STDEXT_REQUIRES(std::is_constructible_v<T, Args...>
+                            && std::is_move_constructible_v<T>)>
         T exchange(in_place_t, Args&&... args);
         template <typename U, typename... Args,
-            STDEXT_REQUIRES(std::is_move_constructible_v<T>
-                        && std::is_constructible_v<T, std::initializer_list<U>&, Args...>)>
+            STDEXT_REQUIRES(std::is_constructible_v<T, std::initializer_list<U>&, Args...>
+                            && std::is_move_constructible_v<T>)>
         T exchange(in_place_t, std::initializer_list<U> il, Args&&... args);
         template <typename U = T,
             STDEXT_REQUIRES(!std::is_same_v<optional, remove_cvref_t<U>>
@@ -281,14 +281,14 @@ namespace stdext
                             && std::is_assignable_v<T&, U>)>
         T exchange(U&& v);
         template <typename U,
-            STDEXT_REQUIRES(std::is_move_constructible_v<T>
-                            && std::is_assignable_v<T&, const U&>
+            STDEXT_REQUIRES(std::is_assignable_v<T&, const U&>
+                            && std::is_move_constructible_v<T>
                             && !_private::is_convertible_from_optional_v<T, U>
                             && !_private::is_assignable_from_optional_v<T, U>)>
         T exchange(const optional<U>& other);
         template <typename U,
-            STDEXT_REQUIRES(std::is_move_constructible_v<T>
-                            && std::is_assignable_v<T&, U>
+            STDEXT_REQUIRES(std::is_assignable_v<T&, U>
+                            && std::is_move_constructible_v<T>
                             && !_private::is_convertible_from_optional_v<T, U>
                             && !_private::is_assignable_from_optional_v<T, U>)>
         T exchange(optional<U>&& other);
