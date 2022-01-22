@@ -35,7 +35,7 @@ if(MSVC)
     )
     # The XP toolset is incompatible with /permissive-.
     if(NOT CMAKE_VS_PLATFORM_TOOLSET MATCHES [[_xp(,.*)?$]])
-        target_compile_options(stdext PRIVATE /permissive-)
+        target_compile_options(stdext PUBLIC /Zc:preprocessor PRIVATE /permissive-)
     endif()
 
     set(NATVIS msvc/stdext.natvis)
