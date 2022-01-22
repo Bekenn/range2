@@ -43,7 +43,7 @@ template <typename T, typename... ArgTypes> struct has_method_##MethodName      
 namespace stdext
 {
     // declval
-    template <typename T> std::add_rvalue_reference_t<T> declval();
+    template <typename T> std::add_rvalue_reference_t<T> declval() noexcept;
 
     // Useful declarations
     using std::integral_constant;

@@ -39,6 +39,7 @@ namespace test
     TEST_CASE("copy", "[utility]")
     {
         int x = 5;
+        STATIC_REQUIRE(noexcept(stdext::copy(x)));
         CHECK(test_value_category(stdext::copy(x)) == value_category::rvalue);
         CHECK(x == 5);
     }

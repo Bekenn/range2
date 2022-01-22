@@ -20,9 +20,7 @@ namespace stdext
 {
     // Discards a value; can be used to silence warnings about unused entities.
     template <typename... Ts>
-    constexpr void discard(Ts&&...) noexcept
-    {
-    }
+    constexpr void discard(Ts&&...) noexcept { }
 
     // Run-time invocation of unreachable results in undefined behavior.
     [[noreturn]] inline void unreachable() noexcept
@@ -42,15 +40,13 @@ namespace stdext
         using std::is_nothrow_convertible;
         using std::is_nothrow_convertible_v;
 #else
+        template <typename T>
+        static void test_nothrow_convertible_to(T) noexcept;
+        template <typename T>
+        static void test_nothrow_convertible_to(...);
+
         template <typename From, typename To>
-        struct is_nothrow_convertible
-        {
-            template <typename T>
-            static true_type test(T) noexcept;
-            template <typename T>
-            static false_type test(...);
-            static constexpr bool value = noexcept(test<To>(declval<From>()));
-        };
+        struct is_nothrow_convertible : bool_constant<noexcept(test_nothrow_convertible_to<To>(declval<From>()))> { };
         template <typename From, typename To>
         constexpr auto is_nothrow_convertible_v = is_nothrow_convertible<From, To>::value;
 #endif
