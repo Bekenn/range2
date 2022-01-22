@@ -10,7 +10,7 @@ file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS res/*)
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES} ${RESOURCES})
 
 add_executable(test-stdext ${SOURCES} ${RESOURCES})
-target_link_libraries(test-stdext PRIVATE stdext Catch2::Catch2WithMain)
+target_link_libraries(test-stdext PRIVATE stdext Catch2::Catch2)
 add_custom_command(TARGET test-stdext POST_BUILD
     COMMAND
         ${CMAKE_COMMAND} -E chdir ${CMAKE_CURRENT_SOURCE_DIR}
