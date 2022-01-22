@@ -328,13 +328,13 @@ namespace stdext
         friend constexpr bool operator==(nullopt_t, const optional& x) noexcept { return !x.has_value(); }
         friend constexpr bool operator!=(const optional& x, nullopt_t) noexcept { return x.has_value(); }
         friend constexpr bool operator!=(nullopt_t, const optional& x) noexcept { return x.has_value(); }
-        friend constexpr bool operator<(const optional& x, nullopt_t) noexcept { return false; }
+        friend constexpr bool operator<(const optional& x, nullopt_t) noexcept { return discard(x), false; }
         friend constexpr bool operator<(nullopt_t, const optional& x) noexcept { return x.has_value(); }
         friend constexpr bool operator<=(const optional& x, nullopt_t) noexcept{ return !x.has_value(); }
-        friend constexpr bool operator<=(nullopt_t, const optional& x) noexcept { return true; }
+        friend constexpr bool operator<=(nullopt_t, const optional& x) noexcept { return discard(x), true; }
         friend constexpr bool operator>(const optional& x, nullopt_t) noexcept { return x.has_value(); }
-        friend constexpr bool operator>(nullopt_t, const optional& x) noexcept { return false; }
-        friend constexpr bool operator>=(const optional& x, nullopt_t) noexcept { return true; }
+        friend constexpr bool operator>(nullopt_t, const optional& x) noexcept { return discard(x), false; }
+        friend constexpr bool operator>=(const optional& x, nullopt_t) noexcept { return discard(x), true; }
         friend constexpr bool operator>=(nullopt_t, const optional& x) noexcept { return !x.has_value(); }
 
         // comparison with T

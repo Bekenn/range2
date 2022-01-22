@@ -20,8 +20,8 @@ namespace test
         static inline int value;
 
     public:
-        friend bool operator == (const fixed_input_iterator& a, const fixed_input_iterator& b) noexcept { return true; }
-        friend bool operator != (const fixed_input_iterator& a, const fixed_input_iterator& b) noexcept { return false; }
+        friend bool operator == (const fixed_input_iterator&, const fixed_input_iterator&) noexcept { return true; }
+        friend bool operator != (const fixed_input_iterator&, const fixed_input_iterator&) noexcept { return false; }
 
     public:
         reference operator * () const noexcept { return value; }
