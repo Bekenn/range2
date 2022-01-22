@@ -23,6 +23,7 @@ endif()
 
 if(MSVC)
     target_compile_options(test-stdext PRIVATE /permissive-)
+    set_target_properties(test-stdext PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY $<TARGET_FILE_DIR:test-stdext>)
 endif()
 
 catch_discover_tests(test-stdext WORKING_DIRECTORY $<TARGET_FILE_DIR:test-stdext>)
