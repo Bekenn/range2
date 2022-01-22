@@ -116,6 +116,42 @@ namespace test
     static_assert(stdext::is_equality_comparable_v<int>);
     static_assert(!stdext::is_equality_comparable_v<void>);
 
+    // identity_type
+    static_assert(std::is_same_v<stdext::identity_type<void>::type, void>);
+    static_assert(std::is_same_v<stdext::identity_type<const void>::type, const void>);
+    static_assert(std::is_same_v<stdext::identity_type<volatile void>::type, volatile void>);
+    static_assert(std::is_same_v<stdext::identity_type<void*>::type, void*>);
+    static_assert(std::is_same_v<stdext::identity_type<int>::type, int>);
+    static_assert(std::is_same_v<stdext::identity_type<int&>::type, int&>);
+    static_assert(std::is_same_v<stdext::identity_type<int&&>::type, int&&>);
+    static_assert(std::is_same_v<stdext::identity_type<int[]>::type, int[]>);
+    static_assert(std::is_same_v<stdext::identity_type<int[5]>::type, int[5]>);
+    static_assert(std::is_same_v<stdext::identity_type<int (*)[]>::type, int (*)[]>);
+    static_assert(std::is_same_v<stdext::identity_type<int (*)[5]>::type, int (*)[5]>);
+    static_assert(std::is_same_v<stdext::identity_type<int (&)[]>::type, int (&)[]>);
+    static_assert(std::is_same_v<stdext::identity_type<int (&)[5]>::type, int (&)[5]>);
+    static_assert(std::is_same_v<stdext::identity_type<void (int)>::type, void (int)>);
+    static_assert(std::is_same_v<stdext::identity_type<void (*)(int)>::type, void (*)(int)>);
+    static_assert(std::is_same_v<stdext::identity_type<void (&)(int)>::type, void (&)(int)>);
+
+    // identity_type_t
+    static_assert(std::is_same_v<stdext::identity_type_t<void>, void>);
+    static_assert(std::is_same_v<stdext::identity_type_t<const void>, const void>);
+    static_assert(std::is_same_v<stdext::identity_type_t<volatile void>, volatile void>);
+    static_assert(std::is_same_v<stdext::identity_type_t<void*>, void*>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int>, int>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int&>, int&>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int&&>, int&&>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int[]>, int[]>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int[5]>, int[5]>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int (*)[]>, int (*)[]>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int (*)[5]>, int (*)[5]>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int (&)[]>, int (&)[]>);
+    static_assert(std::is_same_v<stdext::identity_type_t<int (&)[5]>, int (&)[5]>);
+    static_assert(std::is_same_v<stdext::identity_type_t<void (int)>, void (int)>);
+    static_assert(std::is_same_v<stdext::identity_type_t<void (*)(int)>, void (*)(int)>);
+    static_assert(std::is_same_v<stdext::identity_type_t<void (&)(int)>, void (&)(int)>);
+
     // remove_cvref
     static_assert(std::is_same_v<stdext::remove_cvref<void>::type, void>);
     static_assert(std::is_same_v<stdext::remove_cvref<const void>::type, void>);

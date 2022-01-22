@@ -84,6 +84,10 @@ namespace stdext
 
     template <typename T> constexpr bool is_equality_comparable_v = is_equality_comparable<T>::value;
 
+    // Returns the provided type.  Useful for disabling template argument deduction.
+    template <typename T> struct identity_type { using type = T; };
+    template <typename T> using identity_type_t = typename identity_type<T>::type;
+
     // Strip top-level reference and cv qualifiers
     template <typename T> using remove_cvref = std::remove_cv<std::remove_reference_t<T>>;
     template <typename T> using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;

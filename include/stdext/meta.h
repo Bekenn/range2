@@ -25,15 +25,6 @@ namespace stdext
         static constexpr auto value = V;
     };
 
-    // Identity metafunction.
-    template <typename T> struct identity_type;
-    template <typename T> using identity_type_t = typename identity_type<T>::type;
-    template <typename T>
-    struct identity_type
-    {
-        using type = T;
-    };
-
     // A list of types.
     template <typename...> struct type_list { };
 
