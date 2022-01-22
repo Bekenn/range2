@@ -22,7 +22,7 @@ if(WIN32)
 endif()
 
 if(MSVC)
-    set_property(TARGET test-stdext APPEND_STRING PROPERTY COMPILE_FLAGS "/wd4814")
+    target_compile_options(test-stdext PRIVATE /permissive-)
 endif()
 
 catch_discover_tests(test-stdext WORKING_DIRECTORY $<TARGET_FILE_DIR:test-stdext>)
