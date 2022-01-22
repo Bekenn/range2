@@ -294,15 +294,15 @@ namespace stdext
         T exchange(optional<U>&& other);
 
         // observers
-        constexpr explicit operator const T& () const & { return _storage.has_value ? _storage.value : throw bad_optional_access(); }
-        constexpr explicit operator T& () & { return _storage.has_value ? _storage.value : throw bad_optional_access(); }
-        constexpr explicit operator T&& () && { return _storage.has_value ? stdext::move(_storage.value) : throw bad_optional_access(); }
-        constexpr explicit operator const T&& () const && { return _storage.has_value ? stdext::move(_storage.value) : throw bad_optional_access(); }
-        constexpr bool has_value() const noexcept { return _storage.has_value; }
-        constexpr const T& value() const & { return _storage.has_value ? _storage.value : throw bad_optional_access(); }
-        constexpr T& value() & { return _storage.has_value ? _storage.value : throw bad_optional_access(); }
-        constexpr T&& value() && { return _storage.has_value ? stdext::move(_storage.value) : throw bad_optional_access(); }
-        constexpr const T&& value() const && { return _storage.has_value ? stdext::move(_storage.value) : throw bad_optional_access(); }
+        constexpr explicit operator const T& () const &     { if (!_storage.has_value) throw bad_optional_access(); return _storage.value; }
+        constexpr explicit operator T& () &                 { if (!_storage.has_value) throw bad_optional_access(); return _storage.value; }
+        constexpr explicit operator T&& () &&               { if (!_storage.has_value) throw bad_optional_access(); return stdext::move(_storage.value); }
+        constexpr explicit operator const T&& () const &&   { if (!_storage.has_value) throw bad_optional_access(); return stdext::move(_storage.value); }
+        constexpr bool has_value() const noexcept           { return _storage.has_value; }
+        constexpr const T& value() const &                  { if (!_storage.has_value) throw bad_optional_access(); return _storage.value; }
+        constexpr T& value() &                              { if (!_storage.has_value) throw bad_optional_access(); return _storage.value; }
+        constexpr T&& value() &&                            { if (!_storage.has_value) throw bad_optional_access(); return stdext::move(_storage.value); }
+        constexpr const T&& value() const &&                { if (!_storage.has_value) throw bad_optional_access(); return stdext::move(_storage.value); }
         template <typename U> constexpr T value_or(U&& v) const &;
         template <typename U> constexpr T value_or(U&& v) &&;
 
