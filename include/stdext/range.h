@@ -1902,19 +1902,11 @@ namespace stdext
         return range.base_pos(pos);
     }
 
-    template <typename Range, STDEXT_REQUIRES(is_range<Range>::value)>
+    template <typename Range, STDEXT_REQUIRES(is_range<Range>::value && !is_std_input_range_v<Range>)>
     auto make_generator(Range& range)
     {
         return range_generator<Range>(range);
     }
-
-    template <typename RangeProvider, STDEXT_REQUIRES(is_stl_range_provider<RangeProvider>::value && !is_range<RangeProvider>::value)>
-    auto make_generator(RangeProvider& range)
-    {
-        using I = std::decay_t<decltype(begin(range))>;
-        using S = std::decay_t<decltype(end(range))>;
-        return delimited_iterator_generator<I, S>(begin(range), end(range));
-    };
 
     template <typename Elem, typename Range, STDEXT_REQUIRES(std::is_convertible<Elem, range_value_type<Range>>::value)>
     auto make_consumer(Range& range)

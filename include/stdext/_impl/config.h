@@ -29,6 +29,29 @@
 #define STDEXT_COMPILER_MSVC 1
 #endif
 
+#define STDEXT_DISABLE_WARNING_CLANG(w)
+#define STDEXT_DISABLE_WARNING_GCC(w)
+#define STDEXT_DISABLE_WARNING_MSVC(w)
+
+#if STDEXT_COMPILER_CLANG
+#define STDEXT_PUSH_WARNINGS() _Pragma("clang diagnostic push")
+#define STDEXT_POP_WARNINGS() _Pragma("clang diagnostic pop")
+#undef STDEXT_DISABLE_WARNING_CLANG
+#define STDEXT_DISABLE_WARNING_CLANG(w) STDEXT_DISABLE_WARNING_CLANG_(clang diagnostic ignored w)
+#define STDEXT_DISABLE_WARNING_CLANG_(x) _Pragma(#x)
+#elif STDEXT_COMPILER_GCC
+#define STDEXT_PUSH_WARNINGS() _Pragma("GCC diagnostic push")
+#define STDEXT_POP_WARNINGS() _Pragma("GCC diagnostic pop")
+#undef STDEXT_DISABLE_WARNING_GCC
+#define STDEXT_DISABLE_WARNING_GCC(w) _Pragma(GCC diagnostic ignored w)
+#define STDEXT_DISABLE_WARNING_GCC_(x) _Pragma(#x)
+#elif STDEXT_COMPILER_MSVC
+#define STDEXT_PUSH_WARNINGS() __pragma(warning(push))
+#define STDEXT_POP_WARNINGS() __pragma(warning(pop))
+#undef STDEXT_DISABLE_WARNING_MSVC
+#define STDEXT_DISABLE_WARNING_MSVC(w) __pragma(warning(disable: w))
+#endif
+
 // Processor detection
 #define STDEXT_ARCH_X86 0
 #define STDEXT_ARCH_X86_32 0
