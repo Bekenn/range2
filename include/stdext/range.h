@@ -10,12 +10,12 @@
 #define STDEXT_RANGE_INCLUDED
 #pragma once
 
-#include <stdext/compressed_types.h>
 #include <stdext/consumer.h>
 #include <stdext/generator.h>
 #include <stdext/meta.h>
 
 #include <stdexcept>
+#include <tuple>
 
 
 namespace stdext
@@ -681,7 +681,7 @@ namespace stdext
             using iterator = Iterator;
 
             using size_type = std::make_unsigned_t<difference_type>;
-            using position = compressed_pair<iterator, size_type>;
+            using position = std::tuple<iterator, size_type>;
 
         public:
             counted_forward_iterator_range() : first(), count(0) { }
@@ -705,17 +705,17 @@ namespace stdext
 
             position& inc_pos(position& pos) const
             {
-                ++pos.first();
-                ++pos.second();
+                ++std::get<0>(pos);
+                ++std::get<1>(pos);
                 return pos;
             }
 
-            reference at_pos(position pos) const { return *pos.first(); }
+            reference at_pos(position pos) const { return *std::get<0>(pos); }
 
-            size_type size() const noexcept { return count - first.second(); }
-            void resize(size_type n) noexcept { count = first.second() + n; }
+            size_type size() const noexcept { return count - std::get<1>(first); }
+            void resize(size_type n) noexcept { count = std::get<1>(first) + n; }
 
-            iterator base_pos(position pos) const { return pos.first(); }
+            iterator base_pos(position pos) const { return std::get<0>(pos); }
 
         private:
             position first;
@@ -1147,7 +1147,7 @@ namespace stdext
             using range = Range;
 
             using size_type = std::make_unsigned_t<difference_type>;
-            using position = compressed_pair<range_position_type<Range>, size_type>;
+            using position = std::tuple<range_position_type<Range>, size_type>;
 
         public:
             counted_multi_pass_range() : underlying(nullptr), first(), count(0) { }
@@ -1167,25 +1167,25 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) noexcept(noexcept(first = pos)) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
+            bool is_end_pos(position pos) const noexcept { return std::get<1>(pos) == count; }
 
             position& inc_pos(position& pos) const
             {
-                underlying->inc_pos(pos.first());
-                ++pos.second();
+                underlying->inc_pos(std::get<0>(pos));
+                ++std::get<1>(pos);
                 return pos;
             }
 
             reference at_pos(position pos) const
             {
-                return underlying->at_pos(pos.first());
+                return underlying->at_pos(std::get<0>(pos));
             }
 
             const range& base() const noexcept { return underlying; }
-            range_position_type<range> base_pos(position pos) { return pos.first(); }
+            range_position_type<range> base_pos(position pos) { return std::get<0>(pos); }
 
-            size_type size() const noexcept { return count - first.second(); }
-            void resize(size_type n) noexcept { count = first.second() + n; }
+            size_type size() const noexcept { return count - std::get<1>(first); }
+            void resize(size_type n) noexcept { count = std::get<1>(first) + n; }
 
         private:
             const range* underlying;
@@ -1451,7 +1451,7 @@ namespace stdext
             using range = Range;
 
             using size_type = std::make_unsigned_t<difference_type>;
-            using position = compressed_pair<range_position_type<Range>, size_type>;
+            using position = std::tuple<range_position_type<Range>, size_type>;
 
         public:
             counted_reverse_bidirectional_range() : r(nullptr), first(), count(0) { }
@@ -1473,29 +1473,29 @@ namespace stdext
             position begin_pos() const noexcept { return first; }
             void begin_pos(position pos) { first = pos; }
 
-            bool is_end_pos(position pos) const noexcept { return pos.second() == count; }
+            bool is_end_pos(position pos) const noexcept { return std::get<1>(pos) == count; }
 
             position& inc_pos(position& pos) const
             {
-                r->dec_pos(pos.first());
-                ++pos.second();
+                r->dec_pos(std::get<0>(pos));
+                ++std::get<1>(pos);
                 return pos;
             }
 
             position& dec_pos(position& pos) const
             {
-                r->inc_pos(pos.first());
-                --pos.second();
+                r->inc_pos(std::get<0>(pos));
+                --std::get<1>(pos);
                 return pos;
             }
 
-            reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, pos.first())); }
+            reference at_pos(position pos) const { return r->at_pos(prev_pos(*r, std::get<0>(pos))); }
 
-            size_type size() const noexcept { return count - first.second(); }
-            void resize(size_type n) { count = first.second() + n; }
+            size_type size() const noexcept { return count - std::get<1>(first); }
+            void resize(size_type n) { count = std::get<1>(first) + n; }
 
             const range& base() const noexcept { return *r; }
-            range_position_type<Range> base_pos(position pos) const { return pos.second(); }
+            range_position_type<Range> base_pos(position pos) const { return std::get<1>(pos); }
 
         private:
             friend class counted_reverse_random_access_range<Range>;
