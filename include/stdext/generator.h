@@ -107,8 +107,8 @@ namespace stdext
         Generator& self() noexcept { return static_cast<Generator&>(*this); }
     };
 
-    template <typename Iterator>
-    class iterator_generator
+    template <typename Iterator, typename Sentinel>
+    class delimited_iterator_generator
     {
     public:
         using iterator_category = generator_tag;
@@ -117,57 +117,41 @@ namespace stdext
         using pointer = iterator_pointer_type<Iterator>;
         using reference = iterator_reference_type<Iterator>;
         using iterator = Iterator;
+        using sentinel = Sentinel;
 
     public:
-        iterator_generator() : i() { }
-        explicit iterator_generator(const iterator& i) : i(i) { }
-        explicit iterator_generator(iterator&& i) : i(stdext::move(i)) { }
+        delimited_iterator_generator() : i(), j() { }
+        delimited_iterator_generator(const iterator& i, const sentinel& j) : i(i), j(j) { }
+        delimited_iterator_generator(const iterator& i, sentinel&& j) : i(i), j(stdext::move(j)) { }
+        delimited_iterator_generator(iterator&& i, const sentinel& j) : i(stdext::move(i)), j(j) { }
+        delimited_iterator_generator(iterator&& i, sentinel&& j) : i(stdext::move(i)), j(stdext::move(j)) { }
 
     public:
-        friend bool operator == (const iterator_generator& a, const iterator_generator& b) noexcept
+        friend bool operator == (const delimited_iterator_generator& a, const delimited_iterator_generator& b) noexcept
         {
-            return a.i == b.i;
+            return a.i == b.i && a.j == b.j;
         }
-        friend bool operator != (const iterator_generator& a, const iterator_generator& b) noexcept
+        friend bool operator != (const delimited_iterator_generator& a, const delimited_iterator_generator& b) noexcept
         {
             return !(a == b);
         }
 
-        friend void swap(iterator_generator& a, iterator_generator& b)
+        friend void swap(delimited_iterator_generator& a, delimited_iterator_generator& b)
         {
             swap(a.i, b.i);
+            swap(a.j, b.j);
         }
 
     public:
         reference operator * () const { return *i; }
         pointer operator -> () const { return i.operator -> (); }
-        iterator_generator& operator ++ () { ++i; return *this; }
+        delimited_iterator_generator& operator ++ () { ++i; return *this; }
         decltype(auto) operator ++ (int) { return i++; }
-        explicit operator bool () const { return true; }
+        explicit operator bool () const { return i != j; }
         const iterator& base() const { return i; }
 
     private:
         iterator i;
-    };
-
-    template <typename Iterator, typename Sentinel>
-    class delimited_iterator_generator : public iterator_generator<Iterator>
-    {
-    public:
-        using typename iterator_generator<Iterator>::iterator;
-        using sentinel = Sentinel;
-
-    public:
-        delimited_iterator_generator() : iterator_generator<Iterator>(), j() { }
-        delimited_iterator_generator(const iterator& i, const sentinel& j) : iterator_generator<Iterator>(i), j(j) { }
-        delimited_iterator_generator(const iterator& i, sentinel&& j) : iterator_generator<Iterator>(i), j(stdext::move(j)) { }
-        delimited_iterator_generator(iterator&& i, const sentinel& j) : iterator_generator<Iterator>(stdext::move(i)), j(j) { }
-        delimited_iterator_generator(iterator&& i, sentinel&& j) : iterator_generator<Iterator>(stdext::move(i)), j(stdext::move(j)) { }
-
-    public:
-        explicit operator bool () const { return this->base() != j; }
-
-    private:
         sentinel j;
     };
 
@@ -355,12 +339,6 @@ namespace stdext
         iterator i;
         TerminationPredicate term;
     };
-
-    template <typename Iterator, STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && !is_generator<std::decay_t<Iterator>>::value)>
-    auto make_generator(Iterator&& i)
-    {
-        return iterator_generator<std::decay_t<Iterator>>(stdext::forward<Iterator>(i));
-    }
 
     template <typename Iterator, typename Sentinel,
         STDEXT_REQUIRES(is_iterator<std::decay_t<Iterator>>::value && is_equality_comparable_with<std::decay_t<Iterator>, std::decay_t<Sentinel>>::value)>
