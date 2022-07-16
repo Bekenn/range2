@@ -210,7 +210,7 @@ namespace stdext
         using generator = Generator;
 
     public:
-        to_wchar_generator() noexcept : _g(), _state(), _value() { }
+        to_wchar_generator() = default;
         to_wchar_generator(const generator& g) : _g(g), _state(), _value() { next(); }
         to_wchar_generator(generator&& g) : _g(stdext::move(g)), _state(), _value() { next(); }
 
@@ -278,9 +278,9 @@ namespace stdext
         }
 
     private:
-        generator _g;
-        mbstate_t _state;
-        value_type _value;
+        generator _g = { };
+        mbstate_t _state = { };
+        value_type _value = { };
     };
 
     struct to_multibyte_tag { };
@@ -288,18 +288,18 @@ namespace stdext
 
     inline to_multibyte_tag to_multibyte() { return { }; }
     inline to_wchar_tag to_wchar() { return { }; }
+}
 
-    template <typename Generator, STDEXT_REQUIRES(can_generate<Generator>::value)>
-    auto operator >> (Generator&& g, to_multibyte_tag)
-    {
-        return to_multibyte_generator<generator_type<Generator>>(as_generator(stdext::forward<Generator>(g)));
-    }
+template <typename Producer, STDEXT_REQUIRES(stdext::can_generate_v<Producer>)>
+auto operator >> (Producer&& p, stdext::to_multibyte_tag)
+{
+    return stdext::to_multibyte_generator<stdext::generator_type<Producer>>(stdext::as_generator(stdext::forward<Producer>(p)));
+}
 
-    template <typename Generator, STDEXT_REQUIRES(can_generate<Generator>::value)>
-    auto operator >> (Generator&& g, to_wchar_tag)
-    {
-        return to_wchar_generator<generator_type<Generator>>(as_generator(stdext::forward<Generator>(g)));
-    }
+template <typename Producer, STDEXT_REQUIRES(stdext::can_generate_v<Producer>)>
+auto operator >> (Producer&& p, stdext::to_wchar_tag)
+{
+    return stdext::to_wchar_generator<stdext::generator_type<Producer>>(stdext::as_generator(stdext::forward<Producer>(p)));
 }
 
 #endif

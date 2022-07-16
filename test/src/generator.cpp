@@ -4,6 +4,8 @@
 
 #include <catch2/catch.hpp>
 
+#include <array>
+
 
 namespace test
 {
@@ -1004,6 +1006,64 @@ namespace test
         };
 
         REQUIRE(g >> out);
+        CHECK(f == l);
+        f = std::begin(output);
+
+        while (i != j && f != l)
+            CHECK(*i++ == *f++);
+
+        CHECK(i == j);
+        CHECK(f == l);
+    }
+
+    TEST_CASE("arrays are consumable", "[generator]")
+    {
+        const int values[] = { 3, 1, 4, 1, 5, 9 };
+        auto i = std::begin(values);
+        auto j = std::end(values);
+
+        int output[std::size(values)] = { };
+        auto f = std::begin(output);
+        auto l = std::end(output);
+
+        auto out = [&](int x) -> bool
+        {
+            if (f == l)
+                return false;
+            *f++ = x;
+            return true;
+        };
+
+        REQUIRE(values >> out);
+        CHECK(f == l);
+        f = std::begin(output);
+
+        while (i != j && f != l)
+            CHECK(*i++ == *f++);
+
+        CHECK(i == j);
+        CHECK(f == l);
+    }
+
+    TEST_CASE("standard ranges are consumable", "[generator]")
+    {
+        std::array<const int, 6> values = { 3, 1, 4, 1, 5, 9 };
+        auto i = std::begin(values);
+        auto j = std::end(values);
+
+        int output[std::size(values)] = { };
+        auto f = std::begin(output);
+        auto l = std::end(output);
+
+        auto out = [&](int x) -> bool
+        {
+            if (f == l)
+                return false;
+            *f++ = x;
+            return true;
+        };
+
+        REQUIRE(values >> out);
         CHECK(f == l);
         f = std::begin(output);
 

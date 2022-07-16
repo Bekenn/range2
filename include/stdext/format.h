@@ -202,7 +202,7 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for string_view");
 
-        auto sv = string_view(stdext::forward<Arg>(arg));
+        string_view sv(stdext::forward<Arg>(arg));
         if constexpr (is_consumer_v<std::decay_t<Consumer>, string_view>)
             return out(sv);
         else
@@ -216,9 +216,8 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for u16string_view");
 
-        auto sv = u16string_view(stdext::forward<Arg>(arg));
-        auto generator = make_generator(sv);
-        return generator >> to_multibyte() >> out;
+        u16string_view sv(stdext::forward<Arg>(arg));
+        return sv >> to_multibyte() >> out;
     }
 
     template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_convertible_v<std::decay_t<Arg>, u32string_view>)>
@@ -227,9 +226,8 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for u32string_view");
 
-        auto sv = u32string_view(stdext::forward<Arg>(arg));
-        auto generator = make_generator(sv);
-        return generator >> to_multibyte() >> out;
+        u32string_view sv(stdext::forward<Arg>(arg));
+        return sv >> to_multibyte() >> out;
     }
 #endif
 
@@ -239,9 +237,8 @@ namespace stdext
         if (!fmt.empty())
             throw format_error("Unrecognized format for wstring_view");
 
-        auto sv = wstring_view(stdext::forward<Arg>(arg));
-        auto generator = make_generator(sv);
-        return generator >> to_multibyte() >> out;
+        wstring_view sv(stdext::forward<Arg>(arg));
+        return sv >> to_multibyte() >> out;
     }
 
     template <typename Consumer, typename Arg, STDEXT_REQUIRED(is_consumer_v<Consumer, char> && std::is_invocable_r_v<bool, Arg, Consumer&>)>

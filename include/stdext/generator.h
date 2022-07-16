@@ -415,18 +415,19 @@ namespace stdext
     }
 
     template <typename T> using generator_type = std::remove_reference_t<decltype(as_generator(declval<T>()))>;
+}
 
-    template <typename Generator, typename Consumer, STDEXT_REQUIRES(is_consumer_v<remove_cvref_t<Consumer>, generator_value_type<generator_type<Generator>>>)>
-    bool operator >> (Generator&& g, Consumer&& c)
+template <typename Producer, typename Consumer,
+    STDEXT_REQUIRES(stdext::can_generate_v<Producer> && stdext::is_consumer_v<stdext::remove_cvref_t<Consumer>, stdext::generator_value_type<stdext::generator_type<Producer>>>)>
+bool operator >> (Producer&& p, Consumer&& c)
+{
+    for (auto&& gen = stdext::as_generator(stdext::forward<Producer>(p)); gen; ++gen)
     {
-        for (decltype(auto) gen = as_generator(stdext::forward<Generator>(g)); gen; ++gen)
-        {
-            if (!c(*gen))
-                return false;
-        }
-
-        return true;
+        if (!c(*gen))
+            return false;
     }
+
+    return true;
 }
 
 #endif
