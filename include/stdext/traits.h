@@ -19,24 +19,32 @@
 #define STDEXT_REQUIRED(...) ::std::enable_if_t<(__VA_ARGS__), ::stdext::nullptr_t>
 #define STDEXT_REQUIRES(...) STDEXT_REQUIRED(__VA_ARGS__) = nullptr
 
-#define STDEXT_DECLARE_HAS_INNER_TYPE(Inner)                                    \
-template <typename T> struct has_inner_type_##Inner                             \
-{                                                                               \
-    template <typename U> static ::stdext::true_type test(typename U::Inner*);  \
-    template <typename U> static ::stdext::false_type test(...);                \
-    static constexpr bool value = decltype(test<T>(nullptr))::value;            \
-}
+#define STDEXT_DECLARE_HAS_INNER_TYPE(Inner)                    \
+namespace STDEXT_PP_PASTE(_hit_##Inner, __LINE__)               \
+{                                                               \
+    template <typename T, typename = typename T::Inner>         \
+    ::std::true_type test_has_inner_type_##Inner(int);          \
+    template <typename T>                                       \
+    ::std::false_type test_has_inner_type_##Inner(...);         \
+}                                                               \
+template <typename T> struct has_inner_type_##Inner             \
+    : decltype(STDEXT_PP_PASTE(_hit_##Inner, __LINE__)::test_has_inner_type_##Inner<T>(0)) { }
+
 #define STDEXT_HAS_INNER_TYPE(T, Inner) has_inner_type_##Inner<STDEXT_PP_DEPAREN(T)>
 #define STDEXT_HAS_INNER_TYPE_V(T, Inner) STDEXT_HAS_INNER_TYPE(T, Inner)::value
 
-#define STDEXT_DECLARE_HAS_METHOD(MethodName)                                                   \
-template <typename T, typename... ArgTypes> struct has_method_##MethodName                      \
-{                                                                                               \
-    template <typename U> static ::stdext::true_type                                            \
-        test(decltype(::stdext::declval<U>().MethodName(::stdext::declval<ArgTypes>()...))*);   \
-    template <typename U> static ::stdext::false_type test(...);                                \
-    static constexpr bool value = decltype(test<T>(nullptr))::value;                            \
-}
+#define STDEXT_DECLARE_HAS_METHOD(MethodName)                                                               \
+namespace STDEXT_PP_PASTE(_hm_##MethodName, __LINE__)                                                       \
+{                                                                                                           \
+    template <typename T, typename... ArgTypes>                                                             \
+    ::std::true_type test_has_method_##MethodName(                                                          \
+        ::std::decay_t<decltype(::stdext::declval<T>().MethodName(::stdext::declval<ArgTypes>()...))>*);    \
+    template <typename T, typename... ArgTypes>                                                             \
+    ::std::false_type test_has_method_##MethodName(...);                                                    \
+}                                                                                                           \
+template <typename T, typename... ArgTypes> struct has_method_##MethodName                                  \
+    : decltype(STDEXT_PP_PASTE(_hm_##MethodName, __LINE__)::test_has_method_##MethodName<T, ArgTypes...>(nullptr)) { }
+
 #define STDEXT_HAS_METHOD(T, MethodName, ...) has_method_##MethodName<STDEXT_PP_DEPAREN(T), ## __VA_ARGS__>
 #define STDEXT_HAS_METHOD_V(T, MethodName, ...) STDEXT_HAS_METHOD(T, MethodName, ## __VA_ARGS__)::value
 
@@ -76,13 +84,25 @@ namespace stdext
     template <typename T1, typename T2>
     constexpr bool is_equality_comparable_with_v = is_equality_comparable_with<T1, T2>::value;
 
-    template <typename T> struct is_equality_comparable : is_equality_comparable_with<const T&, const T&> { };
-    template <> struct is_equality_comparable<void> : false_type { };
-    template <> struct is_equality_comparable<const void> : false_type { };
-    template <> struct is_equality_comparable<volatile void> : false_type { };
-    template <> struct is_equality_comparable<const volatile void> : false_type { };
+    template <typename T> struct is_equality_comparable : is_equality_comparable_with<std::add_lvalue_reference_t<std::add_const_t<T>>, std::add_lvalue_reference_t<std::add_const_t<T>>> { };
 
     template <typename T> constexpr bool is_equality_comparable_v = is_equality_comparable<T>::value;
+
+    // Note: This differs from the standard concept semiregular in that it does not require default constructibility.
+    template <typename T> struct is_semiregular : std::conjunction<
+        std::is_object<T>,
+        std::is_move_constructible<T>,
+        std::is_move_assignable<T>,
+        std::is_copy_constructible<T>,
+        std::is_copy_assignable<T>,
+        std::is_destructible<T>,
+        std::is_swappable<T>> { };
+    template <typename T> constexpr bool is_semiregular_v = is_semiregular<T>::value;
+
+    template <typename T> struct is_regular : std::conjunction<
+        is_semiregular<T>,
+        is_equality_comparable<T>> { };
+    template <typename T> constexpr bool is_regular_v = is_regular<T>::value;
 
     // Returns the provided type.  Useful for disabling template argument deduction.
     template <typename T> struct identity_type { using type = T; };
