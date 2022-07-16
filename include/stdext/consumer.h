@@ -98,6 +98,15 @@ namespace stdext
     {
         return delimited_iterator_consumer<remove_cvref_t<Iterator>, remove_cvref_t<Sentinel>>(stdext::forward<Iterator>(i), stdext::forward<Sentinel>(j));
     }
+
+    template <typename Elem, typename RangeProvider,
+        STDEXT_REQUIRES(is_std_range_v<RangeProvider> && std::is_assignable_v<iterator_reference_type<iterator_type<RangeProvider>>, Elem>)>
+    constexpr auto make_consumer(RangeProvider& range)
+    {
+        using I = iterator_type<RangeProvider>;
+        using S = sentinel_type<RangeProvider>;
+        return delimited_iterator_consumer<I, S>(begin(range), end(range));
+    }
 }
 
 #endif

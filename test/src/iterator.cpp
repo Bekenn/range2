@@ -315,259 +315,70 @@ namespace test
     static_assert(std::is_same_v<stdext::iterator_category<bidirectional_iterator>, std::bidirectional_iterator_tag>);
     static_assert(std::is_same_v<stdext::iterator_category<random_access_iterator>, std::random_access_iterator_tag>);
 
-    // value_type
-    static_assert(std::is_same_v<stdext::value_type<int*, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::value_type<const int*, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::value_type<float*, stdext::is_iterator>::type, float>);
-    static_assert(std::is_same_v<stdext::value_type<const float*, stdext::is_iterator>::type, float>);
-    static_assert(std::is_same_v<stdext::value_type<fixed_input_iterator, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::value_type<fixed_output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::value_type<input_iterator, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::value_type<output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::value_type<forward_iterator, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::value_type<bidirectional_iterator, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::value_type<random_access_iterator, stdext::is_iterator>::type, int>);
-
-    // value_type_t
-    static_assert(std::is_same_v<stdext::value_type_t<int*, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::value_type_t<const int*, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::value_type_t<float*, stdext::is_iterator>, float>);
-    static_assert(std::is_same_v<stdext::value_type_t<const float*, stdext::is_iterator>, float>);
-    static_assert(std::is_same_v<stdext::value_type_t<fixed_input_iterator, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::value_type_t<fixed_output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::value_type_t<input_iterator, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::value_type_t<output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::value_type_t<forward_iterator, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::value_type_t<bidirectional_iterator, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::value_type_t<random_access_iterator, stdext::is_iterator>, int>);
-
     // iterator_value_type
-    static_assert(std::is_same_v<stdext::iterator_value_type<int*>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<const int*>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<float*>::type, float>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<const float*>::type, float>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<fixed_input_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<fixed_output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<input_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<forward_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<bidirectional_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type<random_access_iterator>::type, int>);
-
-    // iterator_value_type_t
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<int*>, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<const int*>, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<float*>, float>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<const float*>, float>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<fixed_input_iterator>, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<fixed_output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<input_iterator>, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<forward_iterator>, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<bidirectional_iterator>, int>);
-    static_assert(std::is_same_v<stdext::iterator_value_type_t<random_access_iterator>, int>);
-
-    // difference_type
-    static_assert(std::is_same_v<stdext::difference_type<int*, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<const int*, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<float*, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<const float*, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<fixed_input_iterator, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<fixed_output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::difference_type<input_iterator, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::difference_type<forward_iterator, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<bidirectional_iterator, stdext::is_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type<random_access_iterator, stdext::is_iterator>::type, std::ptrdiff_t>);
-
-    // difference_type_t
-    static_assert(std::is_same_v<stdext::difference_type_t<int*, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<const int*, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<float*, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<const float*, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<fixed_input_iterator, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<fixed_output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::difference_type_t<input_iterator, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::difference_type_t<forward_iterator, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<bidirectional_iterator, stdext::is_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::difference_type_t<random_access_iterator, stdext::is_iterator>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<int*>, int>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<const int*>, int>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<float*>, float>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<const float*>, float>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<fixed_input_iterator>, int>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<fixed_output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<input_iterator>, int>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<forward_iterator>, int>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<bidirectional_iterator>, int>);
+    static_assert(std::is_same_v<stdext::iterator_value_type<random_access_iterator>, int>);
 
     // iterator_difference_type
-    static_assert(std::is_same_v<stdext::iterator_difference_type<int*>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<const int*>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<float*>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<const float*>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<fixed_input_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<fixed_output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<input_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<forward_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<bidirectional_iterator>::type, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type<random_access_iterator>::type, std::ptrdiff_t>);
-
-    // iterator_difference_type_t
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<int*>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<const int*>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<float*>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<const float*>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<fixed_input_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<fixed_output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<input_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<forward_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<bidirectional_iterator>, std::ptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_difference_type_t<random_access_iterator>, std::ptrdiff_t>);
-
-    // pointer_type
-    static_assert(std::is_same_v<stdext::pointer_type<int*, stdext::is_iterator>::type, int*>);
-    static_assert(std::is_same_v<stdext::pointer_type<const int*, stdext::is_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type<float*, stdext::is_iterator>::type, float*>);
-    static_assert(std::is_same_v<stdext::pointer_type<const float*, stdext::is_iterator>::type, const float*>);
-    static_assert(std::is_same_v<stdext::pointer_type<fixed_input_iterator, stdext::is_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type<fixed_output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::pointer_type<input_iterator, stdext::is_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type<output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::pointer_type<forward_iterator, stdext::is_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type<bidirectional_iterator, stdext::is_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type<random_access_iterator, stdext::is_iterator>::type, const int*>);
-
-    // pointer_type_t
-    static_assert(std::is_same_v<stdext::pointer_type_t<int*, stdext::is_iterator>, int*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<const int*, stdext::is_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<float*, stdext::is_iterator>, float*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<const float*, stdext::is_iterator>, const float*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<fixed_input_iterator, stdext::is_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<fixed_output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<input_iterator, stdext::is_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<forward_iterator, stdext::is_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<bidirectional_iterator, stdext::is_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::pointer_type_t<random_access_iterator, stdext::is_iterator>, const int*>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<int*>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<const int*>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<float*>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<const float*>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<fixed_input_iterator>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<fixed_output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<input_iterator>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<forward_iterator>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<bidirectional_iterator>, std::ptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_difference_type<random_access_iterator>, std::ptrdiff_t>);
 
     // iterator_pointer_type
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<int*>::type, int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<const int*>::type, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<float*>::type, float*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<const float*>::type, const float*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<fixed_input_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<fixed_output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<input_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<forward_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<bidirectional_iterator>::type, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type<random_access_iterator>::type, const int*>);
-
-    // iterator_pointer_type_t
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<int*>, int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<const int*>, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<float*>, float*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<const float*>, const float*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<fixed_input_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<fixed_output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<input_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<forward_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<bidirectional_iterator>, const int*>);
-    static_assert(std::is_same_v<stdext::iterator_pointer_type_t<random_access_iterator>, const int*>);
-
-    // reference_type
-    static_assert(std::is_same_v<stdext::reference_type<int*, stdext::is_iterator>::type, int&>);
-    static_assert(std::is_same_v<stdext::reference_type<const int*, stdext::is_iterator>::type, const int&>);
-    static_assert(std::is_same_v<stdext::reference_type<float*, stdext::is_iterator>::type, float&>);
-    static_assert(std::is_same_v<stdext::reference_type<const float*, stdext::is_iterator>::type, const float&>);
-    static_assert(std::is_same_v<stdext::reference_type<fixed_input_iterator, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::reference_type<fixed_output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::reference_type<input_iterator, stdext::is_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::reference_type<output_iterator, stdext::is_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::reference_type<forward_iterator, stdext::is_iterator>::type, const int&>);
-    static_assert(std::is_same_v<stdext::reference_type<bidirectional_iterator, stdext::is_iterator>::type, const int&>);
-    static_assert(std::is_same_v<stdext::reference_type<random_access_iterator, stdext::is_iterator>::type, const int&>);
-
-    // reference_type_t
-    static_assert(std::is_same_v<stdext::reference_type_t<int*, stdext::is_iterator>, int&>);
-    static_assert(std::is_same_v<stdext::reference_type_t<const int*, stdext::is_iterator>, const int&>);
-    static_assert(std::is_same_v<stdext::reference_type_t<float*, stdext::is_iterator>, float&>);
-    static_assert(std::is_same_v<stdext::reference_type_t<const float*, stdext::is_iterator>, const float&>);
-    static_assert(std::is_same_v<stdext::reference_type_t<fixed_input_iterator, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::reference_type_t<fixed_output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::reference_type_t<input_iterator, stdext::is_iterator>, int>);
-    static_assert(std::is_same_v<stdext::reference_type_t<output_iterator, stdext::is_iterator>, void>);
-    static_assert(std::is_same_v<stdext::reference_type_t<forward_iterator, stdext::is_iterator>, const int&>);
-    static_assert(std::is_same_v<stdext::reference_type_t<bidirectional_iterator, stdext::is_iterator>, const int&>);
-    static_assert(std::is_same_v<stdext::reference_type_t<random_access_iterator, stdext::is_iterator>, const int&>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<int*>, int*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<const int*>, const int*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<float*>, float*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<const float*>, const float*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<fixed_input_iterator>, const int*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<fixed_output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<input_iterator>, const int*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<forward_iterator>, const int*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<bidirectional_iterator>, const int*>);
+    static_assert(std::is_same_v<stdext::iterator_pointer_type<random_access_iterator>, const int*>);
 
     // iterator_reference_type
-    static_assert(std::is_same_v<stdext::iterator_reference_type<int*>::type, int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<const int*>::type, const int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<float*>::type, float&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<const float*>::type, const float&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<fixed_input_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<fixed_output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<input_iterator>::type, int>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<output_iterator>::type, void>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<forward_iterator>::type, const int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<bidirectional_iterator>::type, const int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type<random_access_iterator>::type, const int&>);
-
-    // iterator_reference_type_t
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<int*>, int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<const int*>, const int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<float*>, float&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<const float*>, const float&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<fixed_input_iterator>, int>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<fixed_output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<input_iterator>, int>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<output_iterator>, void>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<forward_iterator>, const int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<bidirectional_iterator>, const int&>);
-    static_assert(std::is_same_v<stdext::iterator_reference_type_t<random_access_iterator>, const int&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<int*>, int&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<const int*>, const int&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<float*>, float&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<const float*>, const float&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<fixed_input_iterator>, int>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<fixed_output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<input_iterator>, int>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<output_iterator>, void>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<forward_iterator>, const int&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<bidirectional_iterator>, const int&>);
+    static_assert(std::is_same_v<stdext::iterator_reference_type<random_access_iterator>, const int&>);
 
     namespace { using uptrdiff_t = std::make_unsigned_t<std::ptrdiff_t>; }
 
-    // size_type
-    static_assert(std::is_same_v<stdext::size_type<int*, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<const int*, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<float*, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<const float*, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<fixed_input_iterator, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<input_iterator, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<forward_iterator, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<bidirectional_iterator, stdext::is_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type<random_access_iterator, stdext::is_iterator>::type, uptrdiff_t>);
-
-    // size_type_t
-    static_assert(std::is_same_v<stdext::size_type_t<int*, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<const int*, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<float*, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<const float*, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<fixed_input_iterator, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<input_iterator, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<forward_iterator, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<bidirectional_iterator, stdext::is_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::size_type_t<random_access_iterator, stdext::is_iterator>, uptrdiff_t>);
-
     // iterator_size_type
-    static_assert(std::is_same_v<stdext::iterator_size_type<int*>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<const int*>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<float*>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<const float*>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<fixed_input_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<input_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<forward_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<bidirectional_iterator>::type, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type<random_access_iterator>::type, uptrdiff_t>);
-
-    // iterator_size_type_t
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<int*>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<const int*>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<float*>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<const float*>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<fixed_input_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<input_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<forward_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<bidirectional_iterator>, uptrdiff_t>);
-    static_assert(std::is_same_v<stdext::iterator_size_type_t<random_access_iterator>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<int*>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<const int*>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<float*>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<const float*>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<fixed_input_iterator>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<input_iterator>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<forward_iterator>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<bidirectional_iterator>, uptrdiff_t>);
+    static_assert(std::is_same_v<stdext::iterator_size_type<random_access_iterator>, uptrdiff_t>);
 
     // iterator_proxy
     static_assert(std::is_same_v<stdext::iterator_proxy<int*>::value_type, int>);

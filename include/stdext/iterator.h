@@ -30,46 +30,13 @@ namespace stdext
     }
     template <typename T> struct is_iterator : _private::is_iterator_impl<T> { };
 
-    template <typename Iterator> using iterator_category = typename std::iterator_traits<remove_cvref_t<Iterator>>::iterator_category;
-    namespace _private
-    {
-        template <typename Iterator>
-        struct value_type_of<Iterator, is_iterator, true>
-        {
-            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<remove_cvref_t<Iterator>>::value_type>;
-        };
-        template <typename Iterator>
-        struct difference_type_of<Iterator, is_iterator, true>
-        {
-            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<remove_cvref_t<Iterator>>::difference_type>;
-        };
-        template <typename Iterator>
-        struct pointer_type_of<Iterator, is_iterator, true>
-        {
-            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<remove_cvref_t<Iterator>>::pointer>;
-        };
-        template <typename Iterator>
-        struct reference_type_of<Iterator, is_iterator, true>
-        {
-            using type = std::enable_if_t<is_iterator<Iterator>::value, typename std::iterator_traits<remove_cvref_t<Iterator>>::reference>;
-        };
-        template <typename Iterator>
-        struct size_type_of<Iterator, is_iterator, true>
-        {
-            using type = std::make_unsigned_t<difference_type_t<Iterator, is_iterator>>;
-        };
-    }
+    template <typename T> using iterator_category = typename std::iterator_traits<remove_cvref_t<T>>::iterator_category;
 
-    template <typename Iterator> using iterator_value_type = value_type<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_value_type_t = value_type_t<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_difference_type = difference_type<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_difference_type_t = difference_type_t<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_pointer_type = pointer_type<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_pointer_type_t = pointer_type_t<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_reference_type = reference_type<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_reference_type_t = reference_type_t<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_size_type = size_type<Iterator, is_iterator>;
-    template <typename Iterator> using iterator_size_type_t = size_type_t<Iterator, is_iterator>;
+    template <typename T> using iterator_value_type = std::remove_cv_t<typename std::iterator_traits<T>::value_type>;
+    template <typename T> using iterator_difference_type = typename std::iterator_traits<T>::difference_type;
+    template <typename T> using iterator_pointer_type = typename std::iterator_traits<T>::pointer;
+    template <typename T> using iterator_reference_type = typename std::iterator_traits<T>::reference;
+    template <typename T> using iterator_size_type = std::make_unsigned_t<iterator_difference_type<T>>;
 
     template <typename Iterator, bool IsIterator = is_iterator<Iterator>::value>
     struct is_input_iterator : std::is_base_of<std::input_iterator_tag, iterator_category<Iterator>> { };
@@ -109,6 +76,9 @@ namespace stdext
     template <> struct is_std_range<volatile void> : false_type { };
     template <> struct is_std_range<const volatile void> : false_type { };
     template <typename T> constexpr auto is_std_range_v = is_std_range<T>::value;
+
+    template <typename StdRange> using iterator_type = decltype(begin(declval<StdRange&>()));
+    template <typename StdRange> using sentinel_type = decltype(end(declval<StdRange&>()));
 
     template <typename Iterator>
     class iterator_proxy

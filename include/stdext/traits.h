@@ -147,39 +147,6 @@ namespace stdext
     }
 
     template <typename T> struct equivalent_sized_type : _private::equivalent_sized_type_base<T> { };
-
-    namespace _private
-    {
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct value_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct position_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct difference_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct size_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct pointer_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct reference_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct iterator_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct sentinel_type_of { };
-        template <typename T, template <typename> typename IsT, bool = IsT<T>::value> struct generator_type_of { };
-    }
-
-    template <typename T, template <typename> typename IsT> struct value_type : _private::value_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct position_type : _private::position_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct difference_type : _private::difference_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct size_type : _private::size_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct pointer_type : _private::pointer_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct reference_type : _private::reference_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct iterator_type : _private::iterator_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct sentinel_type : _private::sentinel_type_of<T, IsT> { };
-    template <typename T, template <typename> typename IsT> struct generator_type : _private::generator_type_of<T, IsT> { };
-
-    template <typename T, template <typename> typename IsT> using value_type_t = typename value_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using position_type_t = typename position_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using difference_type_t = typename difference_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using size_type_t = typename size_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using pointer_type_t = typename pointer_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using reference_type_t = typename reference_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using iterator_type_t = typename iterator_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using sentinel_type_t = typename sentinel_type<T, IsT>::type;
-    template <typename T, template <typename> typename IsT> using generator_type_t = typename generator_type<T, IsT>::type;
 }
 
 #endif
