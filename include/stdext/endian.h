@@ -1,3 +1,5 @@
+#ifndef STDEXT_ENDIAN_INCLUDED
+#define STDEXT_ENDIAN_INCLUDED
 #pragma once
 
 #include <stdext/stream.h>
@@ -582,3 +584,5 @@ namespace stdext
 }
 
 #undef STDEXT_BYTE_ORDER_NATIVE
+
+#endif
